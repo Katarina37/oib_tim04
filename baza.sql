@@ -12,22 +12,25 @@ CREATE DATABASE IF NOT EXISTS korisnici
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 
-USE korisnici;
 
--- Tabela za korisnike sistema
-CREATE TABLE IF NOT EXISTS korisnik (
+
+
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    korisnicko_ime VARCHAR(50) NOT NULL UNIQUE,
-    lozinka VARCHAR(255) NOT NULL,                    -- Hesirana lozinka (bcrypt ili slicno)
-    email VARCHAR(100) NOT NULL UNIQUE,
-    ime VARCHAR(50) NOT NULL,
-    prezime VARCHAR(50) NOT NULL,
-    profilna_slika LONGTEXT,                          -- Base64 format
-    uloga ENUM('administrator', 'menadzer_prodaje', 'prodavac') NOT NULL,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    role ENUM('ADMIN', 'SELLER') NOT NULL DEFAULT 'SELLER',
+    profileImage LONGTEXT,
     datum_kreiranja DATETIME DEFAULT CURRENT_TIMESTAMP,
     datum_azuriranja DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+USE korisnici;
+SELECT * FROM users;
 
+
+ALTER TABLE users 
+ADD COLUMN lastName VARCHAR(100) NULL AFTER firstName;
 
 -- ============================================
 -- BAZA PODATAKA: proizvodnja
@@ -383,3 +386,23 @@ INSERT INTO audit_log (tip_zapisa, opis, mikroservis, korisnik_id, ip_adresa) VA
 ('INFO', 'Ambalaza poslata u skladiste', 'skladistenje', 3, '192.168.1.101'),
 ('INFO', 'Kreiran fiskalni racun FR-2025-001', 'prodaja', 3, '192.168.1.101'),
 ('ERROR', 'Greska pri povezivanju na bazu podataka', 'proizvodnja', NULL, '192.168.1.100');
+
+USE korisnici;
+
+DROP TABLE IF EXISTS korisnik;
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    role ENUM('ADMIN', 'SELLER') NOT NULL DEFAULT 'SELLER',
+    profileImage LONGTEXT,
+    datum_kreiranja DATETIME DEFAULT CURRENT_TIMESTAMP,
+    datum_azuriranja DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Testni podaci
+INSERT INTO users (username, password, email, role) VALUES
+('admin', '$2b$10$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX', 'admin@parfumerija.com', 'ADMIN'),
+('prodavac1', '$2b$10$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX', 'prodavac1@parfumerija.com', 'SELLER');

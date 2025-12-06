@@ -7,19 +7,31 @@ import { RegistrationUserDTO } from "../Domain/DTOs/RegistrationUserDTO";
 import { AuthResponseType } from "../Domain/types/AuthResponse";
 
 export class AuthService implements IAuthService {
-  private readonly saltRounds: number = parseInt(process.env.SALT_ROUNDS || "10", 10);
+  private readonly saltRounds: number;
 
-  constructor(private userRepository: Repository<User>) {}
+  constructor(private readonly userRepository: Repository<User>) {
+    this.saltRounds = parseInt(process.env.SALT_ROUNDS || "10", 10);
+  }
 
-  /**
-   * Login user
-   */
   async login(data: LoginUserDTO): Promise<AuthResponseType> {
-    const user = await this.userRepository.findOne({ where: { username: data.username } });
-    if (!user) return { authenificated: false };
+    console.log("[AuthService] Login attempt for:", data.username);
+
+    const user = await this.userRepository.findOne({
+      where: { username: data.username },
+    });
+
+    console.log("[AuthService] User found:", user ? "YES" : "NO");
+
+    if (!user) {
+      return { authenificated: false, message: "User not found" };
+    }
 
     const passwordMatches = await bcrypt.compare(data.password, user.password);
-    if (!passwordMatches) return { authenificated: false };
+    console.log("[AuthService] Password matches:", passwordMatches);
+
+    if (!passwordMatches) {
+      return { authenificated: false, message: "Invalid password" };
+    }
 
     return {
       authenificated: true,
@@ -27,28 +39,33 @@ export class AuthService implements IAuthService {
         id: user.id,
         username: user.username,
         role: user.role,
+        firstName: user.firstName ?? undefined,
+        lastName: user.lastName ?? undefined,
       },
     };
   }
 
-  /**
-   * Register new user
-   */
   async register(data: RegistrationUserDTO): Promise<AuthResponseType> {
-    // Check if username or email already exists
     const existingUser = await this.userRepository.findOne({
       where: [{ username: data.username }, { email: data.email }],
     });
 
-    if (existingUser) return { authenificated: false };
+    if (existingUser) {
+      return {
+        authenificated: false,
+        message: "Username or email already exists",
+      };
+    }
 
     const hashedPassword = await bcrypt.hash(data.password, this.saltRounds);
 
     const newUser = this.userRepository.create({
       username: data.username,
       email: data.email,
-      role: data.role,
       password: hashedPassword,
+      firstName: data.firstName ?? null,
+      lastName: data.lastName ?? null,
+      role: data.role,
       profileImage: data.profileImage ?? null,
     });
 
@@ -60,6 +77,8 @@ export class AuthService implements IAuthService {
         id: savedUser.id,
         username: savedUser.username,
         role: savedUser.role,
+        firstName: savedUser.firstName ?? undefined,
+        lastName: savedUser.lastName ?? undefined,
       },
     };
   }

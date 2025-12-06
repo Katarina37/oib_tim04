@@ -1,6 +1,7 @@
 import { AuthTokenClaims } from "./AuthTokenClaims";
 
 export type AuthResponseType = {
-    authenificated: boolean;
-    userData?: AuthTokenClaims;
-}
+  authenificated: boolean;
+  userData?: AuthTokenClaims;
+  message?: string;
+};
