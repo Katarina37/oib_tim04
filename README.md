@@ -1,472 +1,904 @@
 <div align="center">
 
-<!-- Animated Header -->
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12,14,30&height=300&section=header&text=Парфимерија%20O'Signel%20De%20Or&fontSize=50&fontColor=fff&animation=fadeIn&fontAlignY=38&desc=🌸%20Luxury%20Perfumery%20Information%20System%20🌸&descAlignY=55&descAlign=50" width="100%"/>
+<!-- Animirani Header sa Gradijentom -->
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,25:161b22,50:1f6feb,75:238636,100:8957e5&height=280&section=header&text=Osnove%20Informacione%20Bezbednosti&fontSize=40&fontColor=ffffff&animation=twinkling&fontAlignY=32&desc=🔐%20Projektni%20Zadatak%20•%202025/2026%20🔐&descAlignY=52&descSize=20" width="100%"/>
 
-<!-- Animated Logo -->
-<img src="https://readme-typing-svg.herokuapp.com?font=Playfair+Display&weight=700&size=28&duration=4000&pause=1000&color=C9A227&center=true&vCenter=true&multiline=true&repeat=false&width=700&height=100&lines=✨+The+Art+of+French+Perfumery+✨;Since+Paris%2C+France" alt="Typing SVG" />
-
-<br/>
-
-<!-- Badges Row 1 -->
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Electron](https://img.shields.io/badge/Electron-47848F?style=for-the-badge&logo=electron&logoColor=white)](https://www.electronjs.org/)
-[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com/)
-
-<!-- Badges Row 2 -->
-[![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
-[![TypeORM](https://img.shields.io/badge/TypeORM-FE0803?style=for-the-badge&logo=typeorm&logoColor=white)](https://typeorm.io/)
-[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+<!-- Typing Animacija -->
+<a href="#">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&duration=3000&pause=1000&color=58A6FF&center=true&vCenter=true&multiline=true&repeat=true&width=700&height=80&lines=🏗️+Mikroservisna+Arhitektura;🔒+JWT+Autentifikacija+•+Heširanje+Lozinki;⚡+SOLID+Principi+•+Čista+Arhitektura" alt="Typing SVG" />
+</a>
 
 <br/>
 
-<!-- Stats Badges -->
-![Stars](https://img.shields.io/github/stars/your-username/osignel-de-or?style=social)
-![Forks](https://img.shields.io/github/forks/your-username/osignel-de-or?style=social)
-![Issues](https://img.shields.io/github/issues/your-username/osignel-de-or?color=gold)
-![License](https://img.shields.io/badge/license-MIT-gold)
+<!-- Animirana Linija -->
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
 
 <br/>
 
-<!-- Decorative Divider -->
+<!-- Tech Stack Badges sa Bojama -->
+<p>
+  <img src="https://img.shields.io/badge/🖥️_Electron-47848F?style=for-the-badge&logoColor=white" alt="Electron"/>
+  <img src="https://img.shields.io/badge/⚙️_Node.js-339933?style=for-the-badge&logoColor=white" alt="Node.js"/>
+  <img src="https://img.shields.io/badge/🗄️_MySQL-4479A1?style=for-the-badge&logoColor=white" alt="MySQL"/>
+  <img src="https://img.shields.io/badge/🔗_TypeORM-FE0803?style=for-the-badge&logoColor=white" alt="TypeORM"/>
+</p>
+
+<!-- Dodatni Badges -->
+<p>
+  <img src="https://img.shields.io/badge/Verzija-1.0.0-blue?style=flat-square&logo=semver" alt="Version"/>
+  <img src="https://img.shields.io/badge/Status-U_Izradi-yellow?style=flat-square" alt="Status"/>
+  <img src="https://img.shields.io/badge/Licenca-MIT-green?style=flat-square" alt="License"/>
+  <img src="https://img.shields.io/badge/Mikroservisa-9-purple?style=flat-square" alt="Microservices"/>
+  <img src="https://img.shields.io/badge/Baza-MySQL-orange?style=flat-square&logo=mysql" alt="Database"/>
+</p>
+
 <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
 
 </div>
 
-## 🌹 О Пројекту | About
+<br/>
 
-<img align="right" width="300" src="https://media.giphy.com/media/SWoSkN6DxTszqIKEqv/giphy.gif" alt="coding gif"/>
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+## <img src="https://media.giphy.com/media/iY8CRBdQXODJSCERIr/giphy.gif" width="30"> &nbsp;O Projektu
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
 
-**O'Signel De Or** је софистицирани информациони систем за управљање познатом париском парфимеријом. Систем је изграђен на модерној микросервисној архитектури која обезбеђује скалабилност, сигурност и висок ниво перформанси.
+<img align="right" src="https://media.giphy.com/media/qgQUggAC3Pfv687qPC/giphy.gif" width="320"/>
 
-> *"Perfume is the art that makes memory speak."* — Kenzo Takada
+Kompletan **informacioni sistem** implementiran kroz mikroservisnu arhitekturu sa posebnim fokusom na **bezbednosne aspekte**.
 
-### ✨ Кључне карактеристике
+<br/>
 
-- 🔐 **Сигурна аутентификација** — JWT токени са хеширањем лозинки
-- 🏭 **Микросервисна архитектура** — 9 независних сервиса
-- 📊 **Напредна аналитика** — Извештаји о продаји и перформансама
-- 🎨 **Модеран UI** — Electron + Vite.js клијентска апликација
-- 📝 **Евиденција догађаја** — Комплетан audit log систем
+### ✨ Ključne Karakteristike
+
+- 🏗️ **9 nezavisnih mikroservisa**
+- 🌐 **Centralizovani API Gateway**
+- 🖥️ **Desktop klijentska aplikacija**
+- 🔐 **JWT autentifikacija**
+- 🛡️ **RBAC kontrola pristupa**
+- 📝 **Kompletan audit trail**
 
 <br clear="right"/>
 
----
+<br/>
 
-## 🏛️ Архитектура система
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+## <img src="https://media.giphy.com/media/W5eoZHPpUx9sapR0eu/giphy.gif" width="30"> &nbsp;Članovi Tima
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
+<table>
+<tr>
+<td>
+
+| &nbsp;&nbsp;&nbsp;🎓&nbsp;&nbsp;&nbsp; | Indeks | Ime i Prezime |
+|:---:|:---|:---|
+| 👩‍💻 | `PR 62/2022` | **Lazić Katarina** |
+| 👨‍💻 | `PR 55/2022` | **Simić Slaviša** |
+| 👩‍💻 | `PR 36/2022` | **Misić Jovana** |
+| 👩‍💻 | `PR 42/2022` | **Stojković Andrijana** |
+| 👩‍💻 | `PR 7/2022` | **Vasić Nikolina** |
+| 👩‍💻 | `PR 11/2022` | **Ćurčić Milica** |
+
+</td>
+<td>
+
+<img src="https://media.giphy.com/media/L1R1tvI9svkIWwpVYr/giphy.gif" width="300"/>
+
+</td>
+</tr>
+</table>
+
+<br/>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+## <img src="https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif" width="30"> &nbsp;Arhitektura Sistema
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
+<div align="center">
+<br/>
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#1f6feb', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#58a6ff', 'lineColor': '#8957e5', 'secondaryColor': '#238636', 'tertiaryColor': '#161b22', 'background': '#0d1117', 'mainBkg': '#161b22', 'nodeBorder': '#30363d'}}}%%
+
+flowchart TB
+    subgraph CLIENT["<b>🖥️ KLIJENT</b>"]
+        direction TB
+        E["<b>Electron</b><br/>Desktop Aplikacija"]
+    end
+
+    subgraph GATEWAY["<b>🌐 API GATEWAY</b>"]
+        direction TB
+        G["<b>Rutiranje</b><br/>Autentifikacija & Autorizacija"]
+    end
+
+    subgraph SERVICES["<b>⚙️ MIKROSERVISI</b>"]
+        direction TB
+        
+        subgraph AUTH["🔐 Autentifikacija"]
+            A1["Prijava / Registracija"]
+        end
+        
+        subgraph USER["👤 Korisnici"]
+            U1["CRUD Operacije"]
+        end
+        
+        subgraph PROD["🌱 Proizvodnja"]
+            P1["Sađenje / Branje"]
+        end
+        
+        subgraph PROC["⚗️ Prerada"]
+            PR1["Kreiranje Parfema"]
+        end
+        
+        subgraph STOR["📦 Skladištenje"]
+            S1["Pakovanje / Slanje"]
+        end
+        
+        subgraph SALE["🛒 Prodaja"]
+            SA1["Katalog / Porudžbine"]
+        end
+        
+        subgraph ANAL["📊 Analiza"]
+            AN1["Izveštaji / Statistika"]
+        end
+        
+        subgraph PERF["⚡ Performanse"]
+            PE1["Simulacija / Optimizacija"]
+        end
+        
+        subgraph AUDIT["📝 Evidencija"]
+            AU1["Logovanje Događaja"]
+        end
+    end
+
+    subgraph DATABASE["<b>🗄️ MySQL BAZE PODATAKA</b>"]
+        direction LR
+        DB1[("korisnici")]
+        DB2[("proizvodnja")]
+        DB3[("prerada")]
+        DB4[("skladista")]
+        DB5[("prodaja")]
+        DB6[("izvestaji_analize")]
+        DB7[("izvestaji_performanse")]
+        DB8[("audit_logovi")]
+    end
+
+    E <===> G
+    G <---> AUTH & USER & PROD & PROC & STOR & SALE & ANAL & PERF & AUDIT
+
+    AUTH & USER --> DB1
+    PROD --> DB2
+    PROC --> DB3
+    STOR --> DB4
+    SALE --> DB5
+    ANAL --> DB6
+    PERF --> DB7
+    AUDIT --> DB8
+
+    style CLIENT fill:#238636,stroke:#3fb950,stroke-width:3px,color:#ffffff
+    style GATEWAY fill:#1f6feb,stroke:#58a6ff,stroke-width:3px,color:#ffffff
+    style SERVICES fill:#161b22,stroke:#8957e5,stroke-width:2px
+    style DATABASE fill:#0d1117,stroke:#f78166,stroke-width:2px
+```
+
+<br/>
+</div>
+
+<br/>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+## <img src="https://media.giphy.com/media/VgCDAzcKvsR6OM0uWg/giphy.gif" width="30"> &nbsp;Bezbednosne Karakteristike
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
+<table>
+<tr>
+<td width="50%">
+
+### 🔑 Autentifikacija
+```
+┌────────────────────────────────────┐
+│  ✅ JWT Tokeni                     │
+│  ✅ Refresh Token mehanizam        │
+│  ✅ Sesije sa vremenskim limitom   │
+│  ✅ Validacija na svakom zahtevu   │
+└────────────────────────────────────┘
+```
+
+### 🔒 Zaštita Podataka
+```
+┌────────────────────────────────────┐
+│  ✅ Bcrypt heširanje lozinki       │
+│  ✅ Saltovanje                     │
+│  ✅ Enkripcija osetljivih polja    │
+│  ✅ SQL injection prevencija       │
+└────────────────────────────────────┘
+```
+
+</td>
+<td width="50%">
+
+### 🛡️ Mrežna Bezbednost
+```
+┌────────────────────────────────────┐
+│  ✅ CORS konfiguracija             │
+│  ✅ Rate limiting                  │
+│  ✅ Request validacija             │
+│  ✅ Sanitizacija inputa            │
+└────────────────────────────────────┘
+```
+
+### 📋 Revizija i Praćenje
+```
+┌────────────────────────────────────┐
+│  ✅ Kompletan audit trail          │
+│  ✅ INFO / WARNING / ERROR logovi  │
+│  ✅ Praćenje svih akcija           │
+│  ✅ Vremenske oznake               │
+└────────────────────────────────────┘
+```
+
+</td>
+</tr>
+</table>
+
+<br/>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+## <img src="https://media.giphy.com/media/ZCN6F3FAkwsyOGU2RS/giphy.gif" width="30"> &nbsp;Korisničke Uloge
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
+<table>
+<tr>
+<td align="center" width="33%">
+
+### 🛡️ Administrator
+
+<img src="https://img.shields.io/badge/-ADMIN-dc3545?style=for-the-badge" alt="Admin"/>
+
+```
+╔═══════════════════════════╗
+║  📊 Analiza performansi   ║
+║  📝 Evidencija događaja   ║
+║  📈 Analiza podataka      ║
+║  ⚙️  Upravljanje sistemom  ║
+╚═══════════════════════════╝
+```
+
+**Pristup servisima:**
+- ⚡ Analiza Performansi
+- 📝 Evidencija Događaja  
+- 📊 Analiza Podataka
+
+</td>
+<td align="center" width="33%">
+
+### 📊 Menadžer Prodaje
+
+<img src="https://img.shields.io/badge/-MENADŽER-ffc107?style=for-the-badge&logoColor=black" alt="Manager"/>
+
+```
+╔═══════════════════════════╗
+║  🏭 Distributivni centar  ║
+║  📦 3 ambalaže / slanje   ║
+║  ⏱️  0.5s vreme obrade     ║
+║  🧾 Svi fiskalni računi   ║
+╚═══════════════════════════╝
+```
+
+**Pristup servisima:**
+- 🌱 Proizvodnja
+- ⚗️ Prerada
+- 📦 Skladištenje
+- 🛒 Prodaja
+
+</td>
+<td align="center" width="33%">
+
+### 🛒 Prodavac
+
+<img src="https://img.shields.io/badge/-PRODAVAC-28a745?style=for-the-badge" alt="Seller"/>
+
+```
+╔═══════════════════════════╗
+║  🏪 Magacinski centar     ║
+║  📦 1 ambalaža / slanje   ║
+║  ⏱️  2.5s vreme obrade     ║
+║  🧾 Kreiranje računa      ║
+╚═══════════════════════════╝
+```
+
+**Pristup servisima:**
+- 🌱 Proizvodnja
+- ⚗️ Prerada
+- 📦 Skladištenje
+- 🛒 Prodaja
+
+</td>
+</tr>
+</table>
+
+<br/>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+## <img src="https://media.giphy.com/media/WFZvB7VIXBgiz3oDXE/giphy.gif" width="30"> &nbsp;Pregled Mikroservisa
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
+<details>
+<summary>
+<img src="https://img.shields.io/badge/🔐-Servis_za_Autentifikaciju-1f6feb?style=flat-square" alt="Auth"/>
+&nbsp;<b>Klikni za detalje</b>
+</summary>
+
+<br/>
+
+| Komponenta | Opis |
+|:---|:---|
+| 📁 **Baza podataka** | `korisnici` |
+| 🔧 **Funkcionalnosti** | Registracija, Prijava, JWT generisanje |
+| ✅ **Validacije** | Email format, jačina lozinke, jedinstvenost korisničkog imena |
+
+```javascript
+// Primer JWT payload-a
+{
+  "userId": 1,
+  "username": "korisnik",
+  "role": "PRODAVAC",
+  "iat": 1699999999,
+  "exp": 1700001799
+}
+```
+
+</details>
+
+<details>
+<summary>
+<img src="https://img.shields.io/badge/👤-Servis_za_Upravljanje_Korisnicima-238636?style=flat-square" alt="Users"/>
+&nbsp;<b>Klikni za detalje</b>
+</summary>
+
+<br/>
+
+| Komponenta | Opis |
+|:---|:---|
+| 📁 **Baza podataka** | `korisnici` |
+| 🔧 **Funkcionalnosti** | Dodavanje, Ažuriranje, Brisanje, Pretraga |
+| 📋 **Atributi korisnika** | ID, Korisničko ime, Email, Ime, Prezime, Profilna slika (base64), Uloga |
+
+</details>
+
+<details>
+<summary>
+<img src="https://img.shields.io/badge/🌱-Servis_za_Proizvodnju-3fb950?style=flat-square" alt="Production"/>
+&nbsp;<b>Klikni za detalje</b>
+</summary>
+
+<br/>
+
+| Komponenta | Opis |
+|:---|:---|
+| 📁 **Baza podataka** | `proizvodnja` |
+| 🔧 **Funkcionalnosti** | Sađenje biljaka, Promena jačine ulja, Branje |
+
+**Atributi biljke:**
+| Atribut | Tip | Opis |
+|:---|:---|:---|
+| `opsti_naziv` | string | Naziv biljke |
+| `jacina_ulja` | float | Vrednost 1.0 - 5.0 |
+| `latinski_naziv` | string | Latinski naziv |
+| `zemlja_porekla` | string | Država porekla |
+| `stanje` | enum | POSAĐENA / UBRANA / PRERAĐENA |
+
+</details>
+
+<details>
+<summary>
+<img src="https://img.shields.io/badge/⚗️-Servis_za_Preradu-8957e5?style=flat-square" alt="Processing"/>
+&nbsp;<b>Klikni za detalje</b>
+</summary>
+
+<br/>
+
+| Komponenta | Opis |
+|:---|:---|
+| 📁 **Baza podataka** | `prerada` |
+| 🔧 **Funkcionalnosti** | Prerada biljaka u parfeme, Balansiranje jačine ulja |
+| 📐 **Formula** | 1 biljka = 50ml parfema |
+| 🏷️ **Serijski broj** | `PP-2025-{ID_PARFEMA}` |
+
+**Atributi parfema:**
+| Atribut | Tip | Opis |
+|:---|:---|:---|
+| `naziv` | string | Naziv parfema |
+| `tip` | enum | PARFEM / KOLONJSKA_VODA |
+| `neto_kolicina` | int | 150ml ili 250ml |
+| `rok_trajanja` | date | Datum isteka |
+
+> ⚠️ **Napomena:** Ako jačina ulja prelazi 4.0, sistem automatski sadi novu biljku i balansira vrednosti.
+
+</details>
+
+<details>
+<summary>
+<img src="https://img.shields.io/badge/📦-Servis_za_Skladištenje-f78166?style=flat-square" alt="Storage"/>
+&nbsp;<b>Klikni za detalje</b>
+</summary>
+
+<br/>
+
+| Komponenta | Opis |
+|:---|:---|
+| 📁 **Baza podataka** | `skladista` |
+| 🔧 **Funkcionalnosti** | Pakovanje parfema, Slanje ambalaža, Upravljanje kapacitetom |
+
+**Tipovi skladišta:**
+
+| Tip | Korisnik | Kapacitet | Vreme |
+|:---|:---|:---:|:---:|
+| 🏭 **Distributivni centar** | Menadžer | 3 ambalaže | 0.5s |
+| 🏪 **Magacinski centar** | Prodavac | 1 ambalaža | 2.5s |
+
+</details>
+
+<details>
+<summary>
+<img src="https://img.shields.io/badge/🛒-Servis_za_Prodaju-ea4aaa?style=flat-square" alt="Sales"/>
+&nbsp;<b>Klikni za detalje</b>
+</summary>
+
+<br/>
+
+| Komponenta | Opis |
+|:---|:---|
+| 📁 **Baza podataka** | `prodaja` |
+| 🔧 **Funkcionalnosti** | Katalog proizvoda, Poručivanje, Raspakivanje ambalaža |
+
+**Fiskalni račun sadrži:**
+- 📋 Tip prodaje (MALOPRODAJA / VELEPRODAJA)
+- 💳 Način plaćanja (GOTOVINA / KARTICA / UPLATA)
+- 🧴 Lista parfema sa količinama
+- 💰 Ukupan iznos
+
+</details>
+
+<details>
+<summary>
+<img src="https://img.shields.io/badge/📊-Servis_za_Analizu_Podataka-0969da?style=flat-square" alt="Analytics"/>
+&nbsp;<b>Klikni za detalje</b>
+</summary>
+
+<br/>
+
+| Komponenta | Opis |
+|:---|:---|
+| 📁 **Baza podataka** | `izvestaji_analize` |
+| 🔧 **Funkcionalnosti** | Kreiranje izveštaja, Analiza prodaje, PDF izvoz |
+
+**Dostupne analize:**
+- 📅 Prodaja po mesecu / nedelji / godini
+- 📈 Trend analiza
+- 🏆 Top 10 najprodavanijih parfema
+- 💰 Ukupan prihod po kategorijama
+
+</details>
+
+<details>
+<summary>
+<img src="https://img.shields.io/badge/⚡-Servis_za_Analizu_Performansi-ffd33d?style=flat-square&logoColor=black" alt="Performance"/>
+&nbsp;<b>Klikni za detalje</b>
+</summary>
+
+<br/>
+
+| Komponenta | Opis |
+|:---|:---|
+| 📁 **Baza podataka** | `izvestaji_performanse` |
+| 🔧 **Funkcionalnosti** | Simulacija algoritama, Poređenje efikasnosti, Optimizacija |
+
+**Metrike:**
+- ⏱️ Vreme obrade
+- 📊 Propusnost sistema
+- 🎯 Efikasnost algoritama
+- 💡 Preporuke za poboljšanje
+
+</details>
+
+<details>
+<summary>
+<img src="https://img.shields.io/badge/📝-Servis_za_Evidenciju_Događaja-6e7681?style=flat-square" alt="Audit"/>
+&nbsp;<b>Klikni za detalje</b>
+</summary>
+
+<br/>
+
+| Komponenta | Opis |
+|:---|:---|
+| 📁 **Baza podataka** | `audit_logovi` |
+| 🔧 **Funkcionalnosti** | Logovanje svih akcija, Pretraga, Filtriranje |
+
+**Tipovi zapisa:**
+
+| Tip | Boja | Opis |
+|:---|:---:|:---|
+| `INFO` | 🟢 | Standardne operacije |
+| `WARNING` | 🟡 | Upozorenja i anomalije |
+| `ERROR` | 🔴 | Greške u sistemu |
+
+</details>
+
+<br/>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+## <img src="https://media.giphy.com/media/fwbZnTftCXVocKzfxR/giphy.gif" width="30"> &nbsp;Dijagram Entiteta
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
 
 <div align="center">
 
 ```mermaid
-flowchart TB
-    subgraph Client ["🖥️ Electron Client"]
-        EC[Vite.js App]
-    end
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#238636', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#3fb950', 'lineColor': '#8957e5', 'secondaryColor': '#1f6feb', 'tertiaryColor': '#161b22'}}}%%
+
+erDiagram
+    KORISNIK {
+        int id PK "🔑 Primarni ključ"
+        varchar korisnicko_ime UK "👤 Jedinstveno"
+        varchar lozinka "🔒 Heširano"
+        varchar email "📧 Email adresa"
+        varchar ime "📝 Ime"
+        varchar prezime "📝 Prezime"
+        text profilna_slika "🖼️ Base64"
+        enum uloga "🎭 ADMIN/MENADZER/PRODAVAC"
+    }
     
-    subgraph Gateway ["🚪 API Gateway"]
-        GW[Traffic Router]
-        AUTH[Auth & Authorization]
-    end
+    BILJKA {
+        int id PK "🔑 Primarni ključ"
+        varchar opsti_naziv "🌿 Naziv"
+        decimal jacina_ulja "💧 1.0 - 5.0"
+        varchar latinski_naziv "🔬 Latinski"
+        varchar zemlja_porekla "🌍 Država"
+        enum stanje "📊 Status"
+    }
     
-    subgraph Services ["⚙️ Microservices"]
-        direction TB
-        AS[🔐 Auth Service]
-        US[👤 User Service]
-        PS[🌱 Production Service]
-        PRS[⚗️ Processing Service]
-        PKS[📦 Packaging Service]
-        SS[🏭 Storage Service]
-        SLS[💰 Sales Service]
-        DAS[📊 Data Analysis]
-        PAS[📈 Performance Analysis]
-        ELS[📝 Event Logging]
-    end
+    PARFEM {
+        int id PK "🔑 Primarni ključ"
+        varchar naziv "🧴 Naziv parfema"
+        enum tip "📦 PARFEM/KOLONJSKA"
+        int neto_kolicina "📏 ml"
+        varchar serijski_broj "🏷️ PP-2025-ID"
+        int biljka_id FK "🔗 Referenca"
+        date rok_trajanja "📅 Datum"
+    }
     
-    subgraph Databases ["🗄️ Databases"]
-        DB1[(korisnici)]
-        DB2[(proizvodnja)]
-        DB3[(prerada)]
-        DB4[(skladista)]
-        DB5[(prodaja)]
-        DB6[(izvestaji_analize)]
-        DB7[(izvestaji_performanse)]
-        DB8[(audit_logovi)]
-    end
+    AMBALAZA {
+        int id PK "🔑 Primarni ključ"
+        varchar naziv "📦 Naziv"
+        varchar adresa_posiljaoca "📍 Adresa"
+        int skladiste_id FK "🔗 Referenca"
+        enum status "📊 SPAKOVANA/POSLATA"
+    }
     
-    EC --> GW
-    GW --> AUTH
-    AUTH --> AS
-    GW --> US --> DB1
-    GW --> PS --> DB2
-    GW --> PRS --> DB3
-    GW --> PKS --> DB3
-    GW --> SS --> DB4
-    GW --> SLS --> DB5
-    GW --> DAS --> DB6
-    GW --> PAS --> DB7
-    GW --> ELS --> DB8
+    SKLADISTE {
+        int id PK "🔑 Primarni ključ"
+        varchar naziv "🏭 Naziv"
+        varchar lokacija "📍 Lokacija"
+        int max_kapacitet "📊 Maksimum"
+    }
     
-    style Client fill:#1a1a2e,stroke:#c9a227,color:#fff
-    style Gateway fill:#16213e,stroke:#c9a227,color:#fff
-    style Services fill:#0f3460,stroke:#c9a227,color:#fff
-    style Databases fill:#1a1a2e,stroke:#c9a227,color:#fff
+    FISKALNI_RACUN {
+        int id PK "🔑 Primarni ključ"
+        enum tip_prodaje "🏪 MALO/VELO"
+        enum nacin_placanja "💳 Način"
+        decimal iznos "💰 RSD"
+        datetime datum "📅 Vreme"
+    }
+    
+    AUDIT_LOG {
+        int id PK "🔑 Primarni ključ"
+        enum tip "📊 INFO/WARN/ERROR"
+        datetime datum_vreme "⏰ Timestamp"
+        text opis "📝 Detalji"
+    }
+
+    BILJKA ||--o{ PARFEM : "prerađuje se"
+    PARFEM }o--|| AMBALAZA : "pakuje se"
+    AMBALAZA }o--|| SKLADISTE : "skladišti se"
+    FISKALNI_RACUN }o--o{ PARFEM : "sadrži"
 ```
 
 </div>
 
----
+<br/>
 
-## 🎭 Улоге корисника
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+## <img src="https://media.giphy.com/media/LnQjpWaON8nhr21vNW/giphy.gif" width="30"> &nbsp;Tok Podataka - Proces Prodaje
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
 
 <div align="center">
 
-| Улога | Приступ | Опис |
-|:---:|:---|:---|
-| 🔴 **Администратор** | Аналитика, Евиденција, Перформансе | Комплетан увид у системске извештаје |
-| 🟡 **Менаџер продаје** | Дистрибутивни центар (3 амбалаже/0.5s) | Велепродајне операције |
-| 🟢 **Продавац** | Магацински центар (1 амбалажа/2.5s) | Малопродајне операције |
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#1f6feb', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#58a6ff', 'actorLineColor': '#8957e5', 'signalColor': '#3fb950', 'signalTextColor': '#ffffff'}}}%%
+
+sequenceDiagram
+    autonumber
+    
+    actor K as 🖥️ Klijent
+    participant G as 🌐 Gateway
+    participant P as 🛒 Prodaja
+    participant S as 📦 Skladište
+    participant A as 📊 Analiza
+    participant L as 📝 Audit Log
+
+    rect rgb(31, 111, 235, 0.1)
+        Note over K,L: 📋 PREGLED KATALOGA
+        K->>+G: GET /katalog
+        G->>+P: Prosleđivanje zahteva
+        P->>L: 📝 INFO: Zahtev za katalog
+        P-->>-G: Lista parfema ✅
+        G-->>-K: Prikaz kataloga
+    end
+
+    rect rgb(35, 134, 54, 0.1)
+        Note over K,L: 🛒 KREIRANJE PORUDŽBINE
+        K->>+G: POST /porudzbina
+        G->>+P: Podaci o porudžbini
+        P->>+S: Zahtev za ambalaže
+        S->>L: 📝 INFO: Slanje ambalaža
+        S-->>-P: Ambalaže ✅
+        P->>P: 📦 Raspakivanje
+        P->>+A: Podaci za fiskalni račun
+        A->>A: 🧾 Kreiranje računa
+        A->>L: 📝 INFO: Račun kreiran
+        A-->>-P: Fiskalni račun ✅
+        P->>L: 📝 INFO: Prodaja završena
+        P-->>-G: Potvrda + račun
+        G-->>-K: 🎉 Uspešna kupovina
+    end
+```
 
 </div>
 
----
-
-## 📦 Ентитети
-
-<details>
-<summary>🌿 <b>Биљка (Plant)</b></summary>
 <br/>
 
-```typescript
-interface Biljka {
-  id: number;
-  opstiNaziv: string;           // Општи назив
-  jacinaAromaticnihUlja: number; // 1.0 - 5.0
-  latinskiNaziv: string;        // Латински назив
-  zemljaPorekla: string;        // Земља порекла
-  stanje: 'POSADJANA' | 'UBRANA' | 'PRERADJENA';
-}
-```
-</details>
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+## <img src="https://media.giphy.com/media/UVG0BN8TOMKkPOJS6e/giphy.gif" width="30"> &nbsp;Struktura Projekta
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
 
-<details>
-<summary>🧴 <b>Парфем (Perfume)</b></summary>
+```
+📦 oib-projekat/
+│
+├── 🖥️ klijent/                              # Electron Desktop Aplikacija
+│   ├── 📂 src/
+│   │   ├── 📂 komponente/                   # Vue/React komponente
+│   │   │   ├── 📄 Navbar.vue
+│   │   │   ├── 📄 Sidebar.vue
+│   │   │   └── 📄 ...
+│   │   ├── 📂 stranice/                     # Prikazi stranica
+│   │   │   ├── 📄 Prijava.vue
+│   │   │   ├── 📄 Proizvodnja.vue
+│   │   │   ├── 📄 Prerada.vue
+│   │   │   └── 📄 ...
+│   │   ├── 📂 servisi/                      # API servisi
+│   │   │   ├── 📄 AuthServis.js
+│   │   │   ├── 📄 KorisnikServis.js
+│   │   │   └── 📄 ...
+│   │   └── 📂 pomocnici/                    # Utility funkcije
+│   ├── 📄 main.js                           # Electron main process
+│   ├── 📄 preload.js                        # Preload script
+│   └── 📄 package.json
+│
+├── ⚙️ servisi/
+│   ├── 📂 gateway/                          # 🌐 API Gateway
+│   │   ├── 📂 src/
+│   │   │   ├── 📂 middleware/
+│   │   │   │   ├── 📄 auth.middleware.js
+│   │   │   │   └── 📄 cors.middleware.js
+│   │   │   ├── 📂 routes/
+│   │   │   └── 📄 index.js
+│   │   └── 📄 package.json
+│   │
+│   ├── 📂 autentifikacija/                  # 🔐 Auth Servis
+│   │   ├── 📂 src/
+│   │   │   ├── 📂 controllers/
+│   │   │   ├── 📂 services/
+│   │   │   └── 📂 entities/
+│   │   └── 📄 package.json
+│   │
+│   ├── 📂 korisnici/                        # 👤 User Servis
+│   ├── 📂 proizvodnja/                      # 🌱 Production Servis
+│   ├── 📂 prerada/                          # ⚗️ Processing Servis
+│   ├── 📂 skladistenje/                     # 📦 Storage Servis
+│   ├── 📂 prodaja/                          # 🛒 Sales Servis
+│   ├── 📂 analiza-podataka/                 # 📊 Analytics Servis
+│   ├── 📂 analiza-performansi/              # ⚡ Performance Servis
+│   └── 📂 evidencija/                       # 📝 Audit Servis
+│
+├── 📂 deljeno/                              # Zajednički kod
+│   ├── 📂 entiteti/                         # TypeORM entiteti
+│   ├── 📂 interfejsi/                       # TypeScript interfejsi
+│   ├── 📂 dto/                              # Data Transfer Objects
+│   └── 📂 konstante/                        # Konstante i enumi
+│
+├── 📂 baza/
+│   └── 📄 init.sql                          # Inicijalni podaci
+│
+├── 🐳 docker-compose.yml                    # Docker konfiguracija
+├── ⚙️ .env.example                          # Primer env fajla
+├── 📖 README.md                             # Dokumentacija
+└── 📄 package.json                          # Root package.json
+```
+
 <br/>
 
-```typescript
-interface Parfem {
-  id: number;
-  naziv: string;
-  tip: 'PARFEM' | 'KOLONJSKA_VODA';
-  netoKolicina: 150 | 250;       // ml
-  serijskiBroj: string;          // PP-2025-{ID}
-  biljkaId: number;
-  rokTrajanja: Date;
-}
-```
-</details>
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+## <img src="https://media.giphy.com/media/jSKBmKkvo2dPQQtsR1/giphy.gif" width="30"> &nbsp;Konfiguracija
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
 
-<details>
-<summary>📦 <b>Амбалажа (Packaging)</b></summary>
+<table>
+<tr>
+<td>
+
+### 🗄️ Baza Podataka
+```env
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=root
+DB_PASSWORD=your_password
+DB_NAME=oib_projekat
+```
+
+</td>
+<td>
+
+### 🔐 JWT Konfiguracija
+```env
+JWT_SECRET=super_tajna_vrednost
+JWT_EXPIRATION=30m
+JWT_REFRESH_EXPIRATION=7d
+```
+
+</td>
+</tr>
+<tr>
+<td>
+
+### 🌐 Gateway
+```env
+GATEWAY_PORT=3000
+GATEWAY_HOST=localhost
+```
+
+</td>
+<td>
+
+### 🛡️ CORS
+```env
+ALLOWED_ORIGINS=http://localhost:3000
+ALLOWED_METHODS=GET,POST,PUT,DELETE
+ALLOWED_HEADERS=Content-Type,Authorization
+```
+
+</td>
+</tr>
+</table>
+
+**URL adrese mikroservisa:**
+```env
+AUTH_SERVICE_URL=http://localhost:3001
+USER_SERVICE_URL=http://localhost:3002
+PRODUCTION_SERVICE_URL=http://localhost:3003
+PROCESSING_SERVICE_URL=http://localhost:3004
+STORAGE_SERVICE_URL=http://localhost:3005
+SALES_SERVICE_URL=http://localhost:3006
+ANALYTICS_SERVICE_URL=http://localhost:3007
+PERFORMANCE_SERVICE_URL=http://localhost:3008
+AUDIT_SERVICE_URL=http://localhost:3009
+```
+
 <br/>
 
-```typescript
-interface Ambalaza {
-  id: number;
-  naziv: string;
-  adresaPosiljaoca: string;
-  skladisteId: number;
-  parfemiIds: number[];
-  status: 'SPAKOVANA' | 'POSLATA';
-}
-```
-</details>
-
-<details>
-<summary>🏭 <b>Складиште (Warehouse)</b></summary>
-<br/>
-
-```typescript
-interface Skladiste {
-  id: number;
-  naziv: string;
-  lokacija: string;
-  maksimalanBrojAmbalaza: number;
-}
-```
-</details>
-
-<details>
-<summary>🧾 <b>Фискални рачун (Invoice)</b></summary>
-<br/>
-
-```typescript
-interface FiskalniRacun {
-  id: number;
-  tipProdaje: 'MALOPRODAJA' | 'VELEPRODAJA';
-  nacinPlacanja: 'GOTOVINA' | 'UPLATA_NA_RACUN' | 'KARTICNO';
-  stavke: { parfemId: number; kolicina: number }[];
-  ukupanIznos: number;
-}
-```
-</details>
-
----
-
-## 🚀 Инсталација
-
-<div align="center">
-<img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=18&duration=3000&pause=1000&color=C9A227&center=true&vCenter=true&width=500&lines=Let's+get+you+started...;Follow+these+simple+steps!" alt="Installation"/>
-</div>
-
-### Предуслови
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+## <img src="https://media.giphy.com/media/QssGEmpkyEOhBCb7e1/giphy.gif" width="30"> &nbsp;Pokretanje Projekta
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
 
 ```bash
-# Проверите верзије
-node --version  # >= 18.0.0
-npm --version   # >= 9.0.0
-mysql --version # >= 8.0
-```
+# 📥 1. Kloniranje repozitorijuma
+git clone https://github.com/username/oib-projekat.git
+cd oib-projekat
 
-### 1️⃣ Клонирање репозиторијума
+# 📦 2. Instalacija zavisnosti
+npm install
 
-```bash
-git clone https://github.com/your-username/osignel-de-or.git
-cd osignel-de-or
-```
+# ⚙️ 3. Konfiguracija environment varijabli
+cp .env.example .env
+# Urediti .env fajl sa odgovarajućim vrednostima
 
-### 2️⃣ Подешавање окружења
-
-```bash
-# Копирајте .env.example у .env за сваки микросервис
-cp services/auth-service/.env.example services/auth-service/.env
-cp services/user-service/.env.example services/user-service/.env
-# ... понављајте за остале сервисе
-```
-
-### 3️⃣ Инсталација зависности
-
-```bash
-# Инсталација за све сервисе
-npm run install:all
-
-# Или појединачно
-cd services/auth-service && npm install
-cd ../user-service && npm install
-# ...
-```
-
-### 4️⃣ Покретање база података
-
-```bash
-# Са Docker-ом
+# 🐳 4. Pokretanje MySQL baze (Docker)
 docker-compose up -d mysql
 
-# Или локално креирајте базе
-mysql -u root -p < scripts/create-databases.sql
+# ⏳ 5. Sačekati da se baza pokrene, zatim pokrenuti migracije
+npm run migration:run
+
+# 🚀 6. Pokretanje svih mikroservisa
+npm run start:services
+
+# 🖥️ 7. Pokretanje Electron klijenta
+npm run start:client
 ```
-
-### 5️⃣ Покретање микросервиса
-
-```bash
-# Покрените све сервисе
-npm run start:all
-
-# Или појединачно (у различитим терминалима)
-npm run start:gateway     # Port 3000
-npm run start:auth        # Port 3001
-npm run start:users       # Port 3002
-npm run start:production  # Port 3003
-npm run start:processing  # Port 3004
-npm run start:packaging   # Port 3005
-npm run start:storage     # Port 3006
-npm run start:sales       # Port 3007
-npm run start:analytics   # Port 3008
-npm run start:performance # Port 3009
-npm run start:audit       # Port 3010
-```
-
-### 6️⃣ Покретање клијентске апликације
-
-```bash
-cd client
-npm install
-npm run dev
-```
-
----
-
-## 🖼️ Снимци екрана
-
-<div align="center">
-
-### 🔐 Аутентификација
-<img src="https://placehold.co/800x500/1a1a2e/c9a227?text=Authentication+Screen" alt="Auth Screen" style="border-radius: 10px; box-shadow: 0 4px 20px rgba(201, 162, 39, 0.3);"/>
-
-<br/><br/>
-
-### 🌱 Производња
-<img src="https://placehold.co/800x500/16213e/c9a227?text=Production+Service" alt="Production" style="border-radius: 10px;"/>
-
-<br/><br/>
-
-### 📊 Аналитика продаје
-<img src="https://placehold.co/800x500/0f3460/c9a227?text=Sales+Analytics" alt="Analytics" style="border-radius: 10px;"/>
-
-</div>
-
----
-
-## 📁 Структура пројекта
-
-```
-osignel-de-or/
-├── 📂 client/                    # Electron + Vite.js клијент
-│   ├── 📂 src/
-│   │   ├── 📂 components/        # UI компоненте
-│   │   ├── 📂 services/          # Инјектовани сервиси
-│   │   ├── 📂 pages/             # Странице апликације
-│   │   └── 📂 guards/            # Route guards
-│   └── 📄 electron.js
-│
-├── 📂 services/                  # Микросервиси
-│   ├── 📂 gateway/               # API Gateway (Port 3000)
-│   ├── 📂 auth-service/          # Аутентификација (Port 3001)
-│   ├── 📂 user-service/          # Корисници (Port 3002)
-│   ├── 📂 production-service/    # Производња (Port 3003)
-│   ├── 📂 processing-service/    # Прерада (Port 3004)
-│   ├── 📂 packaging-service/     # Паковање (Port 3005)
-│   ├── 📂 storage-service/       # Складиштење (Port 3006)
-│   ├── 📂 sales-service/         # Продаја (Port 3007)
-│   ├── 📂 analytics-service/     # Анализа података (Port 3008)
-│   ├── 📂 performance-service/   # Анализа перформанси (Port 3009)
-│   └── 📂 audit-service/         # Евиденција догађаја (Port 3010)
-│
-├── 📂 shared/                    # Дељени модули
-│   ├── 📂 entities/              # TypeORM ентитети
-│   ├── 📂 interfaces/            # TypeScript интерфејси
-│   └── 📂 utils/                 # Помоћне функције
-
-```
-
----
-
-## 🔒 Безбедност
-
-<div align="center">
-
-| Мера | Имплементација |
-|:---:|:---|
-| 🔑 | Хеширање лозинки (bcrypt) |
-| 🎫 | JWT токени за аутентификацију |
-| 🛡️ | CORS подешавања по микросервису |
-| 🚫 | Gateway-only приступ микросервисима |
-| 📝 | Комплетна евиденција догађаја |
-| ⏱️ | Сесија истиче након 30 минута |
-
-</div>
-
----
-
-## 🧪 SOLID Принципи
-
-<div align="center">
-
-| Принцип | Примена у пројекту |
-|:---:|:---|
-| **S**ingle Responsibility | Сваки микросервис има једну одговорност |
-| **O**pen/Closed | Сервиси прошириви преко интерфејса |
-| **L**iskov Substitution | Дистрибутивни/Магацински центар |
-| **I**nterface Segregation | Специфични интерфејси по сервису |
-| **D**ependency Inversion | Инјектоване зависности свуда |
-
-</div>
-
----
-
-## 📈 Перформансе
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                  ДИСТРИБУТИВНИ ЦЕНТАР                       │
-│  ═══════════════════════════════════════════════════════   │
-│  📦 Амбалаже по слању: 3                                   │
-│  ⏱️  Време обраде: 0.5s                                     │
-│  🚀 Брзина: 6.0 амб/с                                       │
-│  ✅ Ефикасност: 93%                                         │
-│  💼 Оптимално за: Велепродаја, велики обим                 │
-└─────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────┐
-│                   МАГАЦИНСКИ ЦЕНТАР                         │
-│  ═══════════════════════════════════════════════════════   │
-│  📦 Амбалаже по слању: 1                                   │
-│  ⏱️  Време обраде: 2.5s                                     │
-│  🚀 Брзина: 0.4 амб/с                                       │
-│  ✅ Ефикасност: 35%                                         │
-│  💼 Оптимално за: Малопродаја, појединачне                 │
-└─────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 🤝 Допринос пројекту
-
-<div align="center">
-<img src="https://contrib.rocks/image?repo=your-username/osignel-de-or" />
-</div>
-
-```bash
-# 1. Fork репозиторијум
-# 2. Креирајте feature branch
-git checkout -b feature/amazing-feature
-
-# 3. Commit промене
-git commit -m '✨ Add amazing feature'
-
-# 4. Push на branch
-git push origin feature/amazing-feature
-
-# 5. Отворите Pull Request
-```
-
----
-
-## 📜 Лиценца
-
-<div align="center">
-
-Овај пројекат је лиценциран под **MIT** лиценцом.
-
-[Погледајте LICENSE](./LICENSE)
-
-</div>
-
----
-
-## 📞 Контакт
-
-<div align="center">
-
-[![Email](https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:your-email@example.com)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/your-profile)
-[![Portfolio](https://img.shields.io/badge/Portfolio-000000?style=for-the-badge&logo=About.me&logoColor=white)](https://your-portfolio.com)
-
-</div>
-
----
-
-<div align="center">
-
-<!-- Animated Footer -->
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12,14,30&height=150&section=footer&animation=fadeIn" width="100%"/>
 
 <br/>
 
-**TEST**
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+## <img src="https://media.giphy.com/media/cj87CxfRtrUifF3Ris/giphy.gif" width="30"> &nbsp;Tehničke Napomene
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
+| # | 📋 Napomena | ✅ Status |
+|:---:|:---|:---:|
+| 1 | Klijentska aplikacija koristi **Electron** sa **Vite.js** | ✅ |
+| 2 | Samo **Gateway** je javno dostupan klijentskoj aplikaciji | ✅ |
+| 3 | Svaki mikroservis ima **sopstvenu bazu** podataka | ✅ |
+| 4 | Obavezna primena **SOLID** principa i čiste arhitekture | ✅ |
+| 5 | Sve lozinke se **heširaju** pre čuvanja u bazi | ✅ |
+| 6 | Rad sa bazom koristi **TypeORM** | ✅ |
+| 7 | Klijentska aplikacija koristi **injektovane servise** | ✅ |
+| 8 | Sve rute su **zaštićene** od neovlašćenog pristupa | ✅ |
+| 9 | Baza podataka: **MySQL** | ✅ |
+| 10 | Konfiguracija se čuva u **.env** fajlovima | ✅ |
+| 11 | **CORS** mora biti precizno podešen za svaki servis | ✅ |
+| 12 | Projekat mora imati **inicijalne testne podatke** | ✅ |
 
 <br/>
 
-<img src="https://readme-typing-svg.herokuapp.com?font=Playfair+Display&weight=500&size=16&duration=4000&pause=2000&color=C9A227&center=true&vCenter=true&width=500&lines=Made+with+%E2%9D%A4%EF%B8%8F+in+Paris;Основе+информационе+безбедности+2025%2F2026" alt="Footer"/>
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+## <img src="https://media.giphy.com/media/W5eoZHPpUx9sapR0eu/giphy.gif" width="30"> &nbsp;Statistika Projekta
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
+<div align="center">
+
+<table>
+<tr>
+<td align="center">
+<img src="https://img.shields.io/badge/📦_Mikroservisa-9-1f6feb?style=for-the-badge" alt="Microservices"/>
+</td>
+<td align="center">
+<img src="https://img.shields.io/badge/🗄️_Baza_Podataka-8-238636?style=for-the-badge" alt="Databases"/>
+</td>
+<td align="center">
+<img src="https://img.shields.io/badge/👥_Uloga-3-8957e5?style=for-the-badge" alt="Roles"/>
+</td>
+<td align="center">
+<img src="https://img.shields.io/badge/📋_Entiteta-7-f78166?style=for-the-badge" alt="Entities"/>
+</td>
+</tr>
+</table>
+
+<br/>
+
+```
+╔══════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                  ║
+║   🔐 AUTENTIFIKACIJA    →    🌐 GATEWAY    →    ⚙️ MIKROSERVISI    →    🗄️ BAZE   ║
+║                                                                                  ║
+║        JWT Tokeni              Rutiranje           SOLID Principi        MySQL   ║
+║        Heširanje               CORS                TypeORM               8 baza  ║
+║        Sesije                  Auth Check          Clean Architecture            ║
+║                                                                                  ║
+╚══════════════════════════════════════════════════════════════════════════════════╝
+```
+
+</div>
+
+<br/>
+
+---
+
+<div align="center">
+
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
+
+<br/>
+
+<!-- Footer -->
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,25:161b22,50:1f6feb,75:238636,100:8957e5&height=150&section=footer&animation=twinkling" width="100%"/>
+
+<br/>
+
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=18&duration=3000&pause=1000&color=58A6FF&center=true&vCenter=true&width=600&lines=🎓+Osnove+Informacione+Bezbednosti;📅+Školska+Godina+2025/2026;🔐+Hvala+na+pažnji!" alt="Footer Typing" />
 
 </div>

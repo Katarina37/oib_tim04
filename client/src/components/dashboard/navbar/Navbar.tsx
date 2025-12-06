@@ -4,11 +4,11 @@ import { IUserAPI } from "../../../api/users/IUserAPI";
 import { useAuth } from "../../../hooks/useAuthHook";
 import { UserDTO } from "../../../models/users/UserDTO";
 
-type DashboardNavbarProps = {
+type NavbarProps = {
   userAPI: IUserAPI;
 };
 
-export const DashboardNavbar: React.FC<DashboardNavbarProps> = ({ userAPI }) => {
+export const Navbar: React.FC<NavbarProps> = ({ userAPI }) => {
   const { user: authUser, logout, token } = useAuth();
   const [user, setUser] = useState<UserDTO | null>(null);
   const [isLoading, setIsLoading] = useState(true);
