@@ -1,5 +1,5 @@
 {
-  "name": "microservice-users",
+  "name": "microservice-user",
   "version": "1.2.0",
   "main": "src/index.ts",
   "scripts": {
@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "axios": "^1.13.2",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -20,6 +21,7 @@
     "typeorm": "^0.3.27"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.4",
     "@types/jsonwebtoken": "^9.0.10",

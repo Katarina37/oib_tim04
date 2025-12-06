@@ -1,46 +1,46 @@
-import express from 'express';
-import cors from 'cors';
+import express from "express";
+import cors from "cors";
 import "reflect-metadata";
-import { initialize_database } from './Database/InitializeConnection';
-import dotenv from 'dotenv';
-import { Repository } from 'typeorm';
-import { User } from './Domain/models/User';
-import { Db } from './Database/DbConnectionPool';
-import { IUsersService } from './Domain/services/IUsersService';
-import { UsersService } from './Services/UsersService';
-import { UsersController } from './WebAPI/controllers/UsersController';
-import { ILogerService } from './Domain/services/ILogerService';
-import { LogerService } from './Services/LogerService';
+import { initialize_database } from "./Database/InitializeConnection";
+import dotenv from "dotenv";
+import { Repository } from "typeorm";
+import { User } from "./Domain/models/User";
+import { Db } from "./Database/DbConnectionPool";
+import { IUsersService } from "./Domain/services/IUsersService";
+import { UsersService } from "./Services/UsersService";
+import { UsersController } from "./WebAPI/controllers/UsersController";
+import { ILogerService } from "./Domain/services/ILogerService";
+import { LogerService } from "./Services/LogerService";
 
-dotenv.config({ quiet: true });
+dotenv.config();
 
 const app = express();
 
-// Read CORS settings from environment
 const corsOrigin = process.env.CORS_ORIGIN ?? "*";
-const corsMethods = process.env.CORS_METHODS?.split(",").map(m => m.trim()) ?? ["POST"];
+const corsMethods = process.env.CORS_METHODS?.split(",").map((m) => m.trim()) ?? ["GET", "POST", "PUT", "DELETE"];
 
-// Protected microservice from unauthorized access
-app.use(cors({
-  origin: corsOrigin,
-  methods: corsMethods,
-}));
+app.use(
+  cors({
+    origin: corsOrigin,
+    methods: corsMethods,
+  })
+);
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-initialize_database();
+const initializeApp = async (): Promise<void> => {
+  await initialize_database();
+  const userRepository: Repository<User> = Db.getRepository(User);
+  const logerService: ILogerService = new LogerService();
+  const userService: IUsersService = new UsersService(userRepository);
+  const userController = new UsersController(userService, logerService);
+  app.use("/api/v1", userController.getRouter());
+};
 
-// ORM Repositories
-const userRepository: Repository<User> = Db.getRepository(User);
-
-// Services
-const userService: IUsersService = new UsersService(userRepository);
-const logerService: ILogerService = new LogerService();
-
-// WebAPI routes
-const userController = new UsersController(userService, logerService);
-
-// Registering routes
-app.use('/api/v1', userController.getRouter());
+initializeApp().catch((error) => {
+  console.error("Failed to initialize application:", error);
+  process.exit(1);
+});
 
 export default app;
