@@ -44,10 +44,10 @@ export const ProductionPage: React.FC = () => {
     fetchPlants();
     // Add some sample logs
     setLogs([
-      { id: 1, time: '14:23', message: 'Zasađena biljka: Lavanda', type: 'success' },
-      { id: 2, time: '14:28', message: 'Prerada završena: 5 bočica parfema', type: 'success' },
-      { id: 3, time: '14:35', message: 'Upozorenje: Jačina ulja prelazi 4.0', type: 'warning' },
-      { id: 4, time: '15:10', message: 'Ubrano 10 biljaka vrste Ruža', type: 'info' },
+      { id: 1, time: '14:23', message: 'Zasadjena biljka: Lavanda', type: 'success' },
+      { id: 2, time: '14:28', message: 'Prerada zavrsena: 5 bocica parfema', type: 'success' },
+      { id: 3, time: '14:35', message: 'Upozorenje: Jacina ulja prelazi 4.0', type: 'warning' },
+      { id: 4, time: '15:10', message: 'Ubrano 10 biljaka vrste Ruza', type: 'info' },
     ]);
   }, []);
 
@@ -59,7 +59,7 @@ export const ProductionPage: React.FC = () => {
       const data = await plantAPI.getAllPlants(token);
       setPlants(data);
     } catch (err) {
-      setError('Greška pri učitavanju biljaka');
+      setError('Greska pri ucitavanju biljaka');
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -126,16 +126,16 @@ export const ProductionPage: React.FC = () => {
     try {
       if (selectedPlant) {
         await plantAPI.updatePlant(selectedPlant.id, data as PlantDTO, token);
-        addLog(`Biljka "${(data as UpdatePlantDTO).commonName || selectedPlant.commonName}" je ažurirana`, 'success');
+        addLog(`Biljka "${(data as UpdatePlantDTO).commonName || selectedPlant.commonName}" je azurirana`, 'success');
       } else {
         await plantAPI.createPlant(data as PlantDTO, token);
-        addLog(`Nova biljka "${(data as CreatePlantDTO).commonName}" je zasađena`, 'success');
+        addLog(`Nova biljka "${(data as CreatePlantDTO).commonName}" je zasadjena`, 'success');
       }
       await fetchPlants();
       setIsPlantModalOpen(false);
       setSelectedPlant(null);
     } catch (err) {
-      addLog('Greška pri čuvanju biljke', 'error');
+      addLog('Greska pri cuvanju biljke', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -153,7 +153,7 @@ export const ProductionPage: React.FC = () => {
       setIsDeleteModalOpen(false);
       setSelectedPlant(null);
     } catch (err) {
-      addLog('Greška pri brisanju biljke', 'error');
+      addLog('Greska pri brisanju biljke', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -165,13 +165,14 @@ export const ProductionPage: React.FC = () => {
     if (!token) return;
     setIsSubmitting(true);
     try {
-      // This would call the production service endpoint
-      // For now, we'll simulate it
-      addLog(`Ubrano ${data.quantity} biljaka vrste ${data.commonName}`, 'success');
+      const harvested = await plantAPI.harvestPlants(data, token);
+      const harvestedCount = harvested.length || data.quantity;
+      addLog(`Ubrano ${harvestedCount} biljaka vrste ${data.commonName}`, 'success');
       await fetchPlants();
       setIsHarvestModalOpen(false);
     } catch (err) {
-      addLog('Greška pri berbi biljaka', 'error');
+      setError('Greska pri berbi biljaka');
+      addLog('Greska pri berbi biljaka', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -183,17 +184,17 @@ export const ProductionPage: React.FC = () => {
     if (!token) return;
     setIsSubmitting(true);
     try {
-      // This would call the production service endpoint
-      // For now, we'll simulate it
-      const plant = plants.find(p => p.id === data.plantId);
-      if (plant) {
-        const direction = data.percentageChange > 0 ? 'povećana' : 'smanjena';
-        addLog(`Jačina ulja za "${plant.commonName}" ${direction} za ${Math.abs(data.percentageChange)}%`, 'success');
-      }
+      const updatedPlant = await plantAPI.changeOilStrength(data, token);
+      const direction = data.percentageChange > 0 ? 'povecana' : 'smanjena';
+      addLog(
+        `Jacina ulja za "${updatedPlant.commonName}" ${direction} na ${updatedPlant.oilStrength.toFixed(1)}`,
+        'success'
+      );
       await fetchPlants();
       setIsOilStrengthModalOpen(false);
     } catch (err) {
-      addLog('Greška pri promeni jačine ulja', 'error');
+      setError('Greska pri promeni jacine ulja');
+      addLog('Greska pri promeni jacine ulja', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -236,7 +237,7 @@ export const ProductionPage: React.FC = () => {
         <StatsCard 
           icon={<Sprout size={24} />}
           value={stats.planted}
-          label="Posađene"
+          label="Posadjene"
         />
         <StatsCard 
           icon={<Scissors size={24} />}
@@ -246,7 +247,7 @@ export const ProductionPage: React.FC = () => {
         <StatsCard 
           icon={<FlaskConical size={24} />}
           value={stats.processed}
-          label="Prerađene"
+          label="Preradjene"
         />
       </div>
 
@@ -266,7 +267,7 @@ export const ProductionPage: React.FC = () => {
               </button>
               <button className="btn btn--secondary" onClick={() => setIsOilStrengthModalOpen(true)}>
                 <Droplets size={16} />
-                Promeni jačinu
+                Promeni jacinu
               </button>
               <button className="btn btn--primary" onClick={handleAddClick}>
                 <Plus size={16} />
@@ -288,7 +289,7 @@ export const ProductionPage: React.FC = () => {
               <div className="empty-state">
                 <p className="text-error">{error}</p>
                 <button className="btn btn--primary mt-md" onClick={fetchPlants}>
-                  Pokušaj ponovo
+                  Pokusaj ponovo
                 </button>
               </div>
             ) : (
@@ -311,7 +312,7 @@ export const ProductionPage: React.FC = () => {
         <div className="card">
           <div className="card__header">
             <h2 className="card__title">
-              <span style={{ color: 'var(--color-primary)' }}>📋</span>
+              <span style={{ color: 'var(--color-primary)' }}>LOG</span>
               Dnevnik proizvodnje
             </h2>
           </div>
@@ -356,10 +357,10 @@ export const ProductionPage: React.FC = () => {
           setSelectedPlant(null);
         }}
         onConfirm={handleDeletePlant}
-        title="Obriši biljku"
-        message={`Da li ste sigurni da želite da obrišete biljku "${selectedPlant?.commonName}"? Ova akcija se ne može poništiti.`}
-        confirmText="Obriši"
-        cancelText="Otkaži"
+        title="Obrisi biljku"
+        message={`Da li ste sigurni da zelite da obrisete biljku "${selectedPlant?.commonName}"? Ova akcija se ne moze ponistiti.`}
+        confirmText="Obrisi"
+        cancelText="Otkazi"
         isLoading={isSubmitting}
         variant="danger"
       />

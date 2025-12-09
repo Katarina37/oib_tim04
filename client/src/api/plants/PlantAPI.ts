@@ -1,5 +1,9 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
-import { PlantDTO } from "../../models/plants/PlantDTO";
+import {
+  ChangeOilStrengthDTO,
+  HarvestPlantsDTO,
+  PlantDTO,
+} from "../../models/plants/PlantDTO";
 import { IPlantAPI } from "./IPlantAPI";
 
 export class PlantAPI implements IPlantAPI {
@@ -61,5 +65,23 @@ export class PlantAPI implements IPlantAPI {
     await this.axiosInstance.delete(`/plants/${id}`, {
       headers: this.getAuthHeaders(token),
     });
+  }
+
+  async harvestPlants(data: HarvestPlantsDTO, token: string): Promise<PlantDTO[]> {
+    const response: AxiosResponse<PlantDTO[]> = await this.axiosInstance.post(
+      "/production/harvest",
+      data,
+      { headers: this.getAuthHeaders(token) }
+    );
+    return this.unwrapResponse<PlantDTO[]>(response.data);
+  }
+
+  async changeOilStrength(data: ChangeOilStrengthDTO, token: string): Promise<PlantDTO> {
+    const response: AxiosResponse<PlantDTO> = await this.axiosInstance.put(
+      "/production/oil-strength",
+      data,
+      { headers: this.getAuthHeaders(token) }
+    );
+    return this.unwrapResponse<PlantDTO>(response.data);
   }
 }
