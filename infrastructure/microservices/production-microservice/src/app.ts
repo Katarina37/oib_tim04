@@ -15,17 +15,27 @@ export function createApp(): Application {
   app.use(express.urlencoded({ extended: true }));
 
   // CORS Configuration
-  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:3000"];
+  const defaultOrigins = ["http://localhost:5173", "http://localhost:3000"];
+  const rawOrigins =
+    process.env.ALLOWED_ORIGINS || process.env.CORS_ORIGIN || process.env.CORS_ORIGINS || "";
+  const allowedOrigins = Array.from(
+    new Set(
+      [...defaultOrigins, ...rawOrigins.split(",")]
+        .map((origin) => origin.trim())
+        .filter((origin) => origin.length > 0)
+    )
+  );
+
   app.use(
     cors({
       origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (!origin || allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
           callback(new Error("Not allowed by CORS"));
         }
       },
-      methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Gateway-Key"],
       credentials: true,
     })
