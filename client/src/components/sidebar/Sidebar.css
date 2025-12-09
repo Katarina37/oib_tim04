@@ -1,0 +1,156 @@
+/* Sidebar Component Additional Styles */
+
+.sidebar__nav-item--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.sidebar__nav-item--disabled:hover {
+  background: transparent;
+  color: var(--color-text-muted);
+}
+
+.sidebar__logout-icon {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  opacity: 0;
+  transition: all var(--transition-normal);
+}
+
+.sidebar:hover .sidebar__logout-icon,
+.sidebar.expanded .sidebar__logout-icon {
+  opacity: 1;
+}
+
+.sidebar__profile:hover .sidebar__logout-icon {
+  color: var(--color-error);
+}
+
+/* Tooltip for collapsed state */
+.sidebar__nav-item {
+  position: relative;
+}
+
+.sidebar:not(:hover) .sidebar__nav-item::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 6px 12px;
+  background: var(--color-text-primary);
+  color: var(--color-white);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--transition-fast);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.sidebar:not(:hover) .sidebar__nav-item:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Smooth icon animations */
+.sidebar__nav-icon svg {
+  transition: transform var(--transition-fast);
+}
+
+.sidebar__nav-item:hover .sidebar__nav-icon svg {
+  transform: scale(1.1);
+}
+
+.sidebar__nav-item.active .sidebar__nav-icon svg {
+  transform: scale(1.05);
+}
+
+/* Logo animation */
+.sidebar__logo svg {
+  transition: transform var(--transition-normal);
+}
+
+.sidebar:hover .sidebar__logo svg {
+  transform: rotate(-15deg);
+}
+
+/* Profile hover effect */
+.sidebar__profile {
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar__profile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--color-primary-subtle), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.sidebar__profile:hover::before {
+  transform: translateX(100%);
+}
+
+/* Active indicator */
+.sidebar__nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 24px;
+  background: var(--color-white);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  opacity: 0.5;
+}
+
+/* Nav section labels - for future use */
+.sidebar__section-label {
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.sidebar:hover .sidebar__section-label,
+.sidebar.expanded .sidebar__section-label {
+  opacity: 1;
+}
+
+/* Badge for notifications - for future use */
+.sidebar__nav-badge {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: var(--color-error);
+  color: var(--color-white);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.sidebar:hover .sidebar__nav-badge,
+.sidebar.expanded .sidebar__nav-badge {
+  opacity: 1;
+}

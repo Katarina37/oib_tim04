@@ -1,20 +1,8 @@
-import type { FC } from "react";
-import { Navbar } from "../components/dashboard/navbar/Navbar";
-import { IUserAPI } from "../api/users/IUserAPI";
+import React from 'react';
+import { Navigate } from 'react-router-dom';
 
-type DashboardPageProps = {
-  userAPI: IUserAPI;
+export const Dashboard: React.FC = () => {
+  return <Navigate to="/production" replace />;
 };
 
-const DashboardPage: FC<DashboardPageProps> = ({ userAPI }) => {
-  return (
-    <div className="flex h-full">
-      <Navbar userAPI={userAPI} />
-      <main className="flex-1 p-4">
-        <h1>Dashboard</h1>
-      </main>
-    </div>
-  );
-};
-
-export default DashboardPage;
+export default Dashboard;
