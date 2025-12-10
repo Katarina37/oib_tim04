@@ -1,23 +1,21 @@
-import { Repository, FindOptionsWhere, Between, Like } from "typeorm";
 import { IAuditService } from "../Domain/services/IAuditService";
 import { AuditLog } from "../Domain/models/AuditLog";
 import { AuditLogDTO } from "../Domain/DTOs/AuditLogDTO";
 import { CreateAuditLogDTO } from "../Domain/DTOs/CreateAuditLogDTO";
 import { UpdateAuditLogDTO } from "../Domain/DTOs/UpdateAuditLogDTO";
 import { AuditLogSearchCriteriaDTO } from "../Domain/DTOs/AuditLogSearchCriteriaDTO";
+import { IAuditLogRepository } from "../Domain/repositories/IAuditLogRepository";
 
 export class AuditService implements IAuditService {
-  constructor(private readonly auditLogRepository: Repository<AuditLog>) {}
+  constructor(private readonly auditLogRepository: IAuditLogRepository) {}
 
   async getAllLogs(): Promise<AuditLogDTO[]> {
-    const logs = await this.auditLogRepository.find({
-      order: { datumVreme: "DESC" },
-    });
+    const logs = await this.auditLogRepository.findAll();
     return logs.map((log) => this.toDTO(log));
   }
 
   async getLogById(id: number): Promise<AuditLogDTO> {
-    const log = await this.auditLogRepository.findOne({ where: { id } });
+    const log = await this.auditLogRepository.findById(id);
     if (!log) {
       throw new Error(`Audit log with ID ${id} not found`);
     }
@@ -26,12 +24,12 @@ export class AuditService implements IAuditService {
 
   async createLog(data: CreateAuditLogDTO): Promise<AuditLogDTO> {
     const newLog = this.auditLogRepository.create({
-      tipZapisa: data.tip_zapisa,
+      tip_zapisa: data.tip_zapisa,
       opis: data.opis,
       mikroservis: data.mikroservis ?? null,
-      korisnikId: data.korisnik_id ?? null,
-      ipAdresa: data.ip_adresa ?? null,
-      dodatniPodaci: data.dodatni_podaci ?? null,
+      korisnik_id: data.korisnik_id ?? null,
+      ip_adresa: data.ip_adresa ?? null,
+      dodatni_podaci: data.dodatni_podaci ?? null,
     });
 
     const savedLog = await this.auditLogRepository.save(newLog);
@@ -40,7 +38,7 @@ export class AuditService implements IAuditService {
   }
 
   async updateLog(id: number, data: UpdateAuditLogDTO): Promise<AuditLogDTO> {
-    const log = await this.auditLogRepository.findOne({ where: { id } });
+    const log = await this.auditLogRepository.findById(id);
     if (!log) {
       throw new Error(`Audit log with ID ${id} not found`);
     }
@@ -69,7 +67,7 @@ export class AuditService implements IAuditService {
   }
 
   async deleteLog(id: number): Promise<void> {
-    const log = await this.auditLogRepository.findOne({ where: { id } });
+    const log = await this.auditLogRepository.findById(id);
     if (!log) {
       throw new Error(`Audit log with ID ${id} not found`);
     }
@@ -77,25 +75,7 @@ export class AuditService implements IAuditService {
   }
 
   async searchLogs(criteria: AuditLogSearchCriteriaDTO): Promise<AuditLogDTO[]> {
-    const where: FindOptionsWhere<AuditLog> = {};
-
-    if (criteria.tip_zapisa) {
-      where.tipZapisa = criteria.tip_zapisa;
-    }
-    if (criteria.mikroservis) {
-      where.mikroservis = Like(`%${criteria.mikroservis}%`);
-    }
-    if (criteria.korisnik_id) {
-      where.korisnikId = criteria.korisnik_id;
-    }
-    if (criteria.datum_od && criteria.datum_do) {
-      where.datumVreme = Between(criteria.datum_od, criteria.datum_do);
-    }
-
-    const logs = await this.auditLogRepository.find({
-      where,
-      order: { datumVreme: "DESC" },
-    });
+    const logs = await this.auditLogRepository.search(criteria);
     return logs.map((log) => this.toDTO(log));
   }
 

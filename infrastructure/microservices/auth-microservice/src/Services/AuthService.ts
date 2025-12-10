@@ -1,24 +1,20 @@
-import { Repository } from "typeorm";
 import bcrypt from "bcryptjs";
-import { User } from "../Domain/models/User";
 import { IAuthService } from "../Domain/services/IAuthService";
 import { LoginUserDTO } from "../Domain/DTOs/LoginUserDTO";
 import { RegistrationUserDTO } from "../Domain/DTOs/RegistrationUserDTO";
 import { AuthResponseType } from "../Domain/types/AuthResponse";
+import { IUserRepository } from "../Domain/repositories/IUserRepository";
 
 export class AuthService implements IAuthService {
-  private readonly saltRounds: number;
-
-  constructor(private readonly userRepository: Repository<User>) {
-    this.saltRounds = parseInt(process.env.SALT_ROUNDS || "10", 10);
-  }
+  constructor(
+    private readonly userRepository: IUserRepository,
+    private readonly saltRounds: number
+  ) {}
 
   async login(data: LoginUserDTO): Promise<AuthResponseType> {
     console.log("[AuthService] Login attempt for:", data.username);
 
-    const user = await this.userRepository.findOne({
-      where: { username: data.username },
-    });
+    const user = await this.userRepository.findByUsername(data.username);
 
     console.log("[AuthService] User found:", user ? "YES" : "NO");
 
@@ -46,9 +42,10 @@ export class AuthService implements IAuthService {
   }
 
   async register(data: RegistrationUserDTO): Promise<AuthResponseType> {
-    const existingUser = await this.userRepository.findOne({
-      where: [{ username: data.username }, { email: data.email }],
-    });
+    const existingUser = await this.userRepository.findByUsernameOrEmail(
+      data.username,
+      data.email
+    );
 
     if (existingUser) {
       return {

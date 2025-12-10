@@ -2,13 +2,14 @@ import express from "express";
 import cors from "cors";
 import "reflect-metadata";
 import dotenv from "dotenv";
-import { Repository } from "typeorm";
 import { AuditLog } from "./Domain/models/AuditLog"
 import { Db } from "./Database/DbConnectionPool";
 import { initialize_database } from "./Database/InitializeConnection";
 import { IAuditService } from "./Domain/services/IAuditService";
 import { AuditService } from "./Services/AuditService";
 import { AuditController } from "./WebAPI/controllers/AuditController";
+import { IAuditLogRepository } from "./Domain/repositories/IAuditLogRepository";
+import { TypeOrmAuditLogRepository } from "./Infrastructure/repositories/TypeOrmAuditLogRepository";
 
 dotenv.config();
 
@@ -30,7 +31,9 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 const initializeApp = async (): Promise<void> => {
   await initialize_database();
   
-  const auditLogRepository: Repository<AuditLog> = Db.getRepository(AuditLog);
+  const auditLogRepository: IAuditLogRepository = new TypeOrmAuditLogRepository(
+    Db.getRepository(AuditLog)
+  );
   const auditService: IAuditService = new AuditService(auditLogRepository);
   const auditController = new AuditController(auditService);
   

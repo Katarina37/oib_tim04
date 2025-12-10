@@ -6,6 +6,9 @@ import { ProductionService } from "./Services/ProductionService";
 import { PlantManagementService } from "./Services/PlantManagementService";
 import { PlantRepository } from "./Services/PlantRepository";
 import { LoggerService } from "./Services/LoggerService";
+import axios from "axios";
+import { AxiosAuditClient } from "./Infrastructure/clients/AxiosAuditClient";
+import { IAuditClient } from "./Domain/services/IAuditClient";
 
 export function createApp(): Application {
   const app: Application = express();
@@ -55,7 +58,14 @@ export function createApp(): Application {
 
   // Dependency Injection
   const plantRepository = new PlantRepository();
-  const loggerService = new LoggerService();
+  const auditServiceUrl = process.env.AUDIT_SERVICE_URL || "http://localhost:3002";
+  const auditHttpClient = axios.create({
+    baseURL: auditServiceUrl,
+    headers: { "Content-Type": "application/json" },
+    timeout: 5000,
+  });
+  const auditClient: IAuditClient = new AxiosAuditClient(auditHttpClient);
+  const loggerService = new LoggerService(auditClient);
   const productionService = new ProductionService(plantRepository, loggerService);
   const plantManagementService = new PlantManagementService(plantRepository, loggerService);
 

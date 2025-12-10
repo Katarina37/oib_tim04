@@ -4,6 +4,7 @@ import { LoginUserDTO } from "../Domain/DTOs/LoginUserDTO";
 import { RegistrationUserDTO } from "../Domain/DTOs/RegistrationUserDTO";
 import { authenticate } from "../Middlewares/authentification/AuthMiddleware";
 import { authorize } from "../Middlewares/authorization/AuthorizeMiddleware";
+import { AccessDeniedError } from "../Domain/errors/AccessDeniedError";
 
 export class GatewayController {
   private readonly router: Router;
@@ -49,14 +50,14 @@ export class GatewayController {
   private async getUserById(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params.id, 10);
-      if (!req.user || req.user.id !== id) {
-        res.status(401).json({ message: "You can only access your own data!" });
-        return;
-      }
 
-      const user = await this.gatewayService.getUserById(id);
+      const user = await this.gatewayService.getUserById(id, req.user?.id);
       res.status(200).json(user);
     } catch (err) {
+      if (err instanceof AccessDeniedError) {
+        res.status(401).json({ message: err.message });
+        return;
+      }
       res.status(404).json({ message: (err as Error).message });
     }
   }

@@ -1,4 +1,3 @@
-import { Repository, Like, FindOptionsWhere } from "typeorm";
 import bcrypt from "bcryptjs";
 import { IUsersService } from "../Domain/services/IUsersService";
 import { User } from "../Domain/models/User";
@@ -6,21 +5,21 @@ import { UserDTO } from "../Domain/DTOs/UserDTO";
 import { CreateUserDTO } from "../Domain/DTOs/CreateUserDTO";
 import { UpdateUserDTO } from "../Domain/DTOs/UpdateUserDTO";
 import { UserSearchCriteriaDTO } from "../Domain/DTOs/UserSearchCriteriaDTO";
+import { IUserRepository } from "../Domain/repositories/IUserRepository";
 
 export class UsersService implements IUsersService {
-  private readonly saltRounds: number;
-
-  constructor(private readonly userRepository: Repository<User>) {
-    this.saltRounds = parseInt(process.env.SALT_ROUNDS || "10", 10);
-  }
+  constructor(
+    private readonly userRepository: IUserRepository,
+    private readonly saltRounds: number
+  ) {}
 
   async getAllUsers(): Promise<UserDTO[]> {
-    const users = await this.userRepository.find();
+    const users = await this.userRepository.findAll();
     return users.map((u) => this.toDTO(u));
   }
 
   async getUserById(id: number): Promise<UserDTO> {
-    const user = await this.userRepository.findOne({ where: { id } });
+    const user = await this.userRepository.findById(id);
     if (!user) {
       throw new Error(`User with ID ${id} not found`);
     }
@@ -28,9 +27,10 @@ export class UsersService implements IUsersService {
   }
 
   async createUser(data: CreateUserDTO): Promise<UserDTO> {
-    const existingUser = await this.userRepository.findOne({
-      where: [{ username: data.username }, { email: data.email }],
-    });
+    const existingUser = await this.userRepository.findByUsernameOrEmail(
+      data.username,
+      data.email
+    );
 
     if (existingUser) {
       throw new Error("Username or email already exists");
@@ -53,15 +53,15 @@ export class UsersService implements IUsersService {
   }
 
   async updateUser(id: number, data: UpdateUserDTO): Promise<UserDTO> {
-    const user = await this.userRepository.findOne({ where: { id } });
+    const user = await this.userRepository.findById(id);
     if (!user) {
       throw new Error(`User with ID ${id} not found`);
     }
 
     if (data.username && data.username !== user.username) {
-      const existingUsername = await this.userRepository.findOne({
-        where: { username: data.username },
-      });
+      const existingUsername = await this.userRepository.findByUsername(
+        data.username
+      );
       if (existingUsername) {
         throw new Error("Username already exists");
       }
@@ -69,9 +69,7 @@ export class UsersService implements IUsersService {
     }
 
     if (data.email && data.email !== user.email) {
-      const existingEmail = await this.userRepository.findOne({
-        where: { email: data.email },
-      });
+      const existingEmail = await this.userRepository.findByEmail(data.email);
       if (existingEmail) {
         throw new Error("Email already exists");
       }
@@ -103,7 +101,7 @@ export class UsersService implements IUsersService {
   }
 
   async deleteUser(id: number): Promise<void> {
-    const user = await this.userRepository.findOne({ where: { id } });
+    const user = await this.userRepository.findById(id);
     if (!user) {
       throw new Error(`User with ID ${id} not found`);
     }
@@ -111,29 +109,7 @@ export class UsersService implements IUsersService {
   }
 
   async searchUsers(criteria: UserSearchCriteriaDTO): Promise<UserDTO[]> {
-    const where: FindOptionsWhere<User> = {};
-
-    if (criteria.username) {
-      where.username = Like(`%${criteria.username}%`);
-    }
-
-    if (criteria.email) {
-      where.email = Like(`%${criteria.email}%`);
-    }
-
-    if (criteria.firstName) {
-      where.firstName = Like(`%${criteria.firstName}%`);
-    }
-
-    if (criteria.lastName) {
-      where.lastName = Like(`%${criteria.lastName}%`);
-    }
-
-    if (criteria.role) {
-      where.role = criteria.role;
-    }
-
-    const users = await this.userRepository.find({ where });
+    const users = await this.userRepository.search(criteria);
     return users.map((u) => this.toDTO(u));
   }
 
