@@ -1,45 +1,74 @@
 import { IGatewayService } from "../Domain/services/IGatewayService";
-import { LoginUserDTO } from "../Domain/DTOs/LoginUserDTO";
-import { RegistrationUserDTO } from "../Domain/DTOs/RegistrationUserDTO";
-import { AuthResponseType } from "../Domain/types/AuthResponse";
-import { UserDTO } from "../Domain/DTOs/UserDTO";
 import { IAuthClient } from "../Domain/clients/IAuthClient";
 import { IUserClient } from "../Domain/clients/IUserClient";
-import { IUserAccessPolicy } from "../Domain/services/IUserAccessPolicy";
+import { IMicroserviceClient, ProxyRequest, ProxyResponse } from "../Domain/clients/IMicroserviceClient";
+import { LoginUserDTO } from "../Domain/DTOs/LoginUserDTO";
+import { RegistrationUserDTO } from "../Domain/DTOs/RegistrationUserDTO";
+import { UserDTO } from "../Domain/DTOs/UserDTO";
+import { AuthResponse } from "../Domain/types/AuthResponse";
 
 export class GatewayService implements IGatewayService {
   constructor(
     private readonly authClient: IAuthClient,
     private readonly userClient: IUserClient,
-    private readonly userAccessPolicy: IUserAccessPolicy
+    private readonly productionClient: IMicroserviceClient,
+    private readonly processingClient: IMicroserviceClient,
+    private readonly storageClient: IMicroserviceClient,
+    private readonly salesClient: IMicroserviceClient,
+    private readonly dataAnalysisClient: IMicroserviceClient,
+    private readonly performanceAnalysisClient: IMicroserviceClient,
+    private readonly auditClient: IMicroserviceClient
   ) {}
 
-  // Auth microservice
-  async login(data: LoginUserDTO): Promise<AuthResponseType> {
+  async login(data: LoginUserDTO): Promise<AuthResponse> {
     try {
       return await this.authClient.login(data);
     } catch {
-      return { authenificated: false };
+      return { success: false, message: "Greška prilikom prijave" };
     }
   }
 
-  async register(data: RegistrationUserDTO): Promise<AuthResponseType> {
+  async register(data: RegistrationUserDTO): Promise<AuthResponse> {
     try {
       return await this.authClient.register(data);
     } catch {
-      return { authenificated: false };
+      return { success: false, message: "Greška prilikom registracije" };
     }
   }
 
-  // User microservice
   async getAllUsers(): Promise<UserDTO[]> {
     return this.userClient.getAll();
   }
 
-  async getUserById(id: number, currentUserId?: number): Promise<UserDTO> {
-    this.userAccessPolicy.ensureCanAccess(currentUserId, id);
+  async getUserById(id: number): Promise<UserDTO> {
     return this.userClient.getById(id);
   }
 
-  // TODO: ADD MORE API CALLS
+  async proxyToProduction(request: ProxyRequest): Promise<ProxyResponse> {
+    return this.productionClient.proxy(request);
+  }
+
+  async proxyToProcessing(request: ProxyRequest): Promise<ProxyResponse> {
+    return this.processingClient.proxy(request);
+  }
+
+  async proxyToStorage(request: ProxyRequest): Promise<ProxyResponse> {
+    return this.storageClient.proxy(request);
+  }
+
+  async proxyToSales(request: ProxyRequest): Promise<ProxyResponse> {
+    return this.salesClient.proxy(request);
+  }
+
+  async proxyToDataAnalysis(request: ProxyRequest): Promise<ProxyResponse> {
+    return this.dataAnalysisClient.proxy(request);
+  }
+
+  async proxyToPerformanceAnalysis(request: ProxyRequest): Promise<ProxyResponse> {
+    return this.performanceAnalysisClient.proxy(request);
+  }
+
+  async proxyToAudit(request: ProxyRequest): Promise<ProxyResponse> {
+    return this.auditClient.proxy(request);
+  }
 }

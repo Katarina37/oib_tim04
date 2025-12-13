@@ -1,8 +1,8 @@
 import { LoginUserDTO } from "../DTOs/LoginUserDTO";
 import { RegistrationUserDTO } from "../DTOs/RegistrationUserDTO";
-import { AuthResponseType } from "../types/AuthResponse";
+import { AuthResponse } from "../types/AuthResponse";
 
 export interface IAuthClient {
-  login(data: LoginUserDTO): Promise<AuthResponseType>;
-  register(data: RegistrationUserDTO): Promise<AuthResponseType>;
+  login(data: LoginUserDTO): Promise<AuthResponse>;
+  register(data: RegistrationUserDTO): Promise<AuthResponse>;
 }

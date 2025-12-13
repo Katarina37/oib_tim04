@@ -1,14 +1,24 @@
 import { LoginUserDTO } from "../DTOs/LoginUserDTO";
 import { RegistrationUserDTO } from "../DTOs/RegistrationUserDTO";
 import { UserDTO } from "../DTOs/UserDTO";
-import { AuthResponseType } from "../types/AuthResponse";
+import { AuthResponse } from "../types/AuthResponse";
+import { ProxyRequest, ProxyResponse } from "../clients/IMicroserviceClient";
 
 export interface IGatewayService {
-  // Auth
-  login(data: LoginUserDTO): Promise<AuthResponseType>;
-  register(data: RegistrationUserDTO): Promise<AuthResponseType>;
+  // Auth operations
+  login(data: LoginUserDTO): Promise<AuthResponse>;
+  register(data: RegistrationUserDTO): Promise<AuthResponse>;
 
-  // Users
+  // User operations
   getAllUsers(): Promise<UserDTO[]>;
-  getUserById(id: number, currentUserId?: number): Promise<UserDTO>;
+  getUserById(id: number): Promise<UserDTO>;
+
+  // Proxy operations for other microservices
+  proxyToProduction(request: ProxyRequest): Promise<ProxyResponse>;
+  proxyToProcessing(request: ProxyRequest): Promise<ProxyResponse>;
+  proxyToStorage(request: ProxyRequest): Promise<ProxyResponse>;
+  proxyToSales(request: ProxyRequest): Promise<ProxyResponse>;
+  proxyToDataAnalysis(request: ProxyRequest): Promise<ProxyResponse>;
+  proxyToPerformanceAnalysis(request: ProxyRequest): Promise<ProxyResponse>;
+  proxyToAudit(request: ProxyRequest): Promise<ProxyResponse>;
 }
