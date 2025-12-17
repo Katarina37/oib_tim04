@@ -1,25 +1,16 @@
-import axios, { AxiosInstance, AxiosResponse } from "axios";
 import {
   ChangeOilStrengthDTO,
   HarvestPlantsDTO,
   PlantDTO,
+  PlantSearchCriteriaDTO,
 } from "../../models/plants/PlantDTO";
 import { IPlantAPI } from "./IPlantAPI";
+import { IHttpClient } from "../http/IHttpClient";
 
 export class PlantAPI implements IPlantAPI {
-  private readonly axiosInstance: AxiosInstance;
+  constructor(private readonly httpClient: IHttpClient) {}
 
-  constructor() {
-    const baseURL =
-      import.meta.env.VITE_PRODUCTION_SERVICE_URL || import.meta.env.VITE_GATEWAY_URL;
-
-    this.axiosInstance = axios.create({
-      baseURL,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  }
+  private readonly basePath = "/production";
 
   private getAuthHeaders(token: string) {
     return { Authorization: `Bearer ${token}` };
@@ -33,55 +24,80 @@ export class PlantAPI implements IPlantAPI {
     return data as T;
   }
 
-  async getAllPlants(token: string): Promise<PlantDTO[]> {
-    const response: AxiosResponse<PlantDTO[]> = await this.axiosInstance.get("/plants", {
+  private buildQueryParams(criteria?: PlantSearchCriteriaDTO): Record<string, unknown> | undefined {
+    if (!criteria) return undefined;
+
+    return {
+      ...(criteria.commonName ? { commonName: criteria.commonName } : {}),
+      ...(criteria.latinName ? { latinName: criteria.latinName } : {}),
+      ...(criteria.countryOfOrigin ? { countryOfOrigin: criteria.countryOfOrigin } : {}),
+      ...(criteria.state ? { state: criteria.state } : {}),
+      ...(criteria.minOilStrength !== undefined ? { minOilStrength: criteria.minOilStrength } : {}),
+      ...(criteria.maxOilStrength !== undefined ? { maxOilStrength: criteria.maxOilStrength } : {}),
+      ...(criteria.searchTerm ? { searchTerm: criteria.searchTerm } : {}),
+      ...(criteria.sortBy ? { sortBy: criteria.sortBy } : {}),
+      ...(criteria.sortDirection ? { sortDirection: criteria.sortDirection } : {}),
+    };
+  }
+
+  async getAllPlants(token: string, criteria?: PlantSearchCriteriaDTO): Promise<PlantDTO[]> {
+    const response = await this.httpClient.get<PlantDTO[]>(`${this.basePath}/plants`, {
       headers: this.getAuthHeaders(token),
+      params: this.buildQueryParams(criteria),
     });
-    return this.unwrapResponse<PlantDTO[]>(response.data);
+    return this.unwrapResponse<PlantDTO[]>(response);
+  }
+
+  async searchPlants(criteria: PlantSearchCriteriaDTO, token: string): Promise<PlantDTO[]> {
+    const response = await this.httpClient.get<PlantDTO[]>(`${this.basePath}/plants/search`, {
+      headers: this.getAuthHeaders(token),
+      params: this.buildQueryParams(criteria),
+    });
+    return this.unwrapResponse<PlantDTO[]>(response);
   }
 
   async getPlantById(id: number, token: string): Promise<PlantDTO> {
-    const response: AxiosResponse<PlantDTO> = await this.axiosInstance.get(`/plants/${id}`, {
+    const response = await this.httpClient.get<PlantDTO>(`${this.basePath}/plants/${id}`, {
       headers: this.getAuthHeaders(token),
     });
-    return this.unwrapResponse<PlantDTO>(response.data);
+    return this.unwrapResponse<PlantDTO>(response);
   }
 
   async createPlant(plant: PlantDTO, token: string): Promise<PlantDTO> {
-    const response: AxiosResponse<PlantDTO> = await this.axiosInstance.post("/plants", plant, {
+    const response = await this.httpClient.post<PlantDTO>(`${this.basePath}/plants`, plant, {
       headers: this.getAuthHeaders(token),
     });
-    return this.unwrapResponse<PlantDTO>(response.data);
+    return this.unwrapResponse<PlantDTO>(response);
   }
 
   async updatePlant(id: number, plant: PlantDTO, token: string): Promise<PlantDTO> {
-    const response: AxiosResponse<PlantDTO> = await this.axiosInstance.put(`/plants/${id}`, plant, {
+    const response = await this.httpClient.put<PlantDTO>(`${this.basePath}/plants/${id}`, plant, {
       headers: this.getAuthHeaders(token),
     });
-    return this.unwrapResponse<PlantDTO>(response.data);
+    return this.unwrapResponse<PlantDTO>(response);
   }
 
   async deletePlant(id: number, token: string): Promise<void> {
-    await this.axiosInstance.delete(`/plants/${id}`, {
+    await this.httpClient.delete(`${this.basePath}/plants/${id}`, {
       headers: this.getAuthHeaders(token),
     });
   }
 
   async harvestPlants(data: HarvestPlantsDTO, token: string): Promise<PlantDTO[]> {
-    const response: AxiosResponse<PlantDTO[]> = await this.axiosInstance.post(
-      "/production/harvest",
+    const response = await this.httpClient.post<PlantDTO[]>(
+      `${this.basePath}/harvest`, // harvesting is a production operation
       data,
       { headers: this.getAuthHeaders(token) }
     );
-    return this.unwrapResponse<PlantDTO[]>(response.data);
+    return this.unwrapResponse<PlantDTO[]>(response);
   }
 
   async changeOilStrength(data: ChangeOilStrengthDTO, token: string): Promise<PlantDTO> {
-    const response: AxiosResponse<PlantDTO> = await this.axiosInstance.put(
-      "/production/oil-strength",
+    const response = await this.httpClient.put<PlantDTO>(
+      `${this.basePath}/oil-strength`,
       data,
       { headers: this.getAuthHeaders(token) }
     );
-    return this.unwrapResponse<PlantDTO>(response.data);
+    return this.unwrapResponse<PlantDTO>(response);
   }
 }

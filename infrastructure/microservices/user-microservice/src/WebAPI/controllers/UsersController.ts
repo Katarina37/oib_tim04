@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { ILogerService } from "../../Domain/services/ILogerService";
+import { ILogerService } from "../../Domain/services/ILoggerService";
 import { IUsersService } from "../../Domain/services/IUsersService";
 import { CreateUserDTO } from "../../Domain/DTOs/CreateUserDTO";
 import { UpdateUserDTO } from "../../Domain/DTOs/UpdateUserDTO";
@@ -8,7 +8,7 @@ import {
   validateCreateUserData,
   validateUpdateUserData,
 } from "../validators/UserValidator";
-import { LogType } from "../../Services/LogerService";
+import { LogType } from "../../Services/LoggerService";
 
 export class UsersController {
   private readonly router: Router;

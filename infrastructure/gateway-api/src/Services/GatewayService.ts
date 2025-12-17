@@ -24,7 +24,7 @@ export class GatewayService implements IGatewayService {
     try {
       return await this.authClient.login(data);
     } catch {
-      return { success: false, message: "Greška prilikom prijave" };
+      return { success: false, message: "Greska prilikom prijave" };
     }
   }
 
@@ -32,7 +32,7 @@ export class GatewayService implements IGatewayService {
     try {
       return await this.authClient.register(data);
     } catch {
-      return { success: false, message: "Greška prilikom registracije" };
+      return { success: false, message: "Greska prilikom registracije" };
     }
   }
 

@@ -5,10 +5,10 @@ import { PlantSearchCriteriaDTO } from "../DTOs/PlantSearchCriteriaDTO";
 import { PlantState } from "../enums/PlantState";
 
 export interface IPlantRepository {
-  findAll(): Promise<Plant[]>;
+  findAll(criteria?: PlantSearchCriteriaDTO): Promise<Plant[]>;
   findById(id: number): Promise<Plant | null>;
-  findByState(state: PlantState): Promise<Plant[]>;
-  findByCommonName(commonName: string): Promise<Plant[]>;
+  findByState(state: PlantState, criteria?: PlantSearchCriteriaDTO): Promise<Plant[]>;
+  findByCommonName(commonName: string, criteria?: PlantSearchCriteriaDTO): Promise<Plant[]>;
   findByCriteria(criteria: PlantSearchCriteriaDTO): Promise<Plant[]>;
   create(data: CreatePlantDTO): Promise<Plant>;
   update(id: number, data: UpdatePlantDTO): Promise<Plant>;

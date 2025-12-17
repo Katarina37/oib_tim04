@@ -12,19 +12,33 @@
 }
 
 .sidebar__logout-icon {
+  margin: 0;
+  color: inherit;
+}
+
+.sidebar__logout-button {
   margin-left: auto;
+  background: transparent;
+  border: none;
+  padding: 8px;
+  border-radius: var(--radius-sm);
   color: var(--color-text-muted);
-  opacity: 0;
-  transition: all var(--transition-normal);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition-fast), background var(--transition-fast);
 }
 
-.sidebar:hover .sidebar__logout-icon,
-.sidebar.expanded .sidebar__logout-icon {
-  opacity: 1;
-}
-
-.sidebar__profile:hover .sidebar__logout-icon {
+.sidebar__logout-button:hover,
+.sidebar__logout-button:focus-visible {
   color: var(--color-error);
+  background: var(--color-primary-subtle);
+}
+
+.sidebar__logout-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* Tooltip for collapsed state */
@@ -77,25 +91,6 @@
 
 .sidebar:hover .sidebar__logo svg {
   transform: rotate(-15deg);
-}
-
-/* Profile hover effect */
-.sidebar__profile {
-  position: relative;
-  overflow: hidden;
-}
-
-.sidebar__profile::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, var(--color-primary-subtle), transparent);
-  transform: translateX(-100%);
-  transition: transform 0.6s ease;
-}
-
-.sidebar__profile:hover::before {
-  transform: translateX(100%);
 }
 
 /* Active indicator */

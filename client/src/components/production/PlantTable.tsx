@@ -1,12 +1,15 @@
 import React from 'react';
-import { PlantDTO, PlantState } from '../../models/plants/PlantDTO';
-import { Edit2, Trash2, MoreVertical } from 'lucide-react';
+import { PlantDTO, PlantState, PlantSearchCriteriaDTO } from '../../models/plants/PlantDTO';
+import { Edit2, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface PlantTableProps {
   plants: PlantDTO[];
   onEdit: (plant: PlantDTO) => void;
   onDelete: (plant: PlantDTO) => void;
   isLoading?: boolean;
+  sortBy?: PlantSearchCriteriaDTO['sortBy'];
+  sortDirection?: PlantSearchCriteriaDTO['sortDirection'];
+  onSortChange?: (column: NonNullable<PlantSearchCriteriaDTO['sortBy']>, direction: NonNullable<PlantSearchCriteriaDTO['sortDirection']>) => void;
 }
 
 const getStateLabel = (state: PlantState): string => {
@@ -39,8 +42,41 @@ export const PlantTable: React.FC<PlantTableProps> = ({
   plants, 
   onEdit, 
   onDelete,
-  isLoading = false 
+  isLoading = false,
+  sortBy,
+  sortDirection = 'DESC',
+  onSortChange,
 }) => {
+  const sortableColumns: Array<{
+    key: NonNullable<PlantSearchCriteriaDTO['sortBy']>;
+    label: string;
+    width?: string;
+  }> = [
+    { key: 'commonName', label: 'Naziv' },
+    { key: 'latinName', label: 'Latinski naziv' },
+    { key: 'oilStrength', label: 'Jačina ulja' },
+    { key: 'countryOfOrigin', label: 'Zemlja porekla' },
+    { key: 'state', label: 'Stanje' },
+  ];
+
+  const handleSort = (column: NonNullable<PlantSearchCriteriaDTO['sortBy']>) => {
+    if (!onSortChange) return;
+    const nextDirection =
+      sortBy === column && sortDirection === 'ASC' ? 'DESC' : 'ASC';
+    onSortChange(column, nextDirection);
+  };
+
+  const renderSortIcon = (column: string) => {
+    if (sortBy !== column) {
+      return <ArrowUpDown size={14} className="text-muted" />;
+    }
+    return sortDirection === 'ASC' ? (
+      <ArrowUp size={14} />
+    ) : (
+      <ArrowDown size={14} />
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="empty-state">
@@ -72,11 +108,18 @@ export const PlantTable: React.FC<PlantTableProps> = ({
       <table className="table">
         <thead>
           <tr>
-            <th>Naziv</th>
-            <th>Latinski naziv</th>
-            <th>Jačina ulja</th>
-            <th>Zemlja porekla</th>
-            <th>Stanje</th>
+            {sortableColumns.map((column) => (
+              <th key={column.key} style={column.width ? { width: column.width } : undefined}>
+                <button
+                  className="table__sort-button"
+                  type="button"
+                  onClick={() => handleSort(column.key)}
+                >
+                  <span>{column.label}</span>
+                  {renderSortIcon(column.key)}
+                </button>
+              </th>
+            ))}
             <th style={{ width: '100px' }}>Akcije</th>
           </tr>
         </thead>
@@ -131,6 +174,24 @@ export const PlantTable: React.FC<PlantTableProps> = ({
           ))}
         </tbody>
       </table>
+
+      <style>{`
+        .table__sort-button {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: none;
+          border: none;
+          color: inherit;
+          cursor: pointer;
+          font: inherit;
+          padding: 0;
+        }
+
+        .table__sort-button:hover {
+          color: var(--color-primary);
+        }
+      `}</style>
     </div>
   );
 };

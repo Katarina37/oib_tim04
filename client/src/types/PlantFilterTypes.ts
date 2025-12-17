@@ -1,7 +1,7 @@
-import { PlantStatus } from "../enums/PlantStatus";
+import { PlantState } from "../models/plants/PlantDTO";
 
 export interface PlantFiltersTypes {
-  status?: PlantStatus;
+  status?: PlantState;
   minOilStrength?: number;
   maxOilStrength?: number;
   countryOfOrigin?: string;

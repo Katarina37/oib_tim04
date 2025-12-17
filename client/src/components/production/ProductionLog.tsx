@@ -31,7 +31,7 @@ export const ProductionLog: React.FC<ProductionLogProps> = ({ logs, isLoading = 
     return (
       <div className="empty-state">
         <div className="spinner" />
-        <p className="mt-md text-muted">Učitavanje dnevnika...</p>
+        <p className="mt-md text-muted">Ucitavanje dnevnika...</p>
       </div>
     );
   }
@@ -44,7 +44,7 @@ export const ProductionLog: React.FC<ProductionLogProps> = ({ logs, isLoading = 
         </div>
         <h3 className="empty-state__title">Nema aktivnosti</h3>
         <p className="empty-state__description">
-          Ovde će se prikazivati sve aktivnosti vezane za proizvodnju
+          Ovde ce se prikazivati sve aktivnosti vezane za proizvodnju
         </p>
       </div>
     );

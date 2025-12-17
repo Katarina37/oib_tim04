@@ -9,6 +9,10 @@ import { LoggerService } from "./Services/LoggerService";
 import axios from "axios";
 import { AxiosAuditClient } from "./Infrastructure/clients/AxiosAuditClient";
 import { IAuditClient } from "./Domain/services/IAuditClient";
+import { CorsConfig } from "./WebAPI/middleware/CorsConfig";
+import { GatewayAuthMiddleware } from "./WebAPI/middleware/GatewayAuthMiddleware";
+import { RequestAuditMiddleware } from "./WebAPI/middleware/RequestAuditMiddleware";
+import { requireEnv } from "./config/env";
 
 export function createApp(): Application {
   const app: Application = express();
@@ -18,50 +22,20 @@ export function createApp(): Application {
   app.use(express.urlencoded({ extended: true }));
 
   // CORS Configuration
-  const defaultOrigins = ["http://localhost:5173", "http://localhost:3000"];
-  const rawOrigins =
-    process.env.ALLOWED_ORIGINS || process.env.CORS_ORIGIN || process.env.CORS_ORIGINS || "";
-  const allowedOrigins = Array.from(
-    new Set(
-      [...defaultOrigins, ...rawOrigins.split(",")]
-        .map((origin) => origin.trim())
-        .filter((origin) => origin.length > 0)
-    )
-  );
-
-  app.use(
-    cors({
-      origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          callback(new Error("Not allowed by CORS"));
-        }
-      },
-      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization", "X-Gateway-Key"],
-      credentials: true,
-    })
-  );
-
-  // Gateway API Key Middleware
-  const gatewayKeyMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-    const gatewayKey = req.headers["x-gateway-key"];
-    const expectedKey = process.env.GATEWAY_API_KEY;
-
-    if (gatewayKey !== expectedKey) {
-      res.status(403).json({ message: "Pristup zabranjen" });
-      return;
-    }
-    next();
-  };
+  const corsConfig = new CorsConfig();
+  const gatewayApiKey = requireEnv("GATEWAY_API_KEY");
+  const gatewayAuthMiddleware = new GatewayAuthMiddleware(gatewayApiKey);
+  app.use(cors(corsConfig.buildOptions()));
 
   // Dependency Injection
   const plantRepository = new PlantRepository();
-  const auditServiceUrl = process.env.AUDIT_SERVICE_URL || "http://localhost:3002";
+  const auditServiceUrl = requireEnv("GATEWAY_AUDIT_URL");
   const auditHttpClient = axios.create({
     baseURL: auditServiceUrl,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "X-Gateway-Key": gatewayApiKey,
+    },
     timeout: 5000,
   });
   const auditClient: IAuditClient = new AxiosAuditClient(auditHttpClient);
@@ -79,9 +53,17 @@ export function createApp(): Application {
   });
 
   // Protected Routes (require gateway key)
-  app.use(gatewayKeyMiddleware);
-  app.use(productionController.getRouter());
-  app.use(plantsController.getRouter());
+  const apiRouter = express.Router();
+  apiRouter.use(gatewayAuthMiddleware.getHandler());
+
+  if (process.env.ENABLE_REQUEST_AUDIT_LOGS === "true") {
+    const requestAuditMiddleware = new RequestAuditMiddleware(loggerService);
+    apiRouter.use(requestAuditMiddleware.getHandler());
+  }
+  apiRouter.use(productionController.getRouter());
+  apiRouter.use(plantsController.getRouter());
+  apiRouter.use("/production", plantsController.getRouter()); // allow /production/plants* paths via gateway
+  app.use("/api/v1", apiRouter);
 
   // Error Handling Middleware
   app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {

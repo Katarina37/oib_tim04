@@ -3,7 +3,7 @@ import { IPlantManagementService } from "../../Services/PlantManagementService";
 import { ILoggerService } from "../../Domain/services/ILoggerService";
 import { CreatePlantDTO } from "../../Domain/DTOs/CreatePlantDTO";
 import { UpdatePlantDTO } from "../../Domain/DTOs/UpdatePlantDTO";
-import { PlantSearchCriteriaDTO } from "../../Domain/DTOs/PlantSearchCriteriaDTO";
+import { PlantSearchCriteriaDTO, PlantSortField, SortDirection } from "../../Domain/DTOs/PlantSearchCriteriaDTO";
 import { PlantState } from "../../Domain/enums/PlantState";
 import { LogLevel } from "../../Domain/enums/LogLevel";
 import {
@@ -44,6 +44,24 @@ export class PlantsController {
     return req.ip || req.socket.remoteAddress || "unknown";
   }
 
+  private parseSort(req: Request): Pick<PlantSearchCriteriaDTO, "sortBy" | "sortDirection"> {
+    const sortBy = req.query.sortBy as PlantSortField | undefined;
+    const sortDirection = req.query.sortDirection as SortDirection | undefined;
+    const allowedFields: PlantSortField[] = [
+      "createdAt",
+      "commonName",
+      "latinName",
+      "countryOfOrigin",
+      "state",
+      "oilStrength",
+    ];
+
+    return {
+      sortBy: allowedFields.includes(sortBy as PlantSortField) ? sortBy : undefined,
+      sortDirection: sortDirection === "ASC" ? "ASC" : "DESC",
+    };
+  }
+
   private async getAllPlants(req: Request, res: Response): Promise<void> {
     const clientIp = this.getClientIp(req);
 
@@ -52,7 +70,7 @@ export class PlantsController {
         ipAddress: clientIp,
       });
 
-      const plants = await this.plantManagementService.getAllPlants();
+      const plants = await this.plantManagementService.getAllPlants(this.parseSort(req));
 
       await this.logger.log(
         `Uspesno dohvaceno ${plants.length} biljaka`,
@@ -97,7 +115,7 @@ export class PlantsController {
     }
 
     try {
-      const plants = await this.plantManagementService.getPlantsByState(state);
+      const plants = await this.plantManagementService.getPlantsByState(state, this.parseSort(req));
       res.status(200).json(plants);
     } catch (error) {
       res.status(500).json({ message: (error as Error).message });
@@ -117,6 +135,8 @@ export class PlantsController {
         maxOilStrength: req.query.maxOilStrength
           ? parseFloat(req.query.maxOilStrength as string)
           : undefined,
+        searchTerm: req.query.searchTerm as string,
+        ...this.parseSort(req),
       };
 
       const plants = await this.plantManagementService.searchPlants(criteria);

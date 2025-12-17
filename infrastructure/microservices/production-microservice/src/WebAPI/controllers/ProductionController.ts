@@ -61,6 +61,12 @@ export class ProductionController {
 
       const plant = await this.productionService.plantNewPlant(data);
 
+      await this.logger.log(
+        `Uspesno zasadjen zapis za biljku ${plant.commonName}`,
+        LogLevel.INFO,
+        { ipAddress: clientIp, additionalData: { plantId: plant.id } }
+      );
+
       res.status(201).json({ success: true, data: plant });
     } catch (error) {
       await this.logger.log(
@@ -94,6 +100,12 @@ export class ProductionController {
         data.percentageChange
       );
 
+      await this.logger.log(
+        `Promenjena jacina ulja za biljku ${data.plantId}`,
+        LogLevel.INFO,
+        { ipAddress: clientIp, additionalData: { plantId: data.plantId, percentageChange: data.percentageChange } }
+      );
+
       res.status(200).json({ success: true, data: plant });
     } catch (error) {
       await this.logger.log(
@@ -123,6 +135,15 @@ export class ProductionController {
       }
 
       const harvestedPlants = await this.productionService.harvestPlants(data);
+
+      await this.logger.log(
+        `Uspesno ubrano ${data.quantity} biljaka vrste ${data.commonName}`,
+        LogLevel.INFO,
+        {
+          ipAddress: clientIp,
+          additionalData: { quantity: data.quantity, commonName: data.commonName },
+        }
+      );
 
       res.status(200).json({ success: true, data: harvestedPlants });
     } catch (error) {

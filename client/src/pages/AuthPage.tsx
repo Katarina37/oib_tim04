@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { isAxiosError } from 'axios';
 import { Droplets, User, Lock, Mail, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../hooks/useAuthHook';
-import { AuthAPI } from '../api/auth/AuthAPI';
+import { useServices } from '../contexts/ServiceContext';
 import { LoginUserDTO } from '../models/auth/LoginUserDTO';
 import { RegistrationUserDTO } from '../models/auth/RegistrationUserDTO';
 import { UserRole } from '../enums/UserRole';
@@ -11,16 +12,31 @@ type AuthFormData = {
   username: string;
   password: string;
   email: string;
+  firstName: string;
+  lastName: string;
   role: UserRole;
 };
 
-const authAPI = new AuthAPI();
+const parseApiErrorMessage = (error: unknown): string | null => {
+  if (isAxiosError(error)) {
+    const data = error.response?.data as { message?: string; error?: string } | undefined;
+    return data?.message ?? data?.error ?? null;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return null;
+};
 
 export const AuthPage: React.FC = () => {
   const { login } = useAuth();
+  const { authAPI } = useServices();
   const [isRegister, setIsRegister] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   // Form state
@@ -28,6 +44,8 @@ export const AuthPage: React.FC = () => {
     username: '',
     password: '',
     email: '',
+    firstName: '',
+    lastName: '',
     role: UserRole.SELLER,
   });
 
@@ -42,43 +60,75 @@ export const AuthPage: React.FC = () => {
     }
 
     setError(null);
+    setSuccess(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError(null);
+    setSuccess(null);
 
-    const handleAuthSuccess = (response: AuthResponseType, fallbackMessage: string) => {
+    const handleLoginResponse = (response: AuthResponseType, fallbackMessage: string) => {
       if (response.success && response.token) {
         login(response.token);
-        return true;
+        return;
       }
+
       setError(response.message || fallbackMessage);
-      return false;
+    };
+
+    const handleRegisterResponse = (response: AuthResponseType, fallbackMessage: string) => {
+      if (response.success) {
+        setIsRegister(false);
+        setFormData(prev => ({
+          ...prev,
+          password: '',
+          email: '',
+          firstName: '',
+          lastName: '',
+          role: UserRole.SELLER,
+        }));
+        setSuccess('Registracija je uspesna. Prijavite se rucno.');
+        return;
+      }
+
+      setError(response.message || fallbackMessage);
     };
 
     try {
       if (isRegister) {
+        const trimmedFirstName = formData.firstName.trim();
+        const trimmedLastName = formData.lastName.trim();
+
+        if (!trimmedFirstName || !trimmedLastName) {
+          setError('Ime i prezime su obavezni.');
+          return;
+        }
+
+        setIsLoading(true);
         const registerData: RegistrationUserDTO = {
           username: formData.username,
           password: formData.password,
           email: formData.email,
+          firstName: trimmedFirstName,
+          lastName: trimmedLastName,
           role: formData.role,
           profileImage: '',
         };
         const response = await authAPI.register(registerData);
-        handleAuthSuccess(response, 'Registracija nije uspela. Pokusajte ponovo.');
+        handleRegisterResponse(response, 'Registracija nije uspela. Pokusajte ponovo.');
       } else {
+        setIsLoading(true);
         const loginData: LoginUserDTO = {
           username: formData.username,
           password: formData.password,
         };
         const response = await authAPI.login(loginData);
-        handleAuthSuccess(response, 'Pogresno korisnicko ime ili lozinka.');
+        handleLoginResponse(response, 'Pogresno korisnicko ime ili lozinka.');
       }
     } catch (err) {
-      setError('Doslo je do greske. Pokusajte ponovo.');
+      const apiMessage = parseApiErrorMessage(err);
+      setError(apiMessage ?? 'Doslo je do greske. Pokusajte ponovo.');
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -88,10 +138,13 @@ export const AuthPage: React.FC = () => {
   const toggleMode = () => {
     setIsRegister(!isRegister);
     setError(null);
+    setSuccess(null);
     setFormData({
       username: '',
       password: '',
       email: '',
+      firstName: '',
+      lastName: '',
       role: UserRole.SELLER,
     });
   };
@@ -121,6 +174,13 @@ export const AuthPage: React.FC = () => {
         {error && (
           <div className="auth-form__error">
             {error}
+          </div>
+        )}
+
+        {/* Success Message */}
+        {success && (
+          <div className="auth-form__success">
+            {success}
           </div>
         )}
 
@@ -188,6 +248,69 @@ export const AuthPage: React.FC = () => {
             </div>
           )}
 
+          {/* First Name + Last Name (only for registration) */}
+          {isRegister && (
+            <div className="grid grid--2 gap-md">
+              <div className="input-group">
+                <label className="input-group__label" htmlFor="firstName">
+                  Ime
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <User
+                    size={18}
+                    style={{
+                      position: 'absolute',
+                      left: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: 'var(--color-text-muted)'
+                    }}
+                  />
+                  <input
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    className="input"
+                    placeholder="Unesite ime"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    required
+                    style={{ paddingLeft: '40px' }}
+                  />
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label className="input-group__label" htmlFor="lastName">
+                  Prezime
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <User
+                    size={18}
+                    style={{
+                      position: 'absolute',
+                      left: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: 'var(--color-text-muted)'
+                    }}
+                  />
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    className="input"
+                    placeholder="Unesite prezime"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    required
+                    style={{ paddingLeft: '40px' }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Password */}
           <div className="input-group">
             <label className="input-group__label" htmlFor="password">
@@ -245,16 +368,30 @@ export const AuthPage: React.FC = () => {
               <label className="input-group__label" htmlFor="role">
                 Uloga
               </label>
-              <select
-                id="role"
-                name="role"
-                className="input select"
-                value={formData.role}
-                onChange={handleChange}
-              >
-                <option value={UserRole.SELLER}>Prodavac</option>
-                <option value={UserRole.ADMIN}>Administrator</option>
-              </select>
+              <div style={{ position: 'relative' }}>
+                <User
+                  size={18}
+                  style={{
+                    position: 'absolute',
+                    left: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--color-text-muted)'
+                  }}
+                />
+                <select
+                  id="role"
+                  name="role"
+                  className="input select"
+                  value={formData.role}
+                  onChange={handleChange}
+                  style={{ paddingLeft: '40px' }}
+                >
+                  <option value={UserRole.SELLER}>Prodavac</option>
+                  <option value={UserRole.SALES_MANAGER}>Menadzer prodaje</option>
+                  <option value={UserRole.ADMIN}>Administrator</option>
+                </select>
+              </div>
             </div>
           )}
 

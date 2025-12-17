@@ -1,6 +1,8 @@
 import React from 'react';
 import { Construction, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuthHook';
+import { getDefaultRouteForRole } from '../helpers/roleAccess';
 
 interface UnderConstructionPageProps {
   title: string;
@@ -12,6 +14,8 @@ export const UnderConstructionPage: React.FC<UnderConstructionPageProps> = ({
   description = 'Ova stranica je trenutno u izradi. Molimo vas da se vratite kasnije.' 
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const fallbackRoute = getDefaultRouteForRole(user?.role);
 
   return (
     <div className="under-construction">
@@ -25,10 +29,10 @@ export const UnderConstructionPage: React.FC<UnderConstructionPageProps> = ({
       </p>
       <button 
         className="btn btn--outline mt-lg"
-        onClick={() => navigate('/production')}
+        onClick={() => navigate(fallbackRoute)}
       >
         <ArrowLeft size={16} />
-        Nazad na proizvodnju
+        Nazad na pocetnu
       </button>
     </div>
   );

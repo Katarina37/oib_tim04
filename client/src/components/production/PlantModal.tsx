@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PlantDTO, CreatePlantDTO, UpdatePlantDTO, PlantState } from '../../models/plants/PlantDTO';
+import { PlantDTO, CreatePlantDTO, UpdatePlantDTO } from '../../models/plants/PlantDTO';
 import { X } from 'lucide-react';
 
 interface PlantModalProps {

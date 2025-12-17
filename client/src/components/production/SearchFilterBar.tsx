@@ -167,12 +167,13 @@ export const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
           border-radius: var(--radius-md);
           border: 1px solid var(--color-border-light);
         }
-        
+
         .filter-panel__row {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
           gap: var(--space-md);
         }
+
       `}</style>
     </div>
   );

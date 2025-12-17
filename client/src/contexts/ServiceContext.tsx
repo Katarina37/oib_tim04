@@ -1,0 +1,53 @@
+import { ReactNode, createContext, useContext, useMemo } from "react";
+import { IPlantAPI } from "../api/plants/IPlantAPI";
+import { IAuthAPI } from "../api/auth/IAuthAPI";
+import { IUserAPI } from "../api/users/IUserAPI";
+import { PlantAPI } from "../api/plants/PlantAPI";
+import { AuthAPI } from "../api/auth/AuthAPI";
+import { UserAPI } from "../api/users/UserAPI";
+import { AxiosHttpClient } from "../api/http/AxiosHttpClient";
+import { IHttpClient } from "../api/http/IHttpClient";
+import { AuditAPI } from "../api/audit/AuditAPI";
+import { IAuditAPI } from "../api/audit/IAuditAPI";
+
+type ServiceContextValue = {
+  plantAPI: IPlantAPI;
+  authAPI: IAuthAPI;
+  userAPI: IUserAPI;
+  auditAPI: IAuditAPI;
+};
+
+type ServiceProviderProps = {
+  children: ReactNode;
+  httpClient?: IHttpClient;
+};
+
+const ServiceContext = createContext<ServiceContextValue | undefined>(undefined);
+
+export const ServiceProvider: React.FC<ServiceProviderProps> = ({ children, httpClient }) => {
+  const gatewayUrl = import.meta.env.VITE_GATEWAY_URL;
+
+  const resolvedHttpClient = useMemo<IHttpClient>(() => {
+    return httpClient ?? new AxiosHttpClient(gatewayUrl);
+  }, [httpClient, gatewayUrl]);
+
+  const services = useMemo<ServiceContextValue>(
+    () => ({
+      plantAPI: new PlantAPI(resolvedHttpClient),
+      authAPI: new AuthAPI(resolvedHttpClient),
+      userAPI: new UserAPI(resolvedHttpClient),
+      auditAPI: new AuditAPI(resolvedHttpClient),
+    }),
+    [resolvedHttpClient]
+  );
+
+  return <ServiceContext.Provider value={services}>{children}</ServiceContext.Provider>;
+};
+
+export const useServices = (): ServiceContextValue => {
+  const context = useContext(ServiceContext);
+  if (!context) {
+    throw new Error("useServices must be used within a ServiceProvider");
+  }
+  return context;
+};

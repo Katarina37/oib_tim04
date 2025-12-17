@@ -47,4 +47,7 @@ export interface PlantSearchCriteriaDTO {
   state?: PlantState;
   minOilStrength?: number;
   maxOilStrength?: number;
+  searchTerm?: string;
+  sortBy?: "createdAt" | "commonName" | "latinName" | "countryOfOrigin" | "state" | "oilStrength";
+  sortDirection?: "ASC" | "DESC";
 }

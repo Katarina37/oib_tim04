@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuthHook';
 import { ProtectedRoute } from './components/protected_route/ProtectedRoute';
@@ -6,9 +6,11 @@ import AppLayout from './components/layout/AppLayout';
 import AuthPage from './pages/AuthPage';
 import ProductionPage from './pages/ProductionPage';
 import UnderConstructionPage from './pages/UnderConstructionPage';
+import { getDefaultRouteForRole } from './helpers/roleAccess';
 
 const App: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const defaultRoute = getDefaultRouteForRole(user?.role);
 
   if (isLoading) {
     return (
@@ -24,13 +26,13 @@ const App: React.FC = () => {
       <Route 
         path="/" 
         element={
-          isAuthenticated ? <Navigate to="/production" replace /> : <AuthPage />
+          isAuthenticated ? <Navigate to={defaultRoute} replace /> : <AuthPage />
         } 
       />
       <Route 
         path="/auth" 
         element={
-          isAuthenticated ? <Navigate to="/production" replace /> : <AuthPage />
+          isAuthenticated ? <Navigate to={defaultRoute} replace /> : <AuthPage />
         } 
       />
 
@@ -38,7 +40,7 @@ const App: React.FC = () => {
       <Route
         path="/production"
         element={
-          <ProtectedRoute requiredRole="admin,seller">
+          <ProtectedRoute requiredRole="seller,sales_manager">
             <AppLayout>
               <ProductionPage />
             </AppLayout>
@@ -49,10 +51,10 @@ const App: React.FC = () => {
       <Route
         path="/processing"
         element={
-          <ProtectedRoute requiredRole="admin,seller">
+          <ProtectedRoute requiredRole="seller,sales_manager">
             <AppLayout>
               <UnderConstructionPage 
-                title="Prerada siroovina" 
+                title="Prerada sirovina" 
                 description="Mikroservis za preradu biljaka u parfeme"
               />
             </AppLayout>
@@ -63,7 +65,7 @@ const App: React.FC = () => {
       <Route
         path="/packaging"
         element={
-          <ProtectedRoute requiredRole="admin,seller">
+          <ProtectedRoute requiredRole="seller,sales_manager">
             <AppLayout>
               <UnderConstructionPage 
                 title="Pakovanje" 
@@ -77,7 +79,7 @@ const App: React.FC = () => {
       <Route
         path="/storage"
         element={
-          <ProtectedRoute requiredRole="admin,seller">
+          <ProtectedRoute requiredRole="seller,sales_manager">
             <AppLayout>
               <UnderConstructionPage 
                 title="Skladištenje" 
@@ -91,7 +93,7 @@ const App: React.FC = () => {
       <Route
         path="/sales"
         element={
-          <ProtectedRoute requiredRole="admin,seller">
+          <ProtectedRoute requiredRole="seller,sales_manager">
             <AppLayout>
               <UnderConstructionPage 
                 title="Prodaja" 
@@ -138,20 +140,6 @@ const App: React.FC = () => {
               <UnderConstructionPage 
                 title="Evidencija događaja" 
                 description="Mikroservis za praćenje svih aktivnosti u sistemu"
-              />
-            </AppLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/settings"
-        element={
-          <ProtectedRoute requiredRole="admin,seller">
-            <AppLayout>
-              <UnderConstructionPage 
-                title="Podešavanja" 
-                description="Podešavanja korisničkog naloga i sistema"
               />
             </AppLayout>
           </ProtectedRoute>

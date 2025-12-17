@@ -35,8 +35,8 @@ export function validateRegistrationData(data: RegistrationUserDTO): ValidationR
     return { success: false, message: "Last name cannot exceed 100 characters" };
   }
 
-  if (data.profileImage && !isValidBase64(data.profileImage)) {
-    return { success: false, message: "Profile image must be in valid base64 format" };
+  if (data.profileImage && !isValidImage(data.profileImage)) {
+    return { success: false, message: "Profile image must be a valid URL or base64 string" };
   }
 
   return { success: true };
@@ -47,8 +47,12 @@ function isValidEmail(email: string): boolean {
   return emailRegex.test(email);
 }
 
-function isValidBase64(str: string): boolean {
+function isValidImage(str: string): boolean {
   if (!str || str.length === 0) return true;
+
   const base64Regex = /^(data:image\/[a-zA-Z]+;base64,)?[A-Za-z0-9+/]+=*$/;
-  return base64Regex.test(str);
+  const urlRegex =
+    /^(https?:\/\/)([\w-]+\.)+[\w-]+(\/[\w\-./?%&=+]*)?$/i;
+
+  return base64Regex.test(str) || urlRegex.test(str);
 }

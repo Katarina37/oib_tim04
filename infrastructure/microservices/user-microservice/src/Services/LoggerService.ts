@@ -1,4 +1,4 @@
-import { ILogerService, LogContext } from "../Domain/services/ILogerService";
+import { ILogerService, LogContext } from "../Domain/services/ILoggerService";
 import { IAuditClient } from "../Domain/services/IAuditClient";
 
 export enum LogType {

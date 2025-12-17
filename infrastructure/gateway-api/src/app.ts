@@ -1,7 +1,8 @@
 import express, { Application, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import axios from "axios";
-import dotenv from "dotenv";
+import { requireEnv, requireOneOfEnv } from "./config/env";
+import { CorsConfig } from "./config/CorsConfig";
 
 import { IGatewayService } from "./Domain/services/IGatewayService";
 import { IAuthClient } from "./Domain/clients/IAuthClient";
@@ -14,75 +15,55 @@ import { AxiosAuthClient } from "./Infrastructure/clients/AxiosAuthClient";
 import { AxiosUserClient } from "./Infrastructure/clients/AxiosUserClient";
 import { AxiosMicroserviceClient } from "./Infrastructure/clients/AxiosMicroserviceClient";
 
-dotenv.config();
-
 const app: Application = express();
 
-// CORS configuration from env
-const corsOrigins = process.env.CORS_ORIGIN?.split(",").map((o) => o.trim()) || ["*"];
-const corsMethods = process.env.CORS_METHODS?.split(",").map((m) => m.trim()) || [
-  "GET",
-  "POST",
-  "PUT",
-  "DELETE",
-  "PATCH",
-];
-
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || corsOrigins.includes("*") || corsOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    methods: corsMethods,
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  })
-);
+const corsConfig = new CorsConfig();
+app.use(cors(corsConfig.buildOptions()));
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Environment variables
-const gatewayApiKey = process.env.GATEWAY_API_KEY || "gateway-secret-key";
+const gatewayApiKey = requireEnv("GATEWAY_API_KEY");
+requireEnv("JWT_SECRET");
 const timeout = 5000;
 
 // Create HTTP clients for each microservice
-const createHttpClient = (baseURL: string) =>
+const createHttpClient = (baseURL: string, includeGatewayKey = false) =>
   axios.create({
     baseURL,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(includeGatewayKey ? { "X-Gateway-Key": gatewayApiKey } : {}),
+    },
     timeout,
   });
 
-const getServiceUrl = (url?: string, alt?: string, fallback?: string): string =>
-  url || alt || fallback || "";
+const normalizeApiBaseUrl = (baseURL: string): string => {
+  const trimmed = baseURL.trim().replace(/\/+$/, "");
+  if (!trimmed) return trimmed;
+  return trimmed.endsWith("/api/v1") ? trimmed : `${trimmed}/api/v1`;
+};
 
 // Auth service client
-const authServiceUrl = getServiceUrl(
-  process.env.AUTH_SERVICE_URL,
-  process.env.AUTH_SERVICE_API,
-  "http://localhost:5001/api/v1"
+const authServiceUrl = normalizeApiBaseUrl(
+  requireOneOfEnv(["AUTH_SERVICE_URL", "AUTH_SERVICE_API"])
 );
-const authHttpClient = createHttpClient(authServiceUrl);
+const authHttpClient = createHttpClient(authServiceUrl, true);
 const authClient: IAuthClient = new AxiosAuthClient(authHttpClient);
 
 // User service client
-const userServiceUrl = getServiceUrl(
-  process.env.USER_SERVICE_URL,
-  process.env.USER_SERVICE_API,
-  "http://localhost:5002/api/v1"
+const userServiceUrl = normalizeApiBaseUrl(
+  requireOneOfEnv(["USER_SERVICE_URL", "USER_SERVICE_API"])
 );
-const userHttpClient = createHttpClient(userServiceUrl);
+const userHttpClient = createHttpClient(userServiceUrl, true);
 const userClient: IUserClient = new AxiosUserClient(userHttpClient);
 
 // Production service client
-const productionHttpClient = createHttpClient(
-  process.env.PRODUCTION_SERVICE_URL || "http://localhost:5004"
+const productionServiceUrl = normalizeApiBaseUrl(
+  requireOneOfEnv(["PRODUCTION_SERVICE_URL", "PRODUCTION_SERVICE_API"])
 );
+const productionHttpClient = createHttpClient(productionServiceUrl);
 const productionClient: IMicroserviceClient = new AxiosMicroserviceClient(
   productionHttpClient,
   gatewayApiKey
@@ -90,7 +71,7 @@ const productionClient: IMicroserviceClient = new AxiosMicroserviceClient(
 
 // Processing service client
 const processingHttpClient = createHttpClient(
-  process.env.PROCESSING_SERVICE_URL || "http://localhost:5005/api/v1"
+  normalizeApiBaseUrl(requireEnv("PROCESSING_SERVICE_URL"))
 );
 const processingClient: IMicroserviceClient = new AxiosMicroserviceClient(
   processingHttpClient,
@@ -99,7 +80,7 @@ const processingClient: IMicroserviceClient = new AxiosMicroserviceClient(
 
 // Storage service client
 const storageHttpClient = createHttpClient(
-  process.env.STORAGE_SERVICE_URL || "http://localhost:5006/api/v1"
+  normalizeApiBaseUrl(requireEnv("STORAGE_SERVICE_URL"))
 );
 const storageClient: IMicroserviceClient = new AxiosMicroserviceClient(
   storageHttpClient,
@@ -108,13 +89,13 @@ const storageClient: IMicroserviceClient = new AxiosMicroserviceClient(
 
 // Sales service client
 const salesHttpClient = createHttpClient(
-  process.env.SALES_SERVICE_URL || "http://localhost:5007/api/v1"
+  normalizeApiBaseUrl(requireEnv("SALES_SERVICE_URL"))
 );
 const salesClient: IMicroserviceClient = new AxiosMicroserviceClient(salesHttpClient, gatewayApiKey);
 
 // Data Analysis service client
 const dataAnalysisHttpClient = createHttpClient(
-  process.env.DATA_ANALYSIS_SERVICE_URL || "http://localhost:5008/api/v1"
+  normalizeApiBaseUrl(requireEnv("DATA_ANALYSIS_SERVICE_URL"))
 );
 const dataAnalysisClient: IMicroserviceClient = new AxiosMicroserviceClient(
   dataAnalysisHttpClient,
@@ -123,7 +104,7 @@ const dataAnalysisClient: IMicroserviceClient = new AxiosMicroserviceClient(
 
 // Performance Analysis service client
 const performanceAnalysisHttpClient = createHttpClient(
-  process.env.PERFORMANCE_ANALYSIS_SERVICE_URL || "http://localhost:5009/api/v1"
+  normalizeApiBaseUrl(requireEnv("PERFORMANCE_ANALYSIS_SERVICE_URL"))
 );
 const performanceAnalysisClient: IMicroserviceClient = new AxiosMicroserviceClient(
   performanceAnalysisHttpClient,
@@ -132,7 +113,7 @@ const performanceAnalysisClient: IMicroserviceClient = new AxiosMicroserviceClie
 
 // Audit service client
 const auditHttpClient = createHttpClient(
-  process.env.AUDIT_SERVICE_URL || "http://localhost:5003/api/v1"
+  normalizeApiBaseUrl(requireEnv("AUDIT_SERVICE_URL"))
 );
 const auditClient: IMicroserviceClient = new AxiosMicroserviceClient(auditHttpClient, gatewayApiKey);
 

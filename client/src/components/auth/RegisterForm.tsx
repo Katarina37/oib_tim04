@@ -13,6 +13,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
   const [formData, setFormData] = useState<RegistrationUserDTO>({
     username: "",
     email: "",
+    firstName: "",
+    lastName: "",
     password: "",
     role: UserRole.SELLER,
     profileImage: "",
@@ -84,6 +86,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
           type="text"
           id="username"
           name="username"
+          className="input"
           value={formData.username}
           onChange={handleChange}
           placeholder="Choose a username"
@@ -100,12 +103,49 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
           type="email"
           id="email"
           name="email"
+          className="input"
           value={formData.email}
           onChange={handleChange}
           placeholder="your.email@example.com"
           required
           disabled={isLoading}
         />
+      </div>
+
+      <div className="grid grid--2 gap-md">
+        <div>
+          <label htmlFor="firstName" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
+            First Name
+          </label>
+          <input
+            type="text"
+            id="firstName"
+            name="firstName"
+            className="input"
+            value={formData.firstName}
+            onChange={handleChange}
+            placeholder="Enter your first name"
+            required
+            disabled={isLoading}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="lastName" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
+            Last Name
+          </label>
+          <input
+            type="text"
+            id="lastName"
+            name="lastName"
+            className="input"
+            value={formData.lastName}
+            onChange={handleChange}
+            placeholder="Enter your last name"
+            required
+            disabled={isLoading}
+          />
+        </div>
       </div>
 
       <div>
@@ -115,12 +155,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
         <select
           id="role"
           name="role"
+          className="input select"
           value={formData.role}
           onChange={handleChange}
           required
           disabled={isLoading}
         >
           <option value={UserRole.SELLER}>Seller</option>
+          <option value={UserRole.SALES_MANAGER}>Sales Manager</option>
           <option value={UserRole.ADMIN}>Admin</option>
         </select>
       </div>
@@ -133,6 +175,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
           type="password"
           id="password"
           name="password"
+          className="input"
           value={formData.password}
           onChange={handleChange}
           placeholder="Create a password (min 6 characters)"
@@ -149,6 +192,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
           type="password"
           id="confirmPassword"
           name="confirmPassword"
+          className="input"
           value={confirmPassword}
           onChange={(e) => {
             setConfirmPassword(e.target.value);
@@ -168,6 +212,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
           type="url"
           id="profileImage"
           name="profileImage"
+          className="input"
           value={formData.profileImage}
           onChange={handleChange}
           placeholder="https://example.com/avatar.jpg"

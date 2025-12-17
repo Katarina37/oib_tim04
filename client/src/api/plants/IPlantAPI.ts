@@ -2,10 +2,12 @@ import {
   ChangeOilStrengthDTO,
   HarvestPlantsDTO,
   PlantDTO,
+  PlantSearchCriteriaDTO,
 } from "../../models/plants/PlantDTO";
 
 export interface IPlantAPI {
-  getAllPlants(token: string): Promise<PlantDTO[]>;
+  getAllPlants(token: string, criteria?: PlantSearchCriteriaDTO): Promise<PlantDTO[]>;
+  searchPlants(criteria: PlantSearchCriteriaDTO, token: string): Promise<PlantDTO[]>;
   getPlantById(id: number, token: string): Promise<PlantDTO>;
   createPlant(plant: PlantDTO, token: string): Promise<PlantDTO>;
   updatePlant(id: number, plant: PlantDTO, token: string): Promise<PlantDTO>;

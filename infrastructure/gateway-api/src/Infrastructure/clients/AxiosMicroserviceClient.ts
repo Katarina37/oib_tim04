@@ -11,7 +11,11 @@ export class AxiosMicroserviceClient implements IMicroserviceClient {
   constructor(
     private readonly httpClient: AxiosInstance,
     private readonly gatewayApiKey: string
-  ) {}
+  ) {
+    if (!gatewayApiKey) {
+      throw new Error("GATEWAY_API_KEY is required for gateway → microservice calls");
+    }
+  }
 
   setAuthHeader(token: string): void {
     this.authToken = token;
@@ -21,7 +25,7 @@ export class AxiosMicroserviceClient implements IMicroserviceClient {
     try {
       const headers: Record<string, string> = {
         "X-Gateway-Key": this.gatewayApiKey,
-        ...request.headers,
+        ...(request.headers ?? {}),
       };
 
       if (this.authToken) {

@@ -15,10 +15,11 @@ export class AuthController {
 
   constructor(
     private readonly authService: IAuthService,
-    private readonly logerService: ILogerService
+    private readonly logerService: ILogerService,
+    jwtSecret: string
   ) {
     this.router = Router();
-    this.jwtSecret = process.env.JWT_SECRET || "default_secret";
+    this.jwtSecret = jwtSecret;
     this.jwtOptions = {
       expiresIn: "6h",
     };

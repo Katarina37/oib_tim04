@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Leaf, Plus, Scissors, Droplets, TreeDeciduous, Sprout, FlaskConical } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Leaf, Plus, Scissors, Droplets, TreeDeciduous, Sprout, FlaskConical, ScrollText } from 'lucide-react';
 import { useAuth } from '../hooks/useAuthHook';
-import { PlantAPI } from '../api/plants/PlantAPI';
+import { useServices } from '../contexts/ServiceContext';
 import { PlantDTO, CreatePlantDTO, UpdatePlantDTO, PlantState, HarvestPlantsDTO, ChangeOilStrengthDTO, PlantSearchCriteriaDTO } from '../models/plants/PlantDTO';
 import PlantTable from '../components/production/PlantTable';
 import PlantModal from '../components/production/PlantModal';
@@ -11,11 +11,39 @@ import ProductionLog, { LogEntry } from '../components/production/ProductionLog'
 import StatsCard from '../components/production/StatsCard';
 import SearchFilterBar from '../components/production/SearchFilterBar';
 import ConfirmModal from '../components/common/ConfirmModal';
+import { AuditLogDTO } from '../models/audit/AuditLogDTO';
 
-const plantAPI = new PlantAPI();
+const PRODUCTION_MICROSERVICE = 'proizvodnja';
+
+const mapLogLevelToEntryType = (level: AuditLogDTO['tip_zapisa']): LogEntry['type'] => {
+  const normalized = String(level ?? '').toLowerCase();
+
+  if (normalized === 'error') return 'error';
+  if (normalized === 'warning') return 'warning';
+  if (normalized === 'success') return 'success';
+  return 'info';
+};
+
+const formatTimestampToTime = (timestamp: string): string => {
+  const date = new Date(timestamp);
+
+  if (Number.isNaN(date.getTime())) {
+    return '--:--';
+  }
+
+  return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+};
+
+const toLogEntry = (auditLog: AuditLogDTO): LogEntry => ({
+  id: auditLog.id,
+  time: formatTimestampToTime(auditLog.datum_vreme),
+  message: auditLog.opis,
+  type: mapLogLevelToEntryType(auditLog.tip_zapisa),
+});
 
 export const ProductionPage: React.FC = () => {
   const { token } = useAuth();
+  const { plantAPI, auditAPI } = useServices();
   
   // State for plants data
   const [plants, setPlants] = useState<PlantDTO[]>([]);
@@ -34,29 +62,29 @@ export const ProductionPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<PlantSearchCriteriaDTO>({});
   const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<PlantSearchCriteriaDTO['sortBy']>('createdAt');
+  const [sortDirection, setSortDirection] = useState<PlantSearchCriteriaDTO['sortDirection']>('DESC');
   
   // State for logs
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [logsLoading] = useState(false);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [logsError, setLogsError] = useState<string | null>(null);
 
-  // Fetch plants on mount
-  useEffect(() => {
-    fetchPlants();
-    // Add some sample logs
-    setLogs([
-      { id: 1, time: '14:23', message: 'Zasadjena biljka: Lavanda', type: 'success' },
-      { id: 2, time: '14:28', message: 'Prerada zavrsena: 5 bocica parfema', type: 'success' },
-      { id: 3, time: '14:35', message: 'Upozorenje: Jacina ulja prelazi 4.0', type: 'warning' },
-      { id: 4, time: '15:10', message: 'Ubrano 10 biljaka vrste Ruza', type: 'info' },
-    ]);
-  }, []);
-
-  const fetchPlants = async () => {
-    if (!token) return;
+  const fetchPlants = useCallback(async () => {
+    if (!token) {
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
-      const data = await plantAPI.getAllPlants(token);
+      const criteria: PlantSearchCriteriaDTO = {
+        ...filters,
+        searchTerm: searchTerm || undefined,
+        sortBy,
+        sortDirection,
+      };
+
+      const data = await plantAPI.searchPlants(criteria, token);
       setPlants(data);
     } catch (err) {
       setError('Greska pri ucitavanju biljaka');
@@ -64,44 +92,38 @@ export const ProductionPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [plantAPI, token, filters, searchTerm, sortBy, sortDirection]);
+
+  const fetchProductionLogs = useCallback(async () => {
+    if (!token) {
+      setLogs([]);
+      return;
+    }
+
+    setLogsLoading(true);
+    setLogsError(null);
+
+    try {
+      const auditLogs = await auditAPI.searchLogs({ mikroservis: PRODUCTION_MICROSERVICE }, token);
+      const sortedLogs = [...auditLogs].sort(
+        (first, second) => new Date(second.datum_vreme).getTime() - new Date(first.datum_vreme).getTime()
+      );
+      setLogs(sortedLogs.map(toLogEntry));
+    } catch (err) {
+      setLogsError('Greska pri ucitavanju dnevnika');
+      console.error(err);
+    } finally {
+      setLogsLoading(false);
+    }
+  }, [auditAPI, token]);
+
+  useEffect(() => {
+    fetchPlants();
+    fetchProductionLogs();
+  }, [fetchPlants, fetchProductionLogs]);
 
   // Filter and search plants
-  const filteredPlants = useMemo(() => {
-    return plants.filter(plant => {
-      // Search term filter
-      if (searchTerm) {
-        const search = searchTerm.toLowerCase();
-        if (
-          !plant.commonName.toLowerCase().includes(search) &&
-          !plant.latinName.toLowerCase().includes(search)
-        ) {
-          return false;
-        }
-      }
-      
-      // State filter
-      if (filters.state && plant.state !== filters.state) {
-        return false;
-      }
-      
-      // Country filter
-      if (filters.countryOfOrigin && 
-          !plant.countryOfOrigin.toLowerCase().includes(filters.countryOfOrigin.toLowerCase())) {
-        return false;
-      }
-      
-      // Oil strength filters
-      if (filters.minOilStrength !== undefined && plant.oilStrength < filters.minOilStrength) {
-        return false;
-      }
-      if (filters.maxOilStrength !== undefined && plant.oilStrength > filters.maxOilStrength) {
-        return false;
-      }
-      
-      return true;
-    });
-  }, [plants, searchTerm, filters]);
+  const filteredPlants = plants;
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -112,13 +134,6 @@ export const ProductionPage: React.FC = () => {
     return { total, planted, harvested, processed };
   }, [plants]);
 
-  // Add log entry
-  const addLog = (message: string, type: LogEntry['type']) => {
-    const now = new Date();
-    const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    setLogs(prev => [{ id: Date.now(), time, message, type }, ...prev]);
-  };
-
   // Handle plant creation/update
   const handleSavePlant = async (data: CreatePlantDTO | UpdatePlantDTO) => {
     if (!token) return;
@@ -126,16 +141,15 @@ export const ProductionPage: React.FC = () => {
     try {
       if (selectedPlant) {
         await plantAPI.updatePlant(selectedPlant.id, data as PlantDTO, token);
-        addLog(`Biljka "${(data as UpdatePlantDTO).commonName || selectedPlant.commonName}" je azurirana`, 'success');
       } else {
         await plantAPI.createPlant(data as PlantDTO, token);
-        addLog(`Nova biljka "${(data as CreatePlantDTO).commonName}" je zasadjena`, 'success');
       }
       await fetchPlants();
+      await fetchProductionLogs();
       setIsPlantModalOpen(false);
       setSelectedPlant(null);
     } catch (err) {
-      addLog('Greska pri cuvanju biljke', 'error');
+      setError('Greska pri cuvanju biljke');
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -148,12 +162,12 @@ export const ProductionPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       await plantAPI.deletePlant(selectedPlant.id, token);
-      addLog(`Biljka "${selectedPlant.commonName}" je obrisana`, 'info');
       await fetchPlants();
+      await fetchProductionLogs();
       setIsDeleteModalOpen(false);
       setSelectedPlant(null);
     } catch (err) {
-      addLog('Greska pri brisanju biljke', 'error');
+      setError('Greska pri brisanju biljke');
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -165,14 +179,12 @@ export const ProductionPage: React.FC = () => {
     if (!token) return;
     setIsSubmitting(true);
     try {
-      const harvested = await plantAPI.harvestPlants(data, token);
-      const harvestedCount = harvested.length || data.quantity;
-      addLog(`Ubrano ${harvestedCount} biljaka vrste ${data.commonName}`, 'success');
+      await plantAPI.harvestPlants(data, token);
       await fetchPlants();
+      await fetchProductionLogs();
       setIsHarvestModalOpen(false);
     } catch (err) {
       setError('Greska pri berbi biljaka');
-      addLog('Greska pri berbi biljaka', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -184,17 +196,12 @@ export const ProductionPage: React.FC = () => {
     if (!token) return;
     setIsSubmitting(true);
     try {
-      const updatedPlant = await plantAPI.changeOilStrength(data, token);
-      const direction = data.percentageChange > 0 ? 'povecana' : 'smanjena';
-      addLog(
-        `Jacina ulja za "${updatedPlant.commonName}" ${direction} na ${updatedPlant.oilStrength.toFixed(1)}`,
-        'success'
-      );
+      await plantAPI.changeOilStrength(data, token);
       await fetchPlants();
+      await fetchProductionLogs();
       setIsOilStrengthModalOpen(false);
     } catch (err) {
       setError('Greska pri promeni jacine ulja');
-      addLog('Greska pri promeni jacine ulja', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -298,12 +305,18 @@ export const ProductionPage: React.FC = () => {
                 onEdit={handleEditClick}
                 onDelete={handleDeleteClick}
                 isLoading={isLoading}
+                sortBy={sortBy}
+                sortDirection={sortDirection}
+                onSortChange={(column, direction) => {
+                  setSortBy(column);
+                  setSortDirection(direction);
+                }}
               />
             )}
           </div>
           <div className="card__footer">
             <span className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>
-              Prikazano {filteredPlants.length} od {plants.length} biljaka
+              Prikazano {plants.length} biljaka
             </span>
           </div>
         </div>
@@ -312,12 +325,21 @@ export const ProductionPage: React.FC = () => {
         <div className="card">
           <div className="card__header">
             <h2 className="card__title">
-              <span style={{ color: 'var(--color-primary)' }}>LOG</span>
+              <ScrollText size={20} className="card__title-icon" />
               Dnevnik proizvodnje
             </h2>
           </div>
           <div className="card__body" style={{ padding: 0 }}>
-            <ProductionLog logs={logs} isLoading={logsLoading} />
+            {logsError ? (
+              <div className="empty-state" style={{ padding: 'var(--space-xl)' }}>
+                <p className="text-error">{logsError}</p>
+                <button className="btn btn--secondary mt-md" onClick={fetchProductionLogs}>
+                  Osvezi dnevnik
+                </button>
+              </div>
+            ) : (
+              <ProductionLog logs={logs} isLoading={logsLoading} />
+            )}
           </div>
         </div>
       </div>

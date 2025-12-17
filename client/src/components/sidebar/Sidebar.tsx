@@ -9,10 +9,10 @@ import {
   BarChart3,
   Activity,
   FileText,
-  Settings,
   LogOut,
   Droplets,
 } from 'lucide-react';
+import { normalizeRole, RoleKey } from '../../helpers/roleAccess';
 import { useAuth } from '../../hooks/useAuthHook';
 import './Sidebar.css';
 
@@ -22,6 +22,13 @@ interface NavItemProps {
   label: string;
   disabled?: boolean;
 }
+
+type NavSection = 'operations' | 'system';
+
+type NavConfigItem = NavItemProps & {
+  allowedRoles: RoleKey[];
+  section: NavSection;
+};
 
 const NavItem: React.FC<NavItemProps> = ({ to, icon, label, disabled = false }) => {
   const location = useLocation();
@@ -47,6 +54,77 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, disabled = false }) 
 export const Sidebar: React.FC = () => {
   const { user, logout } = useAuth();
 
+  const navItems: NavConfigItem[] = [
+    {
+      to: "/production",
+      icon: <Leaf size={20} />,
+      label: "Proizvodnja",
+      allowedRoles: ["seller", "sales_manager"],
+      section: "operations",
+    },
+    {
+      to: "/processing",
+      icon: <FlaskConical size={20} />,
+      label: "Prerada",
+      allowedRoles: ["seller", "sales_manager"],
+      section: "operations",
+    },
+    {
+      to: "/packaging",
+      icon: <Package size={20} />,
+      label: "Pakovanje",
+      allowedRoles: ["seller", "sales_manager"],
+      section: "operations",
+    },
+    {
+      to: "/storage",
+      icon: <Warehouse size={20} />,
+      label: "Skladistenje",
+      allowedRoles: ["seller", "sales_manager"],
+      section: "operations",
+    },
+    {
+      to: "/sales",
+      icon: <ShoppingCart size={20} />,
+      label: "Prodaja",
+      allowedRoles: ["seller", "sales_manager"],
+      section: "operations",
+    },
+    {
+      to: "/analytics",
+      icon: <BarChart3 size={20} />,
+      label: "Analiza prodaje",
+      allowedRoles: ["admin"],
+      section: "system",
+    },
+    {
+      to: "/performance",
+      icon: <Activity size={20} />,
+      label: "Performanse",
+      allowedRoles: ["admin"],
+      section: "system",
+    },
+    {
+      to: "/audit-logs",
+      icon: <FileText size={20} />,
+      label: "Evidencija",
+      allowedRoles: ["admin"],
+      section: "system",
+    },
+  ];
+
+  const normalizedRole = normalizeRole(user?.role);
+
+  const filterItemsBySection = (section: NavSection) =>
+    navItems.filter(
+      (item) =>
+        item.section === section &&
+        (normalizedRole ? item.allowedRoles.includes(normalizedRole) : false)
+    );
+
+  const operationsItems = filterItemsBySection('operations');
+  const systemItems = filterItemsBySection('system');
+
   const getInitials = (username?: string): string => {
     if (!username) return 'US';
     const trimmed = username.trim();
@@ -60,7 +138,7 @@ export const Sidebar: React.FC = () => {
         return 'Administrator';
       case 'seller':
         return 'Prodavac';
-      case 'manager':
+      case 'sales_manager':
         return 'Menadzer prodaje';
       default:
         return role ?? '';
@@ -87,31 +165,33 @@ export const Sidebar: React.FC = () => {
       </div>
 
       <nav className="sidebar__nav">
-        <NavItem to="/production" icon={<Leaf size={20} />} label="Proizvodnja" />
-        <NavItem to="/processing" icon={<FlaskConical size={20} />} label="Prerada" disabled />
-        <NavItem to="/packaging" icon={<Package size={20} />} label="Pakovanje" disabled />
-        <NavItem to="/storage" icon={<Warehouse size={20} />} label="Skladistenje" disabled />
-        <NavItem to="/sales" icon={<ShoppingCart size={20} />} label="Prodaja" disabled />
+        {operationsItems.map((item) => (
+          <NavItem key={item.to} to={item.to} icon={item.icon} label={item.label} />
+        ))}
 
-        <div className="sidebar__divider" />
+        {operationsItems.length > 0 && systemItems.length > 0 && <div className="sidebar__divider" />}
 
-        <NavItem to="/analytics" icon={<BarChart3 size={20} />} label="Analiza prodaje" disabled />
-        <NavItem to="/performance" icon={<Activity size={20} />} label="Performanse" disabled />
-        <NavItem to="/audit-logs" icon={<FileText size={20} />} label="Evidencija" disabled />
-
-        <div className="sidebar__divider" />
-
-        <NavItem to="/settings" icon={<Settings size={20} />} label="Podesavanja" disabled />
+        {systemItems.map((item) => (
+          <NavItem key={item.to} to={item.to} icon={item.icon} label={item.label} />
+        ))}
       </nav>
 
       <div className="sidebar__footer">
-        <div className="sidebar__profile" onClick={handleLogout} title="Odjavi se">
+        <div className="sidebar__profile" title="Profil korisnika">
           <div className="sidebar__avatar">{userInitials}</div>
           <div className="sidebar__user-info">
             <div className="sidebar__user-name">{user?.username}</div>
             <div className="sidebar__user-role">{roleLabel}</div>
           </div>
-          <LogOut size={16} className="sidebar__logout-icon" />
+          <button
+            type="button"
+            className="sidebar__logout-button"
+            onClick={handleLogout}
+            title="Odjavi se"
+            aria-label="Odjavi se"
+          >
+            <LogOut size={16} className="sidebar__logout-icon" />
+          </button>
         </div>
       </div>
     </aside>

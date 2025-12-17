@@ -5,6 +5,6 @@ export class AxiosAuditClient implements IAuditClient {
   constructor(private readonly httpClient: AxiosInstance) {}
 
   async sendLog(payload: AuditLogPayload): Promise<void> {
-    await this.httpClient.post("/api/v1/logs", payload);
+    await this.httpClient.post("/logs", payload);
   }
 }

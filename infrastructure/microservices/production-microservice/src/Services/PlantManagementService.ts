@@ -9,9 +9,9 @@ import { LogLevel } from "../Domain/enums/LogLevel";
 import { Plant } from "../Domain/models/Plant";
 
 export interface IPlantManagementService {
-  getAllPlants(): Promise<PlantDTO[]>;
+  getAllPlants(criteria?: PlantSearchCriteriaDTO): Promise<PlantDTO[]>;
   getPlantById(id: number): Promise<PlantDTO>;
-  getPlantsByState(state: PlantState): Promise<PlantDTO[]>;
+  getPlantsByState(state: PlantState, criteria?: PlantSearchCriteriaDTO): Promise<PlantDTO[]>;
   searchPlants(criteria: PlantSearchCriteriaDTO): Promise<PlantDTO[]>;
   createPlant(data: CreatePlantDTO): Promise<PlantDTO>;
   updatePlant(id: number, data: UpdatePlantDTO): Promise<PlantDTO>;
@@ -24,8 +24,8 @@ export class PlantManagementService implements IPlantManagementService {
     private readonly logger: ILoggerService
   ) {}
 
-  async getAllPlants(): Promise<PlantDTO[]> {
-    const plants = await this.plantRepository.findAll();
+  async getAllPlants(criteria: PlantSearchCriteriaDTO = {}): Promise<PlantDTO[]> {
+    const plants = await this.plantRepository.findAll(criteria);
     return plants.map((plant) => this.toDTO(plant));
   }
 
@@ -39,8 +39,11 @@ export class PlantManagementService implements IPlantManagementService {
     return this.toDTO(plant);
   }
 
-  async getPlantsByState(state: PlantState): Promise<PlantDTO[]> {
-    const plants = await this.plantRepository.findByState(state);
+  async getPlantsByState(
+    state: PlantState,
+    criteria: PlantSearchCriteriaDTO = {}
+  ): Promise<PlantDTO[]> {
+    const plants = await this.plantRepository.findByState(state, criteria);
     return plants.map((plant) => this.toDTO(plant));
   }
 
