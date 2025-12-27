@@ -15,7 +15,6 @@ import { requireEnv, requireIntEnv } from "./config/env";
 
 export async function createApp(): Promise<express.Application> {
 
-  await initializeDatabase();
   const app = express();
 
   // middleware
@@ -26,9 +25,16 @@ export async function createApp(): Promise<express.Application> {
   app.use(cors(corsConfig.buildOptions()));
 
   // audit klijent
+  const gatewayApiKey = requireEnv("GATEWAY_API_KEY");
+  const auditServiceUrl = requireEnv("GATEWAY_AUDIT_URL");
+
   const auditHttpClient = axios.create({
-    baseURL: requireEnv("AUDIT_SERVICE_URL"),
-    timeout: 5000,
+    baseURL: auditServiceUrl,
+    headers: {
+     "Content-Type": "application/json",
+      "X-Gateway-Key": gatewayApiKey,
+    },
+   timeout: 5000,
   });
 
   const auditClient = new AxiosAuditClient(auditHttpClient);
@@ -51,7 +57,7 @@ export async function createApp(): Promise<express.Application> {
   app.get("/health", (_req, res) => {
     res.status(200).json({ status: "OK", service: "analysis-microservice" });
   });
-   app.use("*", (_req, res) => {
+   app.use((_req, res) => {
     res.status(404).json({ message: "Route not found" });
   });
   app.use(

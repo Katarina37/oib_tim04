@@ -20,6 +20,17 @@ export function validateFiscalBill(data: CreateFiscalBillDTO): ValidationResult 
     return { success: false, message: "Lista prodanih proizvoda ne sme biti prazna" };
   }
 
-  // ******
+   for (const item of data.soldItems) {
+    if (!item.productId || !item.productName) {
+      return { success: false, message: "Proizvod mora imati ID i naziv" };
+    }
+    if (item.quantity <= 0) {
+     return { success: false, message: "Kolicina mora biti veća od 0" };
+   }
+    if (item.price <= 0) {
+     return { success: false, message: "Cena mora biti veća od 0" };
+   }
+  }
     return { success: true };
 }
+

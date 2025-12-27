@@ -3,8 +3,10 @@ import { SalesReport } from "../models/SalesReport";
 import { TopProductReport } from "../models/TopProductReport";
 import { TrendAnalysis } from "../models/TrendAnalysis";
 import { CreateFiscalBillDTO } from "../DTOs/CreateFiscalBillDTO";
+import { SalesAnalysisDTO } from "../DTOs/SalesAnalysisDTO";
+import { TrendAnalysisDTO } from "../DTOs/TrendAnalysisDTO";
 
-export interface SalesAnalysisParams{
+/*export interface SalesAnalysisParams{
     periodType: "daily" | "weekly" | "monthly" | "yearly" | "total";
     periodValue: string;
 }
@@ -15,7 +17,7 @@ export interface TrendAnalysisParams{
     endDate?: Date;
     productId?: string;
 }
-
+*/
 export interface IAnalysisService{
 
     // fiskalni racuni
@@ -28,9 +30,9 @@ export interface IAnalysisService{
 
     // analiza prodaje
 
-    generateSalesAnalysis(params: SalesAnalysisParams): Promise<SalesReport>;
+    generateSalesAnalysis(params: SalesAnalysisDTO): Promise<SalesReport>;
 
-    getSalesReports(periodType?: string): Promise<SalesReport[]>;
+    getSalesReports(periodType?: SalesAnalysisDTO["periodType"]): Promise<SalesReport[]>;
 
     // top proizvodi
 
@@ -40,9 +42,9 @@ export interface IAnalysisService{
 
     // trendovi
 
-    generateTrendAnalysis(params: TrendAnalysisParams): Promise<TrendAnalysis>;
+    generateTrendAnalysis(params: TrendAnalysisDTO): Promise<TrendAnalysis>;
 
-    getTrendAnalyses(analysisType?: string): Promise<TrendAnalysis[]>;
+    getTrendAnalyses(analysisType?: TrendAnalysisDTO["analysisType"]): Promise<TrendAnalysis[]>;
 
     // pdf izvoz
 

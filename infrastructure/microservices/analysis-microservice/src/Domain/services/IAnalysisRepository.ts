@@ -2,6 +2,8 @@ import { FiscalBill } from "../models/FiscalBill";
 import { SalesReport } from "../models/SalesReport";
 import { TopProductReport } from "../models/TopProductReport";
 import { TrendAnalysis } from "../models/TrendAnalysis";
+import { SalesAnalysisDTO } from "../DTOs/SalesAnalysisDTO";
+import { TrendAnalysisDTO } from "../DTOs/TrendAnalysisDTO";
 
 export interface IAnalysisRepository{
 
@@ -16,9 +18,11 @@ export interface IAnalysisRepository{
 
     // izvjestaji
 
-    findSalesReportByPeriod(periodType: string, periodValue: string): Promise<SalesReport | null>;
+    findSalesReportByPeriod(periodType: SalesAnalysisDTO["periodType"], periodValue: string): Promise<SalesReport | null>;
     
     createSalesReport(data: Partial<SalesReport>): Promise<SalesReport>;
+
+    findAllSalesReports(periodType?: SalesAnalysisDTO["periodType"]): Promise<SalesReport[]>;
 
     // top proizvodi
 
@@ -26,11 +30,13 @@ export interface IAnalysisRepository{
 
     createTopProductReport(data: Partial<TopProductReport>): Promise<TopProductReport>;
 
+    findAllTopProductsReports(): Promise<TopProductReport[]>;
+
     // trendovi
 
     createTrendAnalysis(data: Partial<TrendAnalysis>): Promise<TrendAnalysis>;
 
-    findTrendAnalysisByType(analysisType: string): Promise<TrendAnalysis[]>;
+    findTrendAnalysisByType(analysisType: TrendAnalysisDTO["analysisType"]): Promise<TrendAnalysis[]>;
 
     //agregacije za analizu
 

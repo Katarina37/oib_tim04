@@ -2,6 +2,9 @@ import { Router, Request, Response } from "express";
 import { IAnalysisService } from "../../Domain/services/IAnalysisService";
 import { ILoggerService } from "../../Domain/services/ILoggerService";
 import { LogLevel } from "../../Domain/enums/LogLevel";
+import { SalesAnalysisDTO } from "../../Domain/DTOs/SalesAnalysisDTO";
+import { TrendAnalysisDTO } from "../../Domain/DTOs/TrendAnalysisDTO";
+import { validateFiscalBill } from "../validators/AnalysisValidator";
 
 export class AnalysisController{
     private readonly router: Router;
@@ -53,6 +56,14 @@ export class AnalysisController{
         const clientIp = this.getClientIp(req);
 
         try{
+            const validation = validateFiscalBill(req.body);
+            if(!validation.success){
+                res.status(400).json({
+                    success: false,
+                    message: validation.message
+                });
+                return;
+            }
             const bill = await this.analysisService.createFiscalBill(req.body);
 
             await this.logger.log(
@@ -121,7 +132,7 @@ export class AnalysisController{
 
     private async getSalesReports(req: Request, res: Response): Promise<void>{
         try{
-            const periodType = req.query.periodType as string;
+            const periodType = req.query.periodType as SalesAnalysisDTO["periodType"];
             const reports = await this.analysisService.getSalesReports(periodType);
             res.status(200).json({success: true, data: reports});
         }catch(error){
@@ -140,7 +151,7 @@ export class AnalysisController{
 
     private async getTrendAnalyses(req: Request, res: Response): Promise<void>{
         try{
-            const analysisType = req.query.analysisType as string;
+            const analysisType = req.query.analysisType as TrendAnalysisDTO["analysisType"];
             const analyses = await this.analysisService.getTrendAnalyses(analysisType);
             res.status(200).json({success: true, data: analyses});
         }catch(error){

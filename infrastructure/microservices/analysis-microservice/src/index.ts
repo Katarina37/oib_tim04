@@ -6,7 +6,7 @@ import { initializeDatabase } from './Database/InitializeConnection';
 async function bootstrap(): Promise<void> {
   try {
     await initializeDatabase();
-    const app = createApp();
+    const app = await createApp();
     const port = requireIntEnv("PORT");
     app.listen(port, () => {
       console.log(`\x1b[32m[TCPListen@2.1]\x1b[0m localhost:${port}`);

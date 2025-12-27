@@ -1,5 +1,7 @@
-import { IAnalysisService, SalesAnalysisParams, TrendAnalysisParams } from "../Domain/services/IAnalysisService";
+import { IAnalysisService } from "../Domain/services/IAnalysisService";
 import { CreateFiscalBillDTO } from "../Domain/DTOs/CreateFiscalBillDTO";
+import { SalesAnalysisDTO } from "../Domain/DTOs/SalesAnalysisDTO";
+import { TrendAnalysisDTO } from "../Domain/DTOs/TrendAnalysisDTO";
 import { IAnalysisRepository } from "../Domain/services/IAnalysisRepository";
 import { ILoggerService } from "../Domain/services/ILoggerService";
 import { FiscalBill} from "../Domain/models/FiscalBill";
@@ -43,10 +45,22 @@ export class AnalysisService implements IAnalysisService{
     }
 
     async getFiscalBills(period?: string): Promise<FiscalBill[]> {
-        if(period){
-            return await this.analysisRepository.findFiscalBillsByPeriod(period);
+        try{
+            if(period){
+                return await this.analysisRepository.findFiscalBillsByPeriod(period);
+            }
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30);
+            return await this.analysisRepository.findFiscalBillsByDateRange(startDate, endDate);
+
+        }catch(error){
+            await this.logger.log(
+                `Greska pri dobavljanju fiskalnih racuna: ${(error as Error).message}`,
+                LogLevel.ERROR
+            );
+            throw error;
         }
-        throw new Error("Not implemented");
     }
 
     async getFiscalBillById(id: string): Promise<FiscalBill> {
@@ -57,7 +71,7 @@ export class AnalysisService implements IAnalysisService{
         return bill;
     }
 
-    async generateSalesAnalysis(params: SalesAnalysisParams): Promise<SalesReport> {
+    async generateSalesAnalysis(params: SalesAnalysisDTO): Promise<SalesReport> {
         try{
             const existing = await this.analysisRepository.findSalesReportByPeriod(params.periodType, params.periodValue);
 
@@ -143,7 +157,7 @@ export class AnalysisService implements IAnalysisService{
         }
     }
 
-    async generateTrendAnalysis(params: TrendAnalysisParams): Promise<TrendAnalysis> {
+    async generateTrendAnalysis(params: TrendAnalysisDTO): Promise<TrendAnalysis> {
         try{
             const endDate = params.endDate || new Date();
             const startDate = params.startDate || new Date(endDate.getFullYear(), endDate.getMonth() - 6, 1);
@@ -177,17 +191,15 @@ export class AnalysisService implements IAnalysisService{
         }
     }
 
-    async getSalesReports(periodType?: string): Promise<SalesReport[]> {
-        //... filtriranje prema periodType
-        throw new Error("Not implemented");
+    async getSalesReports(periodType?: SalesAnalysisDTO["periodType"]): Promise<SalesReport[]> {
+        return await this.analysisRepository.findAllSalesReports(periodType);
     }
 
     async getTopProductsReports(): Promise<TopProductReport[]> {
-        // ... vrati sve izvjestaje
-        throw new Error("Not implemented");
+       return await this.analysisRepository.findAllTopProductsReports();
     }
 
-    async getTrendAnalyses(analysisType?: string): Promise<TrendAnalysis[]> {
+    async getTrendAnalyses(analysisType?: TrendAnalysisDTO["analysisType"]): Promise<TrendAnalysis[]> {
     if (analysisType) {
       return await this.analysisRepository.findTrendAnalysisByType(analysisType);
     }

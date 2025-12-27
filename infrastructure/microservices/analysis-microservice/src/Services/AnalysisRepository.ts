@@ -6,6 +6,8 @@ import { TopProductReport } from "../Domain/models/TopProductReport";
 import { TrendAnalysis } from "../Domain/models/TrendAnalysis";
 import { IAnalysisRepository } from "../Domain/services/IAnalysisRepository";
 import { end } from "pdfkit";
+import { SalesAnalysisDTO } from "../Domain/DTOs/SalesAnalysisDTO";
+import { TrendAnalysisDTO } from "../Domain/DTOs/TrendAnalysisDTO";
 
 export class AnalysisRepository implements IAnalysisRepository{
     private fiscalBillRepo: Repository<FiscalBill>;
@@ -49,13 +51,26 @@ export class AnalysisRepository implements IAnalysisRepository{
         return this.fiscalBillRepo.save(bill);
     }
 
-    async findSalesReportByPeriod(periodType: string, periodValue: string): Promise<SalesReport | null> {
+    async findSalesReportByPeriod(periodType: SalesAnalysisDTO["periodType"], periodValue: string): Promise<SalesReport | null> {
         return this.salesReportRepo.findOneBy({periodType, periodValue});
     }
 
     async createSalesReport(data: Partial<SalesReport>): Promise<SalesReport> {
         const report = this.salesReportRepo.create(data);
         return this.salesReportRepo.save(report);
+    }
+
+    async findAllSalesReports(periodType?: SalesAnalysisDTO["periodType"]): Promise<SalesReport[]> {
+        if(periodType){
+            return this.salesReportRepo.find({
+                where: {periodType},
+                order: {generatedAt: "DESC"}
+            });
+        }
+
+        return this.salesReportRepo.find({
+            order: {generatedAt: "DESC"}
+        });
     }
 
     async findTopProductReportByPeriod(period: string): Promise<TopProductReport | null> {
@@ -67,12 +82,18 @@ export class AnalysisRepository implements IAnalysisRepository{
         return this.topProductRepo.save(report);
     }
 
+    async findAllTopProductsReports(): Promise<TopProductReport[]> {
+        return this.topProductRepo.find({
+            order: {generatedAt: "DESC"}
+        });
+    }
+
     async createTrendAnalysis(data: Partial<TrendAnalysis>): Promise<TrendAnalysis> {
         const analysis = this.trendAnalysisRepo.create(data);
         return this.trendAnalysisRepo.save(analysis);
     }
 
-    async findTrendAnalysisByType(analysisType: string): Promise<TrendAnalysis[]> {
+    async findTrendAnalysisByType(analysisType: TrendAnalysisDTO["analysisType"]): Promise<TrendAnalysis[]> {
         return this.trendAnalysisRepo.find({
             where: {analysisType},
             order: {generatedAt: "DESC"}
