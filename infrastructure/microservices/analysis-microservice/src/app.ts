@@ -1,80 +1,71 @@
-import express, { Application, Request, Response, NextFunction } from "express";
+import express from "express";
 import cors from "cors";
-import { ProductionController } from "./WebAPI/controllers/ProductionController";
-import { PlantsController } from "./WebAPI/controllers/PlantsController";
-import { ProductionService } from "./Services/ProductionService";
-import { PlantManagementService } from "./Services/PlantManagementService";
-import { PlantRepository } from "./Services/PlantRepository";
-import { LoggerService } from "./Services/LoggerService";
-import axios from "axios";
-import { AxiosAuditClient } from "./Infrastructure/clients/AxiosAuditClient";
-import { IAuditClient } from "./Domain/services/IAuditClient";
+import helmet from "helmet";
+import { initializeDatabase } from "./Database/InitializeConnection";
 import { CorsConfig } from "./WebAPI/middleware/CorsConfig";
 import { GatewayAuthMiddleware } from "./WebAPI/middleware/GatewayAuthMiddleware";
 import { RequestAuditMiddleware } from "./WebAPI/middleware/RequestAuditMiddleware";
-import { requireEnv } from "./config/env";
+import { AnalysisRepository } from "./Services/AnalysisRepository";
+import { AnalysisService } from "./Services/AnalysisService";
+import { LoggerService } from "./Services/LoggerService";
+import { AxiosAuditClient } from "./Infrastructure/clients/AxiosAuditClient";
+import { AnalysisController } from "./WebAPI/controllers/AnalysisController";
+import axios from "axios";
+import { requireEnv, requireIntEnv } from "./config/env";
 
-export function createApp(): Application {
-  const app: Application = express();
+export async function createApp(): Promise<express.Application> {
 
-  // Middleware
+  await initializeDatabase();
+  const app = express();
+
+  // middleware
+  app.use(helmet());
   app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
 
-  // CORS Configuration
   const corsConfig = new CorsConfig();
-  const gatewayApiKey = requireEnv("GATEWAY_API_KEY");
-  const gatewayAuthMiddleware = new GatewayAuthMiddleware(gatewayApiKey);
   app.use(cors(corsConfig.buildOptions()));
 
-  // Dependency Injection
-  const plantRepository = new PlantRepository();
-  const auditServiceUrl = requireEnv("GATEWAY_AUDIT_URL");
+  // audit klijent
   const auditHttpClient = axios.create({
-    baseURL: auditServiceUrl,
-    headers: {
-      "Content-Type": "application/json",
-      "X-Gateway-Key": gatewayApiKey,
-    },
+    baseURL: requireEnv("AUDIT_SERVICE_URL"),
     timeout: 5000,
   });
-  const auditClient: IAuditClient = new AxiosAuditClient(auditHttpClient);
-  const loggerService = new LoggerService(auditClient);
-  const productionService = new ProductionService(plantRepository, loggerService);
-  const plantManagementService = new PlantManagementService(plantRepository, loggerService);
 
-  // Controllers
-  const productionController = new ProductionController(productionService, loggerService);
-  const plantsController = new PlantsController(plantManagementService, loggerService);
+  const auditClient = new AxiosAuditClient(auditHttpClient);
+  const logger = new LoggerService(auditClient, "analiza-podataka"); //** 
 
-  // Health Check (public endpoint)
-  app.get("/health", (_req: Request, res: Response) => {
-    res.status(200).json({ status: "OK", service: "production-microservice" });
+  // gateway autentifikacija
+  const gatewayAuth = new GatewayAuthMiddleware(requireEnv("GATEWAY_API_KEY"));
+  app.use(gatewayAuth.getHandler());
+
+  //request audit
+  const requestAudit = new RequestAuditMiddleware(logger);
+  app.use(requestAudit.getHandler());
+
+  //inicijalizacija servisa
+  const analysisRepository = new AnalysisRepository();
+  const analysisService = new AnalysisService(analysisRepository, logger);
+  const analysisController = new AnalysisController(analysisService, logger);
+
+  app.use("/api/analysis", analysisController.getRouter());
+  app.get("/health", (_req, res) => {
+    res.status(200).json({ status: "OK", service: "analysis-microservice" });
   });
-
-  // Protected Routes (require gateway key)
-  const apiRouter = express.Router();
-  apiRouter.use(gatewayAuthMiddleware.getHandler());
-
-  if (process.env.ENABLE_REQUEST_AUDIT_LOGS === "true") {
-    const requestAuditMiddleware = new RequestAuditMiddleware(loggerService);
-    apiRouter.use(requestAuditMiddleware.getHandler());
-  }
-  apiRouter.use(productionController.getRouter());
-  apiRouter.use(plantsController.getRouter());
-  apiRouter.use("/production", plantsController.getRouter()); // allow /production/plants* paths via gateway
-  app.use("/api/v1", apiRouter);
-
-  // Error Handling Middleware
-  app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-    console.error("Error:", err.message);
-    res.status(500).json({ message: "Interna greska servera" });
+   app.use("*", (_req, res) => {
+    res.status(404).json({ message: "Route not found" });
   });
+  app.use(
+    (
+      error: Error,
+      _req: express.Request,
+      res: express.Response,
+      _next: express.NextFunction
+    ) => {
+      console.error("Unhandled error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  );
 
-  // 404 Handler
-  app.use((_req: Request, res: Response) => {
-    res.status(404).json({ message: "Ruta nije pronadjena" });
-  });
 
   return app;
 }
