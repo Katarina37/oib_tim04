@@ -9,12 +9,15 @@ import { AxiosHttpClient } from "../api/http/AxiosHttpClient";
 import { IHttpClient } from "../api/http/IHttpClient";
 import { AuditAPI } from "../api/audit/AuditAPI";
 import { IAuditAPI } from "../api/audit/IAuditAPI";
+import { IAnalysisAPI } from "../api/analysis/IAnalysisAPI";
+import { AnalysisAPI } from "../api/analysis/AnalysisAPI";
 
 type ServiceContextValue = {
   plantAPI: IPlantAPI;
   authAPI: IAuthAPI;
   userAPI: IUserAPI;
   auditAPI: IAuditAPI;
+  analysisAPI: IAnalysisAPI;
 };
 
 type ServiceProviderProps = {
@@ -37,6 +40,7 @@ export const ServiceProvider: React.FC<ServiceProviderProps> = ({ children, http
       authAPI: new AuthAPI(resolvedHttpClient),
       userAPI: new UserAPI(resolvedHttpClient),
       auditAPI: new AuditAPI(resolvedHttpClient),
+      analysisAPI: new AnalysisAPI(resolvedHttpClient),
     }),
     [resolvedHttpClient]
   );
