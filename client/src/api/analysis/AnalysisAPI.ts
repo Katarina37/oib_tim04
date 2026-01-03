@@ -11,14 +11,13 @@ import { TopProductsParams } from "../../models/analysis/TopProductsParams";
 
 export class AnalysisAPI implements IAnalysisAPI{
     constructor(private readonly httpClient: IHttpClient){}
-    private readonly basePath = "/analysis";
+    private readonly basePath = "/data-analysis";
     private readonly baseURL = import.meta.env.VITE_GATEWAY_URL;
-    private getAuthHeaders(token: string){
-        return {
-            Authorization: `Bearer ${token}`,
-            "X-Gateway-Key": "OIBTIM4"
-        };
-    }
+    private getAuthHeaders(token: string) {
+    return {
+        Authorization: `Bearer ${token}`,
+    };
+}
 
     private unwrapResponse<T>(data: unknown): T{
         if(data && typeof data == "object" && "data" in data){
@@ -119,7 +118,7 @@ export class AnalysisAPI implements IAnalysisAPI{
     }
 
     async getTopProductsReports(token: string): Promise<TopProductReportDTO[]> {
-        const response = await this.httpClient.post<TopProductReportDTO[]>(
+        const response = await this.httpClient.get<TopProductReportDTO[]>(
             `${this.basePath}/top-products`,
             {headers: this.getAuthHeaders(token)}
         );
@@ -153,7 +152,7 @@ export class AnalysisAPI implements IAnalysisAPI{
 
     async getTrendAnalyses(token: string, analysisType?: string): Promise<TrendAnalysisDTO[]> {
         const params = analysisType ? {analysisType} : {};
-        const response = await this.httpClient.post<TrendAnalysisDTO[]>(
+        const response = await this.httpClient.get<TrendAnalysisDTO[]>(
             `${this.basePath}/trend-analysis`,
             {headers: this.getAuthHeaders(token),
             params

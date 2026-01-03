@@ -6,6 +6,7 @@ import AppLayout from './components/layout/AppLayout';
 import AuthPage from './pages/AuthPage';
 import ProductionPage from './pages/ProductionPage';
 import UnderConstructionPage from './pages/UnderConstructionPage';
+import AnalysisPage from './pages/AnalysisPage';
 import { getDefaultRouteForRole } from './helpers/roleAccess';
 
 const App: React.FC = () => {
@@ -109,10 +110,7 @@ const App: React.FC = () => {
         element={
           <ProtectedRoute requiredRole="admin">
             <AppLayout>
-              <UnderConstructionPage 
-                title="Analiza prodaje" 
-                description="Mikroservis za analizu podataka i izveštavanje"
-              />
+              <AnalysisPage/>
             </AppLayout>
           </ProtectedRoute>
         }

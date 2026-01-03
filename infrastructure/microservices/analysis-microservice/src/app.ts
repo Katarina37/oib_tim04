@@ -53,7 +53,8 @@ export async function createApp(): Promise<express.Application> {
   const analysisService = new AnalysisService(analysisRepository, logger);
   const analysisController = new AnalysisController(analysisService, logger);
 
-  app.use("/api/analysis", analysisController.getRouter());
+  app.use("/api/v1/data-analysis", analysisController.getRouter());
+  
   app.get("/health", (_req, res) => {
     res.status(200).json({ status: "OK", service: "analysis-microservice" });
   });
