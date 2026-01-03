@@ -170,14 +170,21 @@ export const AnalysisPage: React.FC = () => {
                         <p className="page-header__subtitle">Pregled performansi prodaje i finansijskih izveštaja</p>
                     </div>
                     <div className="flex items-center gap-md">
-                        <div className="flex items-center gap-sm bg-white rounded-1g p-2 border border-border">
-                            <Calendar size={16}/>
-                            <select className="select border-0 bg-transparent p1-2" value={period} onChange={(e) => setPeriod(e.target.value)}>
+                        <div className="relative">
+                            <Calendar size={16}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-primary"/>
+                            <select className="appearance-none pl-9 pr-10 py-2
+                            rounded-lg border border-border
+                            bg-white text-sm font-medium
+                            shadow-sm
+                            hover:bg-surface
+                            focus:outline-none focus:ring-2 focus:ring-primary/30
+                            transition"value={period} onChange={(e) => setPeriod(e.target.value)}>
                                 <option value="today">Danas</option>
                                 <option value="yesterday">Juče</option>
                                 <option value="this-week">Ova nedelja</option>
                                 <option value="this-month">Ovaj mesec</option>
-                                <option value="last-mobth">Prošli mesec</option>
+                                <option value="last-month">Prošli mesec</option>
                                 <option value="this-year">Ova godina</option>
                                 <option value="all">Sve</option>
                             </select>
@@ -219,28 +226,43 @@ export const AnalysisPage: React.FC = () => {
 
             <div className="card mb-lg">
                 <div className="card__body p-2">
-                    <div className="flex gap-1">
-                        <button className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'overview' ? 'bg-primary text-white' : 'text-text-secondary hover:bg-surface'}`}
+                    <div className="flex gap-sm bg-surface p-1 rounded-lg">
+                        <button className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition
+                        ${activeTab === 'overview'
+                        ? 'bg-white shadow-sm text-primary'
+                        : 'text-text-secondary hover:bg-white/60'}`}
                         onClick={() => setActiveTab('overview')}>
                             <BarChart3 size={16} className="inline mr-2"/>
                             Pregled
                         </button>
-                        <button className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'fiscal' ? 'bg-primary text-white' : 'text-text-secondary hover:bg-surface'}`}
+                        <button className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition
+                        ${activeTab === 'fiscal'
+                        ? 'bg-white shadow-sm text-primary'
+                        : 'text-text-secondary hover:bg-white/60'}`}
                         onClick={() => setActiveTab('fiscal')}>
                             <FileText size={16} className="inline mr-2"/>
                             Fiskalni računi 
                         </button>
-                        <button className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'sales' ? 'bg-primary text-white' : 'text-text-secondary hover:bg-surface'}`}
+                        <button className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition
+                        ${activeTab === 'sales'
+                        ? 'bg-white shadow-sm text-primary'
+                        : 'text-text-secondary hover:bg-white/60'}`}
                         onClick={() => setActiveTab('sales')}>
                             <DollarSign size={16} className="inline mr-2"/>
                             Prodaja 
                         </button>
-                        <button className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'products' ? 'bg-primary text-white' : 'text-text-secondary hover:bg-surface'}`}
+                        <button className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition
+                        ${activeTab === 'products'
+                        ? 'bg-white shadow-sm text-primary'
+                        : 'text-text-secondary hover:bg-white/60'}`}
                         onClick={() => setActiveTab('products')}>
                             <Package size={16} className="inline mr-2"/>
                             Top proizvodi 
                         </button>
-                        <button className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'trends' ? 'bg-primary text-white' : 'text-text-secondary hover:bg-surface'}`}
+                        <button className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition
+                        ${activeTab === 'trends'
+                        ? 'bg-white shadow-sm text-primary'
+                        : 'text-text-secondary hover:bg-white/60'}`}
                         onClick={() => setActiveTab('trends')}>
                             <TrendingUp size={16} className="inline mr-2"/>
                             Trendovi 

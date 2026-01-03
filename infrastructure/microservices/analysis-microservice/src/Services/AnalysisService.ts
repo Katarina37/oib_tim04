@@ -129,6 +129,15 @@ export class AnalysisService implements IAnalysisService{
             const topProducts = await this.analysisRepository.getTopProducts(period, 10);
             const totalRevenueFromTop = topProducts.reduce((sum, p) => sum + p.revenue, 0);
 
+            if(!topProducts || topProducts.length === 0 || totalRevenueFromTop === 0){
+                return await this.analysisRepository.createTopProductReport({
+                    period,
+                    topProducts: [],
+                    totalRevenueFromTop: 0,
+                    generatedAt: new Date()
+                });
+            }
+
             const productsWithPercentage = topProducts.map((product, index) => ({
                 ...product,
                 percentage: (product.revenue / totalRevenueFromTop) * 100
@@ -163,6 +172,15 @@ export class AnalysisService implements IAnalysisService{
             const startDate = params.startDate || new Date(endDate.getFullYear(), endDate.getMonth() - 6, 1);
 
             const salesTrend = await this.analysisRepository.getSalesTrend(startDate, endDate);
+
+            if(!salesTrend || salesTrend.length === 0){
+                return await this.analysisRepository.createTrendAnalysis({
+                    analysisType: params.analysisType,
+                    dataPoints: [],
+                    conclusion: "Nema dovoljno podataka za analizu",
+                    generatedAt: new Date()
+                });
+            }
 
             const report = await this.analysisRepository.createTrendAnalysis({
                 analysisType: params.analysisType,
@@ -203,7 +221,7 @@ export class AnalysisService implements IAnalysisService{
     if (analysisType) {
       return await this.analysisRepository.findTrendAnalysisByType(analysisType);
     }
-    throw new Error("Not implemented");
+    return [];
   }
 
   async exportAnalysisToPDF(reportId: string, reportType: "sales" | "top" | "trend"): Promise<Buffer> {
