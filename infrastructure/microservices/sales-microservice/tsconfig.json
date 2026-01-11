@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",                     // Ciljna verzija JS
+    "module": "ESNext",                     // Koristi ES module
+    "moduleResolution": "node",             // Node-style resolution
+    "outDir": "./dist",                     // Folder gde se kompajlira JS
+    "rootDir": "./src",                      // Glavni folder sa TS kodom
+    "strict": true,                          // Sve striktne TS provere
+    "esModuleInterop": true,                 // Omogućava import CommonJS paketa
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,          // Potrebno za TypeORM entitete
+    "emitDecoratorMetadata": true,           // Potrebno za TypeORM entitete
+    "skipLibCheck": true,                     // Preskače tipove u node_modules
+    "resolveJsonModule": true,               // Omogućava import JSON fajlova
+    "typeRoots": ["./node_modules/@types"],  // Gde tražimo tipove
+    "types": ["node"]                        // Eksplicitno uključi Node tipove
+  },
+  "include": ["src/**/*"],                   // Uključi sve TS fajlove u src
+}
+
