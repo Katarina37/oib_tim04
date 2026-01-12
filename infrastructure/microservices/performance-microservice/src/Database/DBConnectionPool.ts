@@ -11,7 +11,7 @@ export const Db = new DataSource({
   password: requireEnv("DB_PASSWORD"),
   database: requireEnv("DB_NAME"),
   ssl: { rejectUnauthorized: false },
-  synchronize: false, 
+  synchronize: true, 
   logging: false, 
   entities: [PerformanceReport],
 });
