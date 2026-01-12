@@ -8,7 +8,7 @@ export class LoggerService implements ILoggerService {
 
   constructor(
     private readonly auditClient: IAuditClient,
-    microserviceName = "proizvodnja"
+    microserviceName = "prodaja"
   ) {
     this.microserviceName = microserviceName;
     console.log(`\x1b[35m[Logger@1.45.4]\x1b[0m Service started`);

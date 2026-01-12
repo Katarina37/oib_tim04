@@ -17,11 +17,11 @@ export class SalesController {
   }
 
   private initializeRoutes(): void {
-    this.router.get("/sales", this.getAllSales.bind(this));
-    this.router.get("/sales/:id", this.getSaleById.bind(this));
-    this.router.get("/sales/bill/:billNumber", this.getSaleByBillNumber.bind(this));
-    this.router.post("/sales", this.createSale.bind(this));
-    this.router.delete("/sales/:id", this.deleteSale.bind(this));
+    this.router.get("/", this.getAllSales.bind(this));
+    this.router.get("/:id", this.getSaleById.bind(this));
+    this.router.get("/bill/:billNumber", this.getSaleByBillNumber.bind(this));
+    this.router.post("/", this.createSale.bind(this));
+    this.router.delete("/:id", this.deleteSale.bind(this));
   }
 
   private getClientIp(req: Request): string {
