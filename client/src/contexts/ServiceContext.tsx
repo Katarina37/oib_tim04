@@ -11,6 +11,8 @@ import { AuditAPI } from "../api/audit/AuditAPI";
 import { IAuditAPI } from "../api/audit/IAuditAPI";
 import { IAnalysisAPI } from "../api/analysis/IAnalysisAPI";
 import { AnalysisAPI } from "../api/analysis/AnalysisAPI";
+import { IStorageAPI } from "../api/storage/IStorageAPI";
+import { StorageAPI } from "../api/storage/StorageAPI";
 
 type ServiceContextValue = {
   plantAPI: IPlantAPI;
@@ -18,6 +20,7 @@ type ServiceContextValue = {
   userAPI: IUserAPI;
   auditAPI: IAuditAPI;
   analysisAPI: IAnalysisAPI;
+  storageAPI: IStorageAPI;
 };
 
 type ServiceProviderProps = {
@@ -41,6 +44,7 @@ export const ServiceProvider: React.FC<ServiceProviderProps> = ({ children, http
       userAPI: new UserAPI(resolvedHttpClient),
       auditAPI: new AuditAPI(resolvedHttpClient),
       analysisAPI: new AnalysisAPI(resolvedHttpClient),
+      storageAPI: new StorageAPI(resolvedHttpClient)
     }),
     [resolvedHttpClient]
   );
