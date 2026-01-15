@@ -8,8 +8,8 @@ import {
 
 @Entity("fiscal_bills")
 export class FiscalBill {
-  @PrimaryGeneratedColumn("uuid")
-  id!: string;
+  @PrimaryGeneratedColumn()
+  id!: number;
 
   @Column({ name: "tip_prodaje", length: 20 })
   saleType!: "retail" | "wholesale";
@@ -22,7 +22,7 @@ export class FiscalBill {
 
   @Column({ name: "prodati_proizvodi", type: "json" })
   soldItems!: Array<{
-    productId: string;
+    productId: number;
     productName: string;
     quantity: number;
     price: number;

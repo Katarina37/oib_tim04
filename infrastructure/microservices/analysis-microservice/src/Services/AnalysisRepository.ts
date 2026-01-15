@@ -42,7 +42,7 @@ export class AnalysisRepository implements IAnalysisRepository{
         });
     }
 
-    async findFiscalBillById(id: string): Promise<FiscalBill | null> {
+    async findFiscalBillById(id: number): Promise<FiscalBill | null> {
         return this.fiscalBillRepo.findOneBy({id});
     }
 
@@ -111,9 +111,9 @@ export class AnalysisRepository implements IAnalysisRepository{
         };
     }
 
-    async getTopProducts(period: string, limit: number): Promise<Array<{ productId: string; productName: string; unitsSold: number; revenue: number; }>> {
+    async getTopProducts(period: string, limit: number): Promise<Array<{ productId: number; productName: string; unitsSold: number; revenue: number; }>> {
         const bills = await this.findFiscalBillsByPeriod(period);
-        const productMap = new Map<string, {productName: string; unitsSold: number; revenue: number}>();
+        const productMap = new Map<number, {productName: string; unitsSold: number; revenue: number}>();
 
         bills.forEach(bill => {
             bill.soldItems.forEach(item => {

@@ -5,7 +5,7 @@ import { formatCurrency, formatDate } from "../../helpers/formatters";
 
     interface FiscalBillsTableProps {
     bills: FiscalBillDTO[];
-    onExport: (id: string, type: 'fiscal') => void;
+    onExport: (id: number, type: 'fiscal') => void;
     isLoading?: boolean;
     }
 
@@ -60,7 +60,7 @@ import { formatCurrency, formatDate } from "../../helpers/formatters";
                 <tbody>
                     {bills.map((bill) => (
                         <tr key={bill.id}>
-                            <td className="font-medium">FR-{bill.id.substring(0, 8)}</td>
+                            <td className="font-medium">FR-{bill.id}</td>
                             <td>
                                 <span className="{`badge ${bill.saleType === 'retail' ? 'badge--info' : 'badge--success'}`}">
                                     {getSaleTypeLabel(bill.saleType)}

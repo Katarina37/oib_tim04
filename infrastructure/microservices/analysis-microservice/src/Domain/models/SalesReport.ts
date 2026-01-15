@@ -2,8 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
 
 @Entity("sales_reports")
 export class SalesReport {
-    @PrimaryGeneratedColumn("uuid")
-    id!: string;
+    @PrimaryGeneratedColumn()
+    id!: number;
 
     @Column({name: "tip_perioda", length: 20})
     periodType!: "daily" | "weekly" | "monthly" | "yearly" | "total";

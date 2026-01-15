@@ -2,8 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
 
 @Entity("trend_analyses")
 export class TrendAnalysis {
-    @PrimaryGeneratedColumn("uuid")
-    id!: string;
+    @PrimaryGeneratedColumn()
+    id!: number;
 
     @Column({name: "tip_analize", length: 50})
     analysisType!: "monthly_trend" | "product_trend" | "category_trend";
@@ -13,7 +13,7 @@ export class TrendAnalysis {
         label: string;
         value: number;
         date?: string;
-        productId?: string;
+        productId?: number;
     }>;
 
     @Column({name: "zakljucak", type: "text",nullable: true})

@@ -3,7 +3,7 @@ import { TrendingUp, TrendingDown, Minus, Download } from "lucide-react";
 import { formatCurrency } from "../../helpers/formatters";
 
 interface TopProduct{
-    productId: string;
+    productId: number;
     productName: string;
     unitsSold: number;
     revenue: number;

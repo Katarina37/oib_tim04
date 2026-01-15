@@ -52,6 +52,15 @@ export class AnalysisController{
         return req.ip || req.socket.remoteAddress || "unknown";
     }
 
+    private parseIdParam(param: string, res: Response): number | null {
+        const id = Number.parseInt(param, 10);
+        if (Number.isNaN(id)) {
+            res.status(400).json({ success: false, message: "Neispravan ID" });
+            return null;
+        }
+        return id;
+    }
+
     private async createFiscalBill(req: Request, res: Response): Promise<void>{
         const clientIp = this.getClientIp(req);
 
@@ -95,7 +104,9 @@ export class AnalysisController{
 
     private async getFiscalBillById(req: Request, res: Response): Promise<void>{
         try{
-            const bill = await this.analysisService.getFiscalBillById(req.params.id);
+            const id = this.parseIdParam(req.params.id, res);
+            if (id === null) return;
+            const bill = await this.analysisService.getFiscalBillById(id);
             res.status(200).json({success: true, data: bill});
         }catch(error){
             res.status(404).json({success: false, message: (error as Error).message});
@@ -161,7 +172,9 @@ export class AnalysisController{
 
     private async exportFiscalBillPDF(req: Request, res: Response): Promise<void>{
         try{
-            const pdfBuffer = await this.analysisService.exportFiscalBillToPDF(req.params.id);
+            const id = this.parseIdParam(req.params.id, res);
+            if (id === null) return;
+            const pdfBuffer = await this.analysisService.exportFiscalBillToPDF(id);
             res.setHeader("Content-Type", "application/pdf");
             res.setHeader("Content-Disposition", `attachment; filename=fiscal-bill-${req.params.id}.pdf`);
             res.send(pdfBuffer);
@@ -172,7 +185,9 @@ export class AnalysisController{
 
     private async exportSalesReportPDF(req: Request, res: Response): Promise<void>{
         try{
-            const pdfBuffer = await this.analysisService.exportAnalysisToPDF(req.params.id, "sales");
+            const id = this.parseIdParam(req.params.id, res);
+            if (id === null) return;
+            const pdfBuffer = await this.analysisService.exportAnalysisToPDF(id, "sales");
             res.setHeader("Content-Type", "application/pdf");
             res.setHeader("Content-Disposition", `attachment; filename=sales-report-${req.params.id}.pdf`);
             res.send(pdfBuffer);
@@ -183,7 +198,9 @@ export class AnalysisController{
 
     private async exportTopProductsPDF(req: Request, res: Response): Promise<void>{
         try{
-            const pdfBuffer = await this.analysisService.exportAnalysisToPDF(req.params.id, "top");
+            const id = this.parseIdParam(req.params.id, res);
+            if (id === null) return;
+            const pdfBuffer = await this.analysisService.exportAnalysisToPDF(id, "top");
             res.setHeader("Content-Type", "application/pdf");
             res.setHeader("Content-Disposition", `attachment; filename=top-products-${req.params.id}.pdf`);
             res.send(pdfBuffer);
@@ -194,7 +211,9 @@ export class AnalysisController{
 
     private async exportTrendAnalysisPDF(req: Request, res: Response): Promise<void>{
         try{
-            const pdfBuffer = await this.analysisService.exportAnalysisToPDF(req.params.id, "trend");
+            const id = this.parseIdParam(req.params.id, res);
+            if (id === null) return;
+            const pdfBuffer = await this.analysisService.exportAnalysisToPDF(id, "trend");
             res.setHeader("Content-Type", "application/pdf");
             res.setHeader("Content-Disposition", `attachment; filename=trend-analysis-${req.params.id}.pdf`);
             res.send(pdfBuffer);

@@ -100,7 +100,7 @@ export const AnalysisPage: React.FC = () => {
     const stats = calculateOverviewStats();
 
     //f-ja za eksport PDF-a
-    const handleExportPDF = async (id: string, type: 'sales' | 'products' | 'trends' | 'fiscal') => {
+    const handleExportPDF = async (id: number, type: 'sales' | 'products' | 'trends' | 'fiscal') => {
         if(!token) return;
 
         try{

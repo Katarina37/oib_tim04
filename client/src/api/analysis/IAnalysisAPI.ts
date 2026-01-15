@@ -11,21 +11,21 @@ export interface IAnalysisAPI{
     //fiskalni racuni
     createFiscalBill(data: CreateFiscalBillDTO, token: string): Promise<FiscalBillDTO>;
     getFiscalBills(token: string, period?: string): Promise<FiscalBillDTO[]>;
-    getFiscalBillById(id: string, token: string): Promise<FiscalBillDTO>;
-    exportFiscalBillPDF(id: string, token: string): Promise<Blob>;
+    getFiscalBillById(id: number, token: string): Promise<FiscalBillDTO>;
+    exportFiscalBillPDF(id: number, token: string): Promise<Blob>;
 
     //analiza prodaje
     generateSalesAnalysis(params: SalesAnalysisParams, token: string): Promise<SalesReportDTO>;
     getSalesReports(token: string, periodType?: string):Promise<SalesReportDTO[]>;
-    exportSalesReportPDF(id: string, token: string): Promise<Blob>;
+    exportSalesReportPDF(id: number, token: string): Promise<Blob>;
 
     //top proizvodi
     generateTopProductsAnalysis(params: TopProductsParams, token: string): Promise<TopProductReportDTO>;
     getTopProductsReports(token: string): Promise<TopProductReportDTO[]>;
-    exportTopProductsPDF(id: string, token: string): Promise<Blob>;
+    exportTopProductsPDF(id: number, token: string): Promise<Blob>;
 
     //trendovi
     generateTrendAnalysis(params: TrendAnalysisParams, token: string): Promise<TrendAnalysisDTO>;
     getTrendAnalyses(token: string, analysisType?: string): Promise<TrendAnalysisDTO[]>;
-    exportTrendAnalysisPDF(id: string, token: string): Promise<Blob>;
+    exportTrendAnalysisPDF(id: number, token: string): Promise<Blob>;
 }

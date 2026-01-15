@@ -63,7 +63,7 @@ export class AnalysisService implements IAnalysisService{
         }
     }
 
-    async getFiscalBillById(id: string): Promise<FiscalBill> {
+    async getFiscalBillById(id: number): Promise<FiscalBill> {
         const bill = await this.analysisRepository.findFiscalBillById(id);
         if(!bill){
             throw new Error(`Fiskalni racun sa ID ${id} nije pronadjen`);
@@ -224,7 +224,7 @@ export class AnalysisService implements IAnalysisService{
     return [];
   }
 
-  async exportAnalysisToPDF(reportId: string, reportType: "sales" | "top" | "trend"): Promise<Buffer> {
+  async exportAnalysisToPDF(reportId: number, reportType: "sales" | "top" | "trend"): Promise<Buffer> {
       return new Promise((resolve, reject) => {
         try{
             const doc = new PDFDocument();
@@ -256,7 +256,7 @@ export class AnalysisService implements IAnalysisService{
       });
   }
 
-  async exportFiscalBillToPDF(billId: string): Promise<Buffer> {
+  async exportFiscalBillToPDF(billId: number): Promise<Buffer> {
       const bill = await this.getFiscalBillById(billId);
 
       return new Promise((resolve, reject) => {

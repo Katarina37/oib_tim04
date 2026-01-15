@@ -1,9 +1,9 @@
 export interface FiscalBillDTO{
-    id: string;
+    id: number;
     saleType: "retail" | "wholesale";
     paymentMethod: "cash" | "bank_transfer" | "card";
     soldItems: Array<{
-        productId: string;
+        productId: number;
         productName: string;
         quantity: number;
         price: number;

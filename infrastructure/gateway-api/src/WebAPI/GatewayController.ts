@@ -6,7 +6,6 @@ import { authenticate } from "../Middlewares/authentification/AuthMiddleware";
 import { authorize } from "../Middlewares/authorization/AuthorizeMiddleware";
 import { UserRole } from "../Domain/enums/UserRole";
 import { ProxyRequest } from "../Domain/clients/IMicroserviceClient";
-import { verifyGatewayKey } from "../Middlewares/gatewayKey/GatewayKeyMiddleware";
 
 export class GatewayController {
   private readonly router: Router;
@@ -21,13 +20,6 @@ export class GatewayController {
     // Public routes - Authentication
     this.router.post("/login", this.login.bind(this));
     this.router.post("/register", this.register.bind(this));
-
-    // Internal routes - Gateway key only (for inter-service calls)
-    this.router.post(
-      "/internal/audit/logs",
-      verifyGatewayKey,
-      this.proxyInternalAuditLog.bind(this)
-    );
 
     // Protected routes - Users (Admin only)
     this.router.get(
@@ -234,12 +226,6 @@ export class GatewayController {
 
   private async proxyToAudit(req: Request, res: Response): Promise<void> {
     const proxyRequest = this.buildProxyRequest(req, "audit");
-    const response = await this.gatewayService.proxyToAudit(proxyRequest);
-    res.status(response.status).json(response.success ? response.data : { error: response.error });
-  }
-
-  private async proxyInternalAuditLog(req: Request, res: Response): Promise<void> {
-    const proxyRequest = this.buildProxyRequest(req, "internal/audit");
     const response = await this.gatewayService.proxyToAudit(proxyRequest);
     res.status(response.status).json(response.success ? response.data : { error: response.error });
   }

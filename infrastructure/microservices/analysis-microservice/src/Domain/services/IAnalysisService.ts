@@ -15,7 +15,7 @@ export interface TrendAnalysisParams{
     analysisType: "monthly_trend" | "product_trend";
     startDate?: Date;
     endDate?: Date;
-    productId?: string;
+    productId?: number;
 }
 */
 export interface IAnalysisService{
@@ -26,7 +26,7 @@ export interface IAnalysisService{
 
     getFiscalBills(period?: string): Promise<FiscalBill[]>;
 
-    getFiscalBillById(id: string): Promise<FiscalBill>;
+    getFiscalBillById(id: number): Promise<FiscalBill>;
 
     // analiza prodaje
 
@@ -48,8 +48,8 @@ export interface IAnalysisService{
 
     // pdf izvoz
 
-    exportAnalysisToPDF(reportId: string, reportType: "sales" | "top" | "trend"): Promise<Buffer>;
+    exportAnalysisToPDF(reportId: number, reportType: "sales" | "top" | "trend"): Promise<Buffer>;
 
-    exportFiscalBillToPDF(billId: string): Promise<Buffer>;
+    exportFiscalBillToPDF(billId: number): Promise<Buffer>;
 }
 

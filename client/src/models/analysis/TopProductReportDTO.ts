@@ -1,8 +1,8 @@
 export interface TopProductReportDTO{
-    id: string;
+    id: number;
     period: string;
     topProducts: Array<{
-        productId: string;
+        productId: number;
         productName: string;
         unitsSold: number;
         revenue: number;

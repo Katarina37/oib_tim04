@@ -12,7 +12,7 @@ export interface IAnalysisRepository{
     
     findFiscalBillsByDateRange(startDate: Date, endDate: Date): Promise<FiscalBill[]>;
     
-    findFiscalBillById(id: string): Promise<FiscalBill | null>;
+    findFiscalBillById(id: number): Promise<FiscalBill | null>;
     
     createFiscalBill(data: Partial<FiscalBill>): Promise<FiscalBill>;
 
@@ -46,7 +46,7 @@ export interface IAnalysisRepository{
     }>;
 
     getTopProducts(period: string, limit: number): Promise<Array<{
-        productId: string;
+        productId: number;
         productName: string;
         unitsSold: number;
         revenue: number;

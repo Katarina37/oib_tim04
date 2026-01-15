@@ -2,15 +2,15 @@ import {Entity, PrimaryGeneratedColumn, Column} from "typeorm";
 
 @Entity("top_product_reports")
 export class TopProductReport{
-    @PrimaryGeneratedColumn("uuid")
-    id!: string;
+    @PrimaryGeneratedColumn()
+    id!: number;
 
     @Column({name: "period", length: 50})
     period!: string;
 
     @Column({name: "top_proizvodi", type: "json"})
     topProducts!: Array<{
-        productId: string;
+        productId: number;
         productName: string;
         unitsSold: number;
         revenue: number;

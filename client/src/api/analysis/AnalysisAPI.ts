@@ -48,7 +48,7 @@ export class AnalysisAPI implements IAnalysisAPI{
         return this.unwrapResponse<FiscalBillDTO[]>(response);
     }
 
-    async getFiscalBillById(id: string, token: string): Promise<FiscalBillDTO> {
+    async getFiscalBillById(id: number, token: string): Promise<FiscalBillDTO> {
         const response = await this.httpClient.get<FiscalBillDTO>(
             `${this.basePath}/fiscal-bills/${id}`,
             {headers: this.getAuthHeaders(token)}
@@ -56,7 +56,7 @@ export class AnalysisAPI implements IAnalysisAPI{
         return this.unwrapResponse<FiscalBillDTO>(response);
     }
 
-    async exportFiscalBillPDF(id: string, token: string): Promise<Blob> {
+    async exportFiscalBillPDF(id: number, token: string): Promise<Blob> {
         const response = await fetch(`${this.baseURL}${this.basePath}/fiscal-bills/${id}/pdf`, {
             headers: {
                 ...this.getAuthHeaders(token),
@@ -92,7 +92,7 @@ export class AnalysisAPI implements IAnalysisAPI{
         return this.unwrapResponse<SalesReportDTO[]>(response);
     }
 
-    async exportSalesReportPDF(id: string, token: string): Promise<Blob> {
+    async exportSalesReportPDF(id: number, token: string): Promise<Blob> {
         const response = await fetch(`${this.baseURL}${this.basePath}/sales-analysis/${id}/pdf`, {
             headers: {
                 ...this.getAuthHeaders(token),
@@ -125,7 +125,7 @@ export class AnalysisAPI implements IAnalysisAPI{
         return this.unwrapResponse<TopProductReportDTO[]>(response);
     }
 
-    async exportTopProductsPDF(id: string, token: string): Promise<Blob> {
+    async exportTopProductsPDF(id: number, token: string): Promise<Blob> {
         const response = await fetch(`${this.baseURL}${this.basePath}/top-products/${id}/pdf`, {
             headers: {
                 ...this.getAuthHeaders(token),
@@ -161,7 +161,7 @@ export class AnalysisAPI implements IAnalysisAPI{
         return this.unwrapResponse<TrendAnalysisDTO[]>(response);
     }
 
-    async exportTrendAnalysisPDF(id: string, token: string): Promise<Blob> {
+    async exportTrendAnalysisPDF(id: number, token: string): Promise<Blob> {
         const response = await fetch(`${this.baseURL}${this.basePath}/trend-analysis/${id}/pdf`, {
             headers: {
                 ...this.getAuthHeaders(token),

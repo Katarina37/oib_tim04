@@ -1,5 +1,5 @@
 export interface SalesReportDTO{
-    id: string;
+    id: number;
     periodType: "daily" | "weekly" | "monthly" | "yearly" | "total";
     periodValue: string;
     totalSales: number;
@@ -7,7 +7,7 @@ export interface SalesReportDTO{
     revenue: number;
     details?: {
         topProducts?: Array<{
-            productId: string;
+            productId: number;
             productName: string;
             unitsSold: number;
             revenue: number;
