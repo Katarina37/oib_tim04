@@ -117,6 +117,12 @@ const auditHttpClient = createHttpClient(
 );
 const auditClient: IMicroserviceClient = new AxiosMicroserviceClient(auditHttpClient, gatewayApiKey);
 
+// Weather service client
+const weatherHttpClient = createHttpClient(
+  normalizeApiBaseUrl(requireEnv("WEATHER_SERVICE_URL"))
+);
+const weatherClient: IMicroserviceClient = new AxiosMicroserviceClient(weatherHttpClient, gatewayApiKey);
+
 // Create gateway service with all dependencies
 const gatewayService: IGatewayService = new GatewayService(
   authClient,
@@ -127,7 +133,8 @@ const gatewayService: IGatewayService = new GatewayService(
   salesClient,
   dataAnalysisClient,
   performanceAnalysisClient,
-  auditClient
+  auditClient,
+  weatherClient
 );
 
 // Create controller and register routes

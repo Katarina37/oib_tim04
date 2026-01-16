@@ -1,10 +1,12 @@
-﻿import React from 'react';
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuthHook';
 import { ProtectedRoute } from './components/protected_route/ProtectedRoute';
 import AppLayout from './components/layout/AppLayout';
 import AuthPage from './pages/AuthPage';
 import ProductionPage from './pages/ProductionPage';
+import WeatherPage from './pages/WeatherPage';
+import SettingsPage from './pages/SettingsPage';
 import UnderConstructionPage from './pages/UnderConstructionPage';
 import AnalysisPage from './pages/AnalysisPage';
 import { getDefaultRouteForRole } from './helpers/roleAccess';
@@ -105,6 +107,30 @@ const App: React.FC = () => {
         }
       />
 
+      {/* Weather and Settings - SELLER only */}
+      <Route
+        path="/weather"
+        element={
+          <ProtectedRoute requiredRole="seller">
+            <AppLayout>
+              <WeatherPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute requiredRole="seller">
+            <AppLayout>
+              <SettingsPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Admin routes */}
       <Route
         path="/analytics"
         element={
@@ -123,7 +149,7 @@ const App: React.FC = () => {
             <AppLayout>
               <UnderConstructionPage 
                 title="Analiza performansi" 
-                description="Mikroservis za analizu performansi logističkih algoritama"
+                description="Mikroservis za analizu performansi sistema"
               />
             </AppLayout>
           </ProtectedRoute>
@@ -137,7 +163,7 @@ const App: React.FC = () => {
             <AppLayout>
               <UnderConstructionPage 
                 title="Evidencija događaja" 
-                description="Mikroservis za praćenje svih aktivnosti u sistemu"
+                description="Mikroservis za audit logove sistema"
               />
             </AppLayout>
           </ProtectedRoute>

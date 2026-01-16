@@ -333,7 +333,7 @@ body {
 }
 
 .sidebar__footer {
-  padding: var(--space-md);
+  padding: var(--space-md) var(--space-sm);
   border-top: 1px solid var(--color-border-light);
 }
 
@@ -341,7 +341,8 @@ body {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-sm);
+  min-height: 44px;
+  padding: calc(var(--space-sm) + 2px);
   border-radius: var(--radius-md);
   cursor: default;
   transition: all var(--transition-fast);
@@ -352,9 +353,9 @@ body {
 }
 
 .sidebar__avatar {
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
   border-radius: var(--radius-md);
   background: var(--color-primary-subtle);
   display: flex;
@@ -362,7 +363,7 @@ body {
   justify-content: center;
   color: var(--color-primary);
   font-weight: 600;
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-sm);
   overflow: hidden;
 }
 
@@ -377,6 +378,9 @@ body {
   overflow: hidden;
   opacity: 0;
   transition: opacity var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .sidebar:hover .sidebar__user-info,

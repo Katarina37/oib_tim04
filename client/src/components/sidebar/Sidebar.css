@@ -11,39 +11,50 @@
   color: var(--color-text-muted);
 }
 
-.sidebar__logout-icon {
-  margin: 0;
-  color: inherit;
-}
-
 .sidebar__logout-button {
   margin-left: auto;
   background: transparent;
   border: none;
-  padding: 8px;
-  border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
-  cursor: pointer;
-  display: flex;
+  padding: 0;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: color var(--transition-fast), background var(--transition-fast);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-normal), color var(--transition-fast);
 }
 
 .sidebar__logout-button:hover,
 .sidebar__logout-button:focus-visible {
   color: var(--color-error);
-  background: var(--color-primary-subtle);
 }
 
 .sidebar__logout-button:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.sidebar:hover .sidebar__logout-button,
+.sidebar.expanded .sidebar__logout-button {
+  opacity: 1;
+}
+
+.sidebar__logout-icon {
+  color: inherit;
 }
 
 /* Tooltip for collapsed state */
 .sidebar__nav-item {
   position: relative;
+}
+
+.sidebar__nav-bottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
 }
 
 .sidebar:not(:hover) .sidebar__nav-item::after {

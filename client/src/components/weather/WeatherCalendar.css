@@ -1,0 +1,205 @@
+.weather-calendar {
+  background: var(--color-white, #ffffff);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.calendar-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #1a2b3c);
+  text-transform: capitalize;
+  margin: 0;
+}
+
+.calendar-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: var(--color-background-light, #f8f9fa);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--color-text-secondary, #5a6b7c);
+  transition: all 0.2s ease;
+}
+
+.calendar-nav-btn:hover {
+  background: var(--color-primary-light, #e8f5f0);
+  color: var(--color-primary, #66cdaa);
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.calendar-weekdays span {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #5a6b7c);
+  padding: 8px 0;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar-day {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--color-background-light, #f8f9fa);
+  min-height: 60px;
+}
+
+.calendar-day.empty {
+  background: transparent;
+  cursor: default;
+}
+
+.calendar-day:not(.empty):hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.calendar-day.selected {
+  border: 2px solid var(--color-primary, #66cdaa);
+}
+
+.calendar-day.today {
+  border: 2px solid var(--color-info, #3b82f6);
+}
+
+.calendar-day.today.selected {
+  border: 2px solid var(--color-primary, #66cdaa);
+  box-shadow: 0 0 0 2px var(--color-info, #3b82f6);
+}
+
+.day-number {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary, #1a2b3c);
+}
+
+.day-weather {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+/* Temperature states */
+.calendar-day.temp-cold {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+}
+
+.calendar-day.temp-moderate {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+}
+
+.calendar-day.temp-hot {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+/* Weather icons */
+.weather-icon.cold {
+  color: #0ea5e9;
+}
+
+.weather-icon.moderate {
+  color: #22c55e;
+}
+
+.weather-icon.hot {
+  color: #f59e0b;
+}
+
+.weather-icon.cloudy {
+  color: #6b7280;
+}
+
+.weather-icon.rain {
+  color: #3b82f6;
+}
+
+/* Humidity icons */
+.humidity-icon.humid {
+  color: #3b82f6;
+}
+
+.humidity-icon.dry {
+  color: #f97316;
+}
+
+/* Tooltip */
+.weather-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-white, #ffffff);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  min-width: 200px;
+  pointer-events: none;
+}
+
+.weather-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--color-white, #ffffff);
+}
+
+.tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 0.8125rem;
+}
+
+.tooltip-row span {
+  color: var(--color-text-secondary, #5a6b7c);
+}
+
+.tooltip-row strong {
+  color: var(--color-text-primary, #1a2b3c);
+}
+
+.tooltip-note {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border-light, #f0f2f4);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #5a6b7c);
+  font-style: italic;
+}

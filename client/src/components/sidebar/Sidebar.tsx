@@ -11,6 +11,8 @@ import {
   FileText,
   LogOut,
   Droplets,
+  CloudSun,
+  Settings,
 } from 'lucide-react';
 import { normalizeRole, RoleKey } from '../../helpers/roleAccess';
 import { useAuth } from '../../hooks/useAuthHook';
@@ -23,7 +25,7 @@ interface NavItemProps {
   disabled?: boolean;
 }
 
-type NavSection = 'operations' | 'system';
+type NavSection = 'operations' | 'system' | 'seller';
 
 type NavConfigItem = NavItemProps & {
   allowedRoles: RoleKey[];
@@ -90,6 +92,22 @@ export const Sidebar: React.FC = () => {
       allowedRoles: ["seller", "sales_manager"],
       section: "operations",
     },
+    // Weather and Settings - SELLER only
+    {
+      to: "/weather",
+      icon: <CloudSun size={20} />,
+      label: "Vreme",
+      allowedRoles: ["seller"],
+      section: "seller",
+    },
+    {
+      to: "/settings",
+      icon: <Settings size={20} />,
+      label: "Podešavanje",
+      allowedRoles: ["seller"],
+      section: "seller",
+    },
+    // Admin section
     {
       to: "/analytics",
       icon: <BarChart3 size={20} />,
@@ -123,7 +141,10 @@ export const Sidebar: React.FC = () => {
     );
 
   const operationsItems = filterItemsBySection('operations');
+  const sellerItems = filterItemsBySection('seller');
   const systemItems = filterItemsBySection('system');
+  const sellerPrimaryItems = sellerItems.filter((item) => item.to !== "/settings");
+  const settingsItem = sellerItems.find((item) => item.to === "/settings");
 
   const getInitials = (username?: string): string => {
     if (!username) return 'US';
@@ -160,24 +181,41 @@ export const Sidebar: React.FC = () => {
         </div>
         <div className="sidebar__brand">
           <div className="sidebar__brand-name">O'Sinjel De Or</div>
-          <div className="sidebar__brand-subtitle">Parfumerija</div>
+          <div className="sidebar__brand-subtitle">Parfimerija</div>
         </div>
       </div>
 
       <nav className="sidebar__nav">
-        {operationsItems.map((item) => (
-          <NavItem key={item.to} to={item.to} icon={item.icon} label={item.label} />
+        {operationsItems.length > 0 && (
+          <div className="sidebar__section">
+            {operationsItems.map((item) => (
+              <NavItem key={item.to} {...item} />
+            ))}
+          </div>
+        )}
+
+        {sellerPrimaryItems.map((item) => (
+          <NavItem key={item.to} {...item} />
         ))}
 
-        {operationsItems.length > 0 && systemItems.length > 0 && <div className="sidebar__divider" />}
+        {systemItems.length > 0 && (
+          <div className="sidebar__section">
+            <span className="sidebar__section-title">Sistem</span>
+            {systemItems.map((item) => (
+              <NavItem key={item.to} {...item} />
+            ))}
+          </div>
+        )}
 
-        {systemItems.map((item) => (
-          <NavItem key={item.to} to={item.to} icon={item.icon} label={item.label} />
-        ))}
+        {settingsItem && (
+          <div className="sidebar__nav-bottom">
+            <NavItem {...settingsItem} />
+          </div>
+        )}
       </nav>
 
       <div className="sidebar__footer">
-        <div className="sidebar__profile" title="Profil korisnika">
+        <div className="sidebar__profile">
           <div className="sidebar__avatar">{userInitials}</div>
           <div className="sidebar__user-info">
             <div className="sidebar__user-name">{user?.username}</div>
@@ -188,7 +226,6 @@ export const Sidebar: React.FC = () => {
             className="sidebar__logout-button"
             onClick={handleLogout}
             title="Odjavi se"
-            aria-label="Odjavi se"
           >
             <LogOut size={16} className="sidebar__logout-icon" />
           </button>

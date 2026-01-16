@@ -67,6 +67,20 @@ export class GatewayController {
       this.proxyToSales.bind(this)
     );
 
+    // Weather microservice routes (Seller only)
+    this.router.all(
+      "/weather/*path",
+      authenticate,
+      authorize(UserRole.SELLER),
+      this.proxyToWeather.bind(this)
+    );
+    this.router.all(
+      "/weather",
+      authenticate,
+      authorize(UserRole.SELLER),
+      this.proxyToWeather.bind(this)
+    );
+
     // Data Analysis microservice routes (Admin only)
     this.router.all(
       "/data-analysis/*path",
@@ -184,6 +198,7 @@ export class GatewayController {
       params: req.query as Record<string, string>,
       headers: {
         Authorization: req.headers.authorization || "",
+        "X-Demo-Date": (req.headers["x-demo-date"] as string) || "",
       },
     };
   }
@@ -209,6 +224,12 @@ export class GatewayController {
   private async proxyToSales(req: Request, res: Response): Promise<void> {
     const proxyRequest = this.buildProxyRequest(req);
     const response = await this.gatewayService.proxyToSales(proxyRequest);
+    res.status(response.status).json(response.success ? response.data : { error: response.error });
+  }
+
+  private async proxyToWeather(req: Request, res: Response): Promise<void> {
+    const proxyRequest = this.buildProxyRequest(req);
+    const response = await this.gatewayService.proxyToWeather(proxyRequest);
     res.status(response.status).json(response.success ? response.data : { error: response.error });
   }
 

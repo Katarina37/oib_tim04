@@ -21,4 +21,5 @@ export interface IGatewayService {
   proxyToDataAnalysis(request: ProxyRequest): Promise<ProxyResponse>;
   proxyToPerformanceAnalysis(request: ProxyRequest): Promise<ProxyResponse>;
   proxyToAudit(request: ProxyRequest): Promise<ProxyResponse>;
+  proxyToWeather(request: ProxyRequest): Promise<ProxyResponse>;
 }
