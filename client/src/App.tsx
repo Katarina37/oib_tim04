@@ -9,6 +9,7 @@ import WeatherPage from './pages/WeatherPage';
 import SettingsPage from './pages/SettingsPage';
 import UnderConstructionPage from './pages/UnderConstructionPage';
 import AnalysisPage from './pages/AnalysisPage';
+import PerformancePage from './pages/PerformancePage';
 import { getDefaultRouteForRole } from './helpers/roleAccess';
 
 const App: React.FC = () => {
@@ -147,10 +148,7 @@ const App: React.FC = () => {
         element={
           <ProtectedRoute requiredRole="admin">
             <AppLayout>
-              <UnderConstructionPage 
-                title="Analiza performansi" 
-                description="Mikroservis za analizu performansi sistema"
-              />
+              <PerformancePage/>
             </AppLayout>
           </ProtectedRoute>
         }
