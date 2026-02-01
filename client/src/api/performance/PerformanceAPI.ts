@@ -3,7 +3,7 @@ import { IHttpClient } from "../http/IHttpClient";
 import { PerformanceReportDTO } from "../../models/performance/PerformanceReportDTO";
 import { CreatePerformanceParams } from "../../models/performance/CreatePerformanceParams";
 
-export class PerformanceAPII implements IPerformanceAPI {
+export class PerformanceAPI implements IPerformanceAPI {
     constructor(private readonly httpClient: IHttpClient) {}
 
     // Putanja do mikroservisa na Gateway-u
