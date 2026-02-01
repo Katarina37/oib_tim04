@@ -1,3 +1,3 @@
 export interface SendPackageDTO {
-    quantity: number;
+    quantity: number; 
 }

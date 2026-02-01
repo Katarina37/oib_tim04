@@ -1,5 +1,5 @@
 export enum PackageState {
-    AVAILABLE = "dostupno",
-    RESERVED = "rezervisano",
-    SENT = "poslato",
+    AVAILABLE = "spakovana",
+    RESERVED = "rezervisana",
+    SENT = "poslata",
 }

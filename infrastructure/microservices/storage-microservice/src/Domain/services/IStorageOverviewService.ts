@@ -1,10 +1,9 @@
-import { AvailablePackagesDTO } from "../DTOs/AvailablePackagesDTO";
-import { PackageSummaryDTO } from "../DTOs/PackageSummaryDTO";
 import { WarehouseSummaryDTO } from "../DTOs/WarehouseSummaryDTO";
+import { PackageSummaryDTO } from "../DTOs/PackageSummaryDTO";
+import { AvailablePackagesDTO } from "../DTOs/AvailablePackagesDTO";
 
-export interface IStorageRepository {
+export interface IStorageOverviewService {
     getAvailablePackages(): Promise<AvailablePackagesDTO>;
-    sendPackages(quantity: number): Promise<number>;
     getWarehouses(): Promise<WarehouseSummaryDTO[]>;
     getPackages(): Promise<PackageSummaryDTO[]>;
 }

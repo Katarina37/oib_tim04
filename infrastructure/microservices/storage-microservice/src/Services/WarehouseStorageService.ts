@@ -1,9 +1,7 @@
 import { IStorageService } from "../Domain/services/IStorageService";
 import { ILoggerService } from "../Domain/services/ILoggerService";
-import { PackageState } from "../Domain/enums/PackageState";
 import { LogLevel } from "../Domain/enums/LogLevel";
 import { IStorageRepository } from "../Domain/services/IStorageRepository";
-
 export class WarehouseStorageService implements IStorageService {
     private static readonly MAX_PER_DISPATCH = 1;
     private static readonly PROCUREMENT_TIME_MS = 2500;
@@ -24,9 +22,11 @@ export class WarehouseStorageService implements IStorageService {
                 throw new Error("Kolicina mora biti veca od 0");
             }
 
-            const sent = Math.min(quantity, WarehouseStorageService.MAX_PER_DISPATCH);
+            const toSend = Math.min(quantity, WarehouseStorageService.MAX_PER_DISPATCH);
 
             await new Promise(resolve => setTimeout(resolve, WarehouseStorageService.PROCUREMENT_TIME_MS));
+
+            const sent = await this.repository.sendPackages(toSend);
 
             await this.logger.log(
                 `Poslata ambalaza iz magacinskog centra: ${sent}/${quantity}`,
@@ -43,9 +43,5 @@ export class WarehouseStorageService implements IStorageService {
             );
             throw error;
         }
-    }
-
-    async getAvailablePackages(): Promise<number> {
-        return this.repository.getAvailablePackages();
     }
 }

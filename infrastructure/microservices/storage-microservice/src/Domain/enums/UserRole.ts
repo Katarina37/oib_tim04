@@ -1,4 +1,4 @@
 export enum UserRole {
-    MANAGER = "manager",
+    MANAGER = "sales_manager",
     SELLER = "seller",
 }

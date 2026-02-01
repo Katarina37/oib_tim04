@@ -1,15 +1,22 @@
 import express, { Application, Request, Response, NextFunction } from "express";
 import cors from "cors";
+import axios from "axios";
+
 import { StorageController } from "./WebAPI/controllers/StorageController";
+import { StorageOverviewController } from "./WebAPI/controllers/StorageOverviewController";
+
 import { StorageFacadeService } from "./Services/StorageFacadeService";
 import { DistributionCenterStorageService } from "./Services/DistributionCenterStorageService";
 import { WarehouseStorageService } from "./Services/WarehouseStorageService";
+import { StorageOverviewService } from "./Services/StorageOverviewService";
+
 import { StorageRepository } from "./Services/StorageRepository";
 import { LoggerService } from "./Services/LoggerService";
-import axios from "axios";
+
 import { AxiosAuditClient } from "./Infrastructure/clients/AxiosAuditClient";
 import { IAuditClient } from "./Domain/services/IAuditClient";
 import { IStorageRepository } from "./Domain/services/IStorageRepository";
+
 import { CorsConfig } from "./WebAPI/middleware/CorsConfig";
 import { GatewayAuthMiddleware } from "./WebAPI/middleware/GatewayAuthMiddleware";
 import { RequestAuditMiddleware } from "./WebAPI/middleware/RequestAuditMiddleware";
@@ -18,19 +25,23 @@ import { requireEnv } from "./config/env";
 export function createApp(): Application {
     const app: Application = express();
 
+
     // Middleware
+
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
-    // CORS Configuration
     const corsConfig = new CorsConfig();
-    app.use(cors(corsConfig.buildOptions()));
-
-    // Gateway Auth
     const gatewayApiKey = requireEnv("GATEWAY_API_KEY");
     const gatewayAuthMiddleware = new GatewayAuthMiddleware(gatewayApiKey);
+    app.use(cors(corsConfig.buildOptions()));
 
-    // Audit Client
+    // Dependency Injection
+   
+    // Repository
+    const storageRepository: IStorageRepository = new StorageRepository();
+
+    // Audit + Logger
     const auditServiceUrl = requireEnv("GATEWAY_AUDIT_URL");
     const auditHttpClient = axios.create({
         baseURL: auditServiceUrl,
@@ -40,51 +51,69 @@ export function createApp(): Application {
         },
         timeout: 5000,
     });
+
     const auditClient: IAuditClient = new AxiosAuditClient(auditHttpClient);
     const loggerService = new LoggerService(auditClient, "storage-microservice");
 
-    // Repository
-    const storageRepository: IStorageRepository = new StorageRepository();
+    // WRITE services
+    const distributionCenterService =
+        new DistributionCenterStorageService(storageRepository, loggerService);
 
-    // Storage Services
-    const distributionCenterService = new DistributionCenterStorageService(storageRepository, loggerService);
-    const warehouseStorageService = new WarehouseStorageService(storageRepository, loggerService);
+    const warehouseStorageService =
+        new WarehouseStorageService(storageRepository, loggerService);
 
-    // Facade
+    // WRITE facade
     const storageFacade = new StorageFacadeService(
         distributionCenterService,
         warehouseStorageService
     );
 
-    // Controller
-    const storageController = new StorageController(storageFacade, loggerService);
+    // READ service
+    const storageOverviewService =
+        new StorageOverviewService(storageRepository);
 
-    // Health Check (public endpoint)
+    // Controllers
+
+    const storageController =
+        new StorageController(storageFacade, loggerService);
+
+    const storageOverviewController =
+        new StorageOverviewController(storageOverviewService, loggerService);
+
+    // Health check
+
     app.get("/health", (_req: Request, res: Response) => {
-        res.status(200).json({ status: "OK", service: "storage-microservice" });
+        res.status(200).json({
+            status: "OK",
+            service: "storage-microservice",
+        });
     });
 
-    // Protected Routes (require gateway key)
+    // Protected routes
+
     const apiRouter = express.Router();
     apiRouter.use(gatewayAuthMiddleware.getHandler());
 
     if (process.env.ENABLE_REQUEST_AUDIT_LOGS === "true") {
-        const requestAuditMiddleware = new RequestAuditMiddleware(loggerService);
+        const requestAuditMiddleware =
+            new RequestAuditMiddleware(loggerService);
         apiRouter.use(requestAuditMiddleware.getHandler());
     }
 
     apiRouter.use(storageController.getRouter());
-    app.use("/api/v1/storage", apiRouter);
+    apiRouter.use(storageOverviewController.getRouter());
 
-    // Error Handling Middleware
+    app.use("/api/v1", apiRouter);
+
+    // Error handling
+
     app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
         console.error("Error:", err.message);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: "Interna greska servera" });
     });
 
-    // 404 Handler
     app.use((_req: Request, res: Response) => {
-        res.status(404).json({ message: "Route not found" });
+        res.status(404).json({ message: "Ruta nije pronadjena" });
     });
 
     return app;

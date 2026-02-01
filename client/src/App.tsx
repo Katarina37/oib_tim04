@@ -10,6 +10,7 @@ import SettingsPage from './pages/SettingsPage';
 import UnderConstructionPage from './pages/UnderConstructionPage';
 import AnalysisPage from './pages/AnalysisPage';
 import { getDefaultRouteForRole } from './helpers/roleAccess';
+import StoragePage from './pages/StoragePage';
 
 const App: React.FC = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -84,10 +85,7 @@ const App: React.FC = () => {
         element={
           <ProtectedRoute requiredRole="seller,sales_manager">
             <AppLayout>
-              <UnderConstructionPage 
-                title="Skladištenje" 
-                description="Mikroservis za upravljanje skladištima"
-              />
+              <StoragePage/>
             </AppLayout>
           </ProtectedRoute>
         }

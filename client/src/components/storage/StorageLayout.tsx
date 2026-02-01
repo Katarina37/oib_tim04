@@ -1,19 +1,43 @@
 import React from "react";
 import WarehousesColumn from "./WarehousesColumn";
 import PackagingStorageTable from "./PackagingStorageTable";
+import {
+    WarehouseSummaryDTO,
+    PackageSummaryDTO,
+} from "../../models/storage/AvailablePackagesDTO";
 
-const StorageLayout: React.FC = () => {
+interface StorageLayoutProps {
+    warehouses: WarehouseSummaryDTO[];
+    packages: PackageSummaryDTO[];
+}
+
+const StorageLayout: React.FC<StorageLayoutProps> = ({
+    warehouses,
+    packages,
+}) => {
     return (
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 p-4">
-            {/* lijevo: skladista */}
-            <div className="xl:col-span-1">
-                <WarehousesColumn />
+        <div className="grid grid--2">
+
+            <div className="card">
+                <div className="card__header">
+                    <h2 className="card__title">Skladišta</h2>
+                </div>
+
+                <div className="card__body">
+                    <WarehousesColumn warehouses={warehouses} />
+                </div>
             </div>
 
-            {/* desno: ambalaze */}
-            <div className="xl:col-span-2">
-                <PackagingStorageTable />
+            <div className="card">
+                <div className="card__header">
+                    <h2 className="card__title">Ambalaže</h2>
+                </div>
+
+                <div className="card__body">
+                    <PackagingStorageTable packages={packages} />
+                </div>
             </div>
+
         </div>
     );
 };

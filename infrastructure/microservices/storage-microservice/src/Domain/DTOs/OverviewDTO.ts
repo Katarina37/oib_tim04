@@ -1,7 +1,7 @@
 import { PackageSummaryDTO } from "./PackageSummaryDTO";
 import { WarehouseSummaryDTO } from "./WarehouseSummaryDTO";
 
-export interface AvailablePackagesDTO {
-    distributiveCenter: number;
-    warehouseCenter: number;
+export interface OverviewDTO {
+    warehouses: WarehouseSummaryDTO[];
+    packages: PackageSummaryDTO[];
 }

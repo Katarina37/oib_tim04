@@ -197,8 +197,10 @@ export class GatewayController {
       data: req.body,
       params: req.query as Record<string, string>,
       headers: {
-        Authorization: req.headers.authorization || "",
-        "X-Demo-Date": (req.headers["x-demo-date"] as string) || "",
+          Authorization: req.headers.authorization || "",
+          "X-User-Id": String(req.user?.id ?? ""),
+          "X-User-Role": req.user?.role ?? "",
+          "X-Demo-Date": (req.headers["x-demo-date"] as string) || "",
       },
     };
   }

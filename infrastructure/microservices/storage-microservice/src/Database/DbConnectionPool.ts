@@ -1,6 +1,8 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
 import { Package } from "../Domain/models/Package";
+import { Warehouse } from "../Domain/models/Warehouse";
+import { PackagePerfume } from "../Domain/models/PackagePerfume";
 import { requireEnv, requireIntEnv } from "../config/env";
 
 export const AppDataSource = new DataSource({
@@ -13,7 +15,7 @@ export const AppDataSource = new DataSource({
   ssl: { rejectUnauthorized: false },
   synchronize: true, 
   logging: false, 
-  entities: [Package],
+  entities: [Package, Warehouse, PackagePerfume],
 });
 
 export const Db = AppDataSource;

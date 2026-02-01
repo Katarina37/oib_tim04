@@ -1,76 +1,62 @@
 import React from "react";
+import { WarehouseSummaryDTO } from "../../models/storage/AvailablePackagesDTO";
 import { Package } from "lucide-react";
 
-interface Warehouse {
-    id: string;
-    name: string;
-    address: string;
-    used: number;
-    capacity: number;
+interface Props {
+    warehouses: WarehouseSummaryDTO[];
 }
 
-const warehouses: Warehouse[] = [
-    {
-        id: "central",
-        name: "Centralno skladište",
-        address: "Pariz, Rue de la Paix 45",
-        used: 67,
-        capacity: 100,
-    },
-    {
-        id: "north",
-        name: "Severno skladište",
-        address: "Pariz, Avenue Foch 12",
-        used: 45,
-        capacity: 75,
-    },
-    {
-        id: "south",
-        name: "Juno skladište",
-        address: "Pariz, Blvd. Saint-Germain 89",
-        used: 28,
-        capacity: 50,
-    },
-];
-
-const WarehousesColumn: React.FC = () => {
+const WarehousesColumn: React.FC<Props> = ({ warehouses }) => {
     return (
         <div className="space-y-4">
-            {warehouses.map((w) => {
-                const percent = Math.round((w.used / w.capacity) * 100);
-                return (
-                    <div
-                        key={w.id}
-                        className="rounded-2xl bg-white shadow-sm p-4"
-                    >
-                        <div className="flex justify-between items-start mb-2">
-                            <div>
-                                <h3 className="font-semibold">{w.name}</h3>
-                                <p className="text-sm text-gray-500">{w.address}</p>
+            {warehouses.length > 0 ? (
+                warehouses.map((w: WarehouseSummaryDTO) => {
+                    const percent = Math.round((w.usedCapacity / w.capacity) * 100);
+                    return (
+                        <div
+                            key={w.id}
+                            className="rounded-lg border border-gray-200 bg-white p-5 hover:shadow-lg transition-all duration-200"
+                        >
+                            <div className="flex justify-between items-start mb-3">
+                                <div className="flex-1">
+                                    <h3 className="font-semibold text-gray-900 mb-1">
+                                        {w.name}
+                                    </h3>
+                                    <p className="text-sm text-gray-500">
+                                        {w.address}
+                                    </p>
+                                </div>
+                                <div className="ml-3 p-2 bg-orange-50 rounded-lg">
+                                    <Package className="h-5 w-5 text-orange-600" />
+                                </div>
                             </div>
-                            <Package className="h-5 w-5 text-orange-500" />
-                        </div>
 
-                        <div className="flex justify-between text-sm mb-1">
-                            <span>Kapacitet</span>
-                            <span className="font-medium">
-                                {w.used} / {w.capacity}
-                            </span>
+                            <div className="mt-4">
+                                <div className="flex justify-between text-sm mb-2">
+                                    <span className="text-gray-600">Kapacitet</span>
+                                    <span className="font-semibold text-gray-900">
+                                        {w.usedCapacity} / {w.capacity}
+                                    </span>
+                                </div>
+                                <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
+                                    <div
+                                        className="bg-orange-500 h-2.5 rounded-full transition-all duration-300"
+                                        style={{ width: `${percent}%` }}
+                                    />
+                                </div>
+                                <p className="text-xs text-gray-500 mt-2">
+                                    {percent}% popunjeno
+                                </p>
+                            </div>
                         </div>
-
-                        <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                            <div
-                                className="bg-orange-500 h-2 rounded-full"
-                                style={{ width: `${percent}%` }}
-                            ></div>
-                        </div>
-
-                        <p className="text-xs text-gray-500 mt-1">
-                            {percent}% popunjeno
-                        </p>
-                    </div>
-                );
-            })}
+                    );
+                })
+            ) : (
+                <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
+                    <Package className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">Nema skladista</p>
+                </div>
+            )}
         </div>
     );
 };

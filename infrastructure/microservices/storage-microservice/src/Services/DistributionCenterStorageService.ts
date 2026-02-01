@@ -1,5 +1,4 @@
 import { IStorageService } from "../Domain/services/IStorageService";
-import { PackageState } from "../Domain/enums/PackageState";
 import { LogLevel } from "../Domain/enums/LogLevel";
 import { IStorageRepository } from "../Domain/services/IStorageRepository";
 import { ILoggerService } from "../Domain/services/ILoggerService";
@@ -24,9 +23,11 @@ export class DistributionCenterStorageService implements IStorageService {
                 throw new Error("Kolicina mora biti veca od 0");
             }
 
-            const sent = Math.min(quantity, DistributionCenterStorageService.MAX_PER_DISPATCH);
+            const toSend = Math.min(quantity, DistributionCenterStorageService.MAX_PER_DISPATCH);
 
             await new Promise(resolve => setTimeout(resolve, DistributionCenterStorageService.PROCUREMENT_TIME_MS));
+
+            const sent = await this.repository.sendPackages(toSend);
 
             await this.logger.log(
                 `Poslata ambalaza iz distributivnog centra: ${sent}/${quantity}`,
@@ -43,9 +44,5 @@ export class DistributionCenterStorageService implements IStorageService {
             );
             throw error;
         }
-    }
-
-    async getAvailablePackages(): Promise<number> {
-        return this.repository.getAvailablePackages();
     }
 }

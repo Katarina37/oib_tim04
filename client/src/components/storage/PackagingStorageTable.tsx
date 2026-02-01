@@ -1,76 +1,75 @@
 import React from "react";
+import { PackageSummaryDTO } from "../../models/storage/AvailablePackagesDTO";
 
-interface PackagingRow {
-    id: string;
-    sender: string;
-    perfumeCount: number;
-    warehouse: string;
-    status: "STORED" | "SENT";
+interface Props {
+    packages: PackageSummaryDTO[];
 }
 
-const rows: PackagingRow[] = [
-    {
-        id: "AMB-2025-001",
-        sender: "Centar za pakovanje 1",
-        perfumeCount: 24,
-        warehouse: "Centralno skladište",
-        status: "STORED",
-    },
-    {
-        id: "AMB-2025-002",
-        sender: "Centar za pakovanje 1",
-        perfumeCount: 18,
-        warehouse: "Centralno skladište",
-        status: "SENT",
-    },
-    {
-        id: "AMB-2025-003",
-        sender: "Centar za pakovanje 2",
-        perfumeCount: 30,
-        warehouse: "Severno skladište",
-        status: "STORED",
-    },
-];
-
-const PackagingStorageTable: React.FC = () => {
+const PackagingStorageTable: React.FC<Props> = ({ packages }) => {
     return (
-        <div className="rounded-2xl border bg-white p-4 shadow-sm">
-            <h2 className="text-lg font-semibold mb-3">
-                Ambalaže u skladištu
-            </h2>
-
-            <div className="overflow-x-auto mt-3">
-                <table className="w-full text-sm">
-                    <thead className="border-b">
-                        <tr className="text-left">
-                            <th className="py-2">ID ambalaže</th>
-                            <th>Pošiljalac</th>
-                            <th>Broj parfema</th>
-                            <th>Skladište</th>
-                            <th>Status</th>
+        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden shadow-sm mb-lg">
+            <div className="overflow-x-auto">
+                <table className="w-full table-fixed">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th className="w-1/12 py-3 px-4 text-left text-sm font-semibold text-gray-900">
+                                ID
+                            </th>
+                            <th className="w-3/12 py-3 px-4 text-left text-sm font-semibold text-gray-900">
+                                Posiljalac
+                            </th>
+                            <th className="w-2/12 py-3 px-4 text-left text-sm font-semibold text-gray-900">
+                                Broj parfema
+                            </th>
+                            <th className="w-3/12 py-3 px-4 text-left text-sm font-semibold text-gray-900">
+                                Skladiste
+                            </th>
+                            <th className="w-3/12 py-3 px-4 text-left text-sm font-semibold text-gray-900">
+                                Status
+                            </th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {rows.map((r) => (
-                            <tr key={r.id} className="border-b last:border-none">
-                                <td className="py-2 font-medium">{r.id}</td>
-                                <td>{r.sender}</td>
-                                <td>{r.perfumeCount}</td>
-                                <td>{r.warehouse}</td>
-                                <td>
-                                    <span
-                                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${r.status === "STORED"
-                                                ? "bg-green-100 text-green-700"
-                                                : "bg-blue-100 text-blue-700"
-                                            }`}
-                                    >
-                                        {r.status === "STORED"
-                                            ? "Skladištena"
-                                            : "Poslata"}
-                                    </span>
+                    <tbody className="divide-y divide-gray-200">
+                        {packages.length > 0 ? (
+                            packages.map((r: PackageSummaryDTO) => (
+                                <tr
+                                    key={r.id}
+                                    className="hover:bg-gray-50 transition-colors"
+                                >
+                                    <td className="py-4 px-4 text-sm font-medium text-gray-900">
+                                        {r.id}
+                                    </td>
+                                    <td className="py-4 px-4 text-sm text-gray-700">
+                                        {r.sender}
+                                    </td>
+                                    <td className="py-4 px-4 text-sm text-gray-700 text-center">
+                                        {r.perfumeCount}
+                                    </td>
+                                    <td className="py-4 px-4 text-sm text-gray-700">
+                                        {r.warehouseName}
+                                    </td>
+                                    <td className="py-4 px-4 text-sm">
+                                        <span
+                                            className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${r.status === "STORED"
+                                                    ? "bg-green-50 text-green-700 border border-green-200"
+                                                    : "bg-blue-50 text-blue-700 border border-blue-200"
+                                                }`}
+                                        >
+                                            {r.status === "STORED" ? "Skladištena" : "Poslata"}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td
+                                    colSpan={5}
+                                    className="py-12 text-center text-gray-500"
+                                >
+                                    Nema ambalaža u skladistima
                                 </td>
                             </tr>
-                        ))}
+                        )}
                     </tbody>
                 </table>
             </div>
