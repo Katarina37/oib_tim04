@@ -11,11 +11,17 @@ import { requireEnv } from "./config/env";
 import { SalesController } from "./WebAPI/controllers/SaleController";
 import { SaleService } from "./Services/SaleService";
 import { TypeORMSaleRepository } from "./Infrastructure/repositories/TypeORMSaleRepository";
+
 import { AxiosAuditClient } from "./Infrastructure/clients/AxiosAuditClient";
+import { AnalysisClient } from "./Infrastructure/clients/AnalysisClient";
+import { StorageClient } from "./Infrastructure/clients/StorageClient";
+
 import { IAuditClient } from "./Domain/services/IAuditClient";
+import { IAnalysisClient } from "./Domain/services/IAnalysisClient";
+import { IStorageClient } from "./Domain/services/IStorageClient";
 import { ILoggerService } from "./Domain/services/ILoggerService";
+
 import { LoggerService } from "./Services/LoggerService";
-import { Sale } from "./Domain/models/Sale";
 
 export async function createApp(): Promise<Application> {
   const app = express();
@@ -47,9 +53,28 @@ export async function createApp(): Promise<Application> {
   (auditClient as any).sendLog = (auditClient as any).sendLog;
   const loggerService: ILoggerService = new LoggerService(auditClient);
  
+  // ===== ANALYSIS CLIENT =====
+  const analysisServiceUrl = requireEnv("GATEWAY_ANALYSIS_URL");
+  const analysisClient: IAnalysisClient = new AnalysisClient(
+    analysisServiceUrl,
+    gatewayApiKey
+  );
+
+  // ===== STORAGE CLIENT =====
+  const storageServiceUrl = requireEnv("GATEWAY_STORAGE_URL");
+  const storageClient: IStorageClient = new StorageClient(
+    storageServiceUrl,
+    gatewayApiKey
+  );
+
   // ===== DEPENDENCY INJECTION =====
   const saleRepository = new TypeORMSaleRepository();
-  const saleService = new SaleService(saleRepository, auditClient);
+  const saleService = new SaleService(
+    saleRepository, 
+    auditClient,
+    storageClient,
+    analysisClient
+  );
   
   const salesController = new SalesController(
     saleService,
@@ -65,7 +90,7 @@ export async function createApp(): Promise<Application> {
 
   // ===== API ROUTES (PROTECTED) =====
   const apiRouter = express.Router();
- apiRouter.use(gatewayAuthMiddleware.getHandler());
+  apiRouter.use(gatewayAuthMiddleware.getHandler());
 
   if (process.env.ENABLE_REQUEST_AUDIT_LOGS === "true") {
     const requestAuditMiddleware = new RequestAuditMiddleware(loggerService);

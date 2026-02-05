@@ -9,7 +9,7 @@ export class SaleItem {
     @Column({ name: "parfem_id", type: "int" })
     perfumeId!: number;
 
-    @Column({ name: "naziv_parfema", type: "varchar", length: 255 })
+    @Column({ name: "naziv_parfema", type: "varchar", length: 100 })
     perfumeName!: string;
 
     @Column({ name: "kolicina", type: "int" })
@@ -28,7 +28,7 @@ export class SaleItem {
 
     @Column({ name: "ukupna_cena", 
               type: "decimal", 
-              precision: 10, 
+              precision: 12, 
               scale: 2,
               transformer: {
                 to: (value: number) => value,
@@ -37,7 +37,7 @@ export class SaleItem {
     })
     totalPrice!: number;
 
-    @ManyToOne(() => Sale, (sale) => sale.id)
+    @ManyToOne(() => Sale, (sale) => sale.items)
     @JoinColumn({ name: "fiskalni_racun_id" })
     sale!: Sale;
 }

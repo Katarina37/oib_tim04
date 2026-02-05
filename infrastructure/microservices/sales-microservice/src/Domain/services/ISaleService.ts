@@ -7,4 +7,5 @@ export interface ISaleService {
     getAllSales(): Promise<SaleResponseDTO[]>;
     getSaleByBillNumber(billNumber: string): Promise<SaleResponseDTO>;
     deleteSale(id: number): Promise<void>;
+    getAvailablePerfumes(): Promise<any[]>;
 }

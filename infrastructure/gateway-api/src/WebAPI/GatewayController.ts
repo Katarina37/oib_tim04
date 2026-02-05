@@ -61,6 +61,12 @@ export class GatewayController {
 
     // Sales microservice routes (Seller, Sales Manager)
     this.router.all(
+      "/sales", authenticate,
+      authorize(UserRole.SELLER, UserRole.SALES_MANAGER), 
+      this.proxyToSales.bind(this)
+    );
+
+    this.router.all(
       "/sales/*path",
       authenticate,
       authorize(UserRole.SELLER, UserRole.SALES_MANAGER),

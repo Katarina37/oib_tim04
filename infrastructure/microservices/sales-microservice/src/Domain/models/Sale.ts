@@ -11,15 +11,15 @@ export class Sale {
   @Column({ name: "broj_racuna", type: "varchar", length: 255, nullable: true })
   billNumber!: string;
 
-  @Column({ name: "tip_prodaje", type: "varchar", length: 50, default: SaleType.RETAIL, enum: SaleType })  
+  @Column({ name: "tip_prodaje", type: "enum", default: SaleType.RETAIL, enum: SaleType })  
   salesType!: SaleType;
 
-  @Column({ name: "nacin_placanja", type: "varchar", length: 50, default: PaymentMethod.CASH, enum: PaymentMethod })  
+  @Column({ name: "nacin_placanja", type: "enum", default: PaymentMethod.CASH, enum: PaymentMethod })  
   paymentMethod!: PaymentMethod;
 
   @Column({ name: "ukupan_iznos", 
             type: "decimal", 
-            precision: 10, 
+            precision: 12, 
             scale: 2,
             transformer: {
               to: (value: number) => value,

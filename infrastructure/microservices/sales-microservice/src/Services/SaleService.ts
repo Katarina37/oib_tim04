@@ -7,14 +7,41 @@ import { SaleItem } from "../Domain/models/SaleItem";
 import { PaymentMethod } from "../Domain/enums/PaymentMethod";
 import { SaleType } from "../Domain/enums/SaleType";
 import { IAuditClient } from "../Domain/services/IAuditClient";
+import { IStorageClient } from "Domain/services/IStorageClient";
+import { IAnalysisClient } from "Domain/services/IAnalysisClient";
 
 export class SaleService implements ISaleService {
     constructor(
         private readonly saleRepository: ISaleRepository,
-        private readonly auditClient: IAuditClient
+        private readonly auditClient: IAuditClient,
+        private readonly storageClient: IStorageClient,
+        private readonly analysisClient: IAnalysisClient
     ) {}
 
     async executeSale(data: CreateSaleDto): Promise<SaleResponseDTO> {
+        //trazenje ambalaze od mikroservisa za skladistenje
+        const requestedPackages = data.items.reduce(
+            (sum, item) => sum + item.quantity, 
+            0
+        );
+
+        const sentPackages = await this.storageClient.sendPackages(requestedPackages);
+        
+        if (sentPackages < requestedPackages) {
+            await this.auditClient.sendLog({
+                tip_zapisa: "ERROR",
+                opis: `Nedovoljno paketa na stanju za prodaju. Zahtevano: ${requestedPackages}, poslato: ${sentPackages}.`,
+                mikroservis: "sales-microservice",
+                korisnik_id: data.userId,
+                dodatni_podaci: { 
+                    requested: requestedPackages, 
+                    sent: sentPackages 
+                },
+            });
+            throw new Error("Nema dovoljno paketa na stanju za izvršenje prodaje.");
+        }
+
+        //kreiranje prodaje
         const newSale = await this.saleRepository.create({
             salesType: data.type as SaleType,
             paymentMethod: data.paymentMethod as PaymentMethod,
@@ -46,15 +73,33 @@ export class SaleService implements ISaleService {
 
         const savedSale = await this.saleRepository.save(newSale);
 
+        //slanje podataka mikroservisu za analizu podataka
+        const analysisResponse = await this.analysisClient.createFiscalBill({
+            saleType: newSale.salesType,
+            paymentMethod: newSale.paymentMethod,
+            userId: data.userId,
+            soldItems: newSale.items.map(item => ({
+                productId: item.perfumeId,
+                productName: item.perfumeName,
+                quantity: item.quantity,
+                price: item.totalPrice,
+            })),
+        });
+
+        //cuvanje broja fiskalnog racuna
         savedSale.billNumber = `FR-2026-${savedSale.id}`;
         const finalSale = await this.saleRepository.save(savedSale);
 
+        //audit - uspesna prodaja
         await this.auditClient.sendLog({
             tip_zapisa: "INFO",
             opis: `Izvrsena prodaja sa ID-jem ${finalSale.id} i brojem racuna ${finalSale.billNumber}.`,
             mikroservis: "sales-microservice",
             korisnik_id: data.userId,
-            dodatni_podaci: {total: finalSale.totalAmount, items: finalSale.items.length},
+            dodatni_podaci: {
+                saleId: finalSale.id,
+                total: finalSale.totalAmount
+            }
         });
 
         return this.toDTO(finalSale)
@@ -101,6 +146,11 @@ export class SaleService implements ISaleService {
         });
     }
 
+    async getAvailableProducts(): Promise<any[]> {
+        const rawInventory = await this.storageClient.getInventory();
+        return rawInventory; 
+    }
+
     private toDTO(sale: Sale): SaleResponseDTO {
         return {
             id: sale.id,
@@ -115,5 +165,16 @@ export class SaleService implements ISaleService {
                 totalPrice: item.totalPrice,
             })),
         };
+    }
+
+    async getAvailablePerfumes(): Promise<any[]> {
+        // TODO: Ovo treba da bude pravi poziv ka storage/processing servisu za parfeme
+        // Za sada vraćamo mock podatke
+        return [
+            { id: 1, name: "Rosa Mistika", type: "parfem", volumeMl: 150, price: 12500, stock: 45, serialNumber: "PP-2026-1", plantId: 1, expiryDate: "2027-12-31" },
+            { id: 2, name: "Lavander Noir", type: "parfem", volumeMl: 250, price: 8900, stock: 67, serialNumber: "PP-2026-2", plantId: 2, expiryDate: "2027-12-31" },
+            { id: 3, name: "Bergamot Esenc", type: "kolonjska_voda", volumeMl: 150, price: 13200, stock: 23, serialNumber: "PP-2026-3", plantId: 3, expiryDate: "2027-12-31" },
+            { id: 4, name: "Jasmin De Nuit", type: "parfem", volumeMl: 250, price: 9500, stock: 38, serialNumber: "PP-2026-4", plantId: 4, expiryDate: "2027-12-31" },
+        ];
     }
 }
