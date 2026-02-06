@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Calendar, Save, RotateCcw, Info } from 'lucide-react';
+import { formatDate } from '../helpers/formatters';
 import './SettingsPage.css';
 
 export const SettingsPage: React.FC = () => {
@@ -30,15 +31,9 @@ export const SettingsPage: React.FC = () => {
     setTimeout(() => setIsSaved(false), 2000);
   };
 
-  const formatDate = (dateStr: string): string => {
+  const formatDemoDate = (dateStr: string): string => {
     if (!dateStr) return 'Sistemski datum';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('sr-RS', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
+    return formatDate(dateStr);
   };
 
   return (
@@ -71,7 +66,7 @@ export const SettingsPage: React.FC = () => {
 
           <div className="current-date">
             <span className="label">Trenutno aktivan datum:</span>
-            <span className="value">{formatDate(demoDate)}</span>
+            <span className="value">{formatDemoDate(demoDate)}</span>
           </div>
 
           <div className="form-group">

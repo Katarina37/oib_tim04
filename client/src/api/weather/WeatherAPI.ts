@@ -24,6 +24,27 @@ export class WeatherAPI implements IWeatherAPI {
     return { headers };
   }
 
+  private getErrorMessage(error: unknown, fallback: string): string {
+    if (error && typeof error === "object") {
+      const responseData = (error as { response?: { data?: { message?: unknown; error?: unknown } } })
+        .response?.data;
+      const message = typeof responseData?.message === "string" ? responseData.message.trim() : "";
+      if (message) {
+        return message;
+      }
+      const errorText = typeof responseData?.error === "string" ? responseData.error.trim() : "";
+      if (errorText) {
+        return errorText;
+      }
+    }
+
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+
+    return fallback;
+  }
+
   async getAllWeather(token: string): Promise<WeatherDTO[]> {
     return this.httpClient.get<WeatherDTO[]>(this.basePath, this.getHeaders(token));
   }
@@ -52,12 +73,18 @@ export class WeatherAPI implements IWeatherAPI {
   }
 
   async applyWeatherEffects(date: string, token: string): Promise<WeatherEffectResultDTO> {
-    const response = await this.httpClient.post<ApiResponse<WeatherEffectResultDTO>>(
-      `${this.basePath}/${date}/apply-effects`,
-      {},
-      this.getHeaders(token)
-    );
-    return response.data;
+    try {
+      const response = await this.httpClient.post<ApiResponse<WeatherEffectResultDTO>>(
+        `${this.basePath}/${date}/apply-effects`,
+        {},
+        this.getHeaders(token)
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        this.getErrorMessage(error, "Greška pri primeni vremenskih efekata")
+      );
+    }
   }
 
   async deleteWeather(date: string, token: string): Promise<void> {

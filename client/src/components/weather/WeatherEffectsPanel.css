@@ -2,7 +2,8 @@
   background: var(--color-white, #ffffff);
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--color-border-light, #f0f2f4);
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
 }
 
 .weather-effects-panel h3 {
@@ -39,7 +40,7 @@
   gap: 8px;
   width: 100%;
   padding: 14px 20px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, var(--color-primary, #66cdaa) 0%, var(--color-primary-dark, #4db892) 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -47,11 +48,12 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
 }
 
 .apply-effects-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+  box-shadow: var(--shadow-md, 0 4px 6px rgba(0, 0, 0, 0.08));
 }
 
 .apply-effects-btn:disabled {
@@ -88,16 +90,25 @@
   margin-top: 16px;
   padding: 16px;
   border-radius: 8px;
+  --effect-item-bg: rgba(15, 23, 42, 0.04);
+  --effect-item-border: rgba(15, 23, 42, 0.12);
+  --effect-divider: rgba(15, 23, 42, 0.2);
 }
 
 .effects-result.effect-success {
   background: #dcfce7;
   border: 1px solid #86efac;
+  --effect-item-bg: rgba(22, 163, 74, 0.08);
+  --effect-item-border: rgba(22, 163, 74, 0.25);
+  --effect-divider: rgba(22, 163, 74, 0.28);
 }
 
 .effects-result.effect-warning {
   background: #fef3c7;
   border: 1px solid #fcd34d;
+  --effect-item-bg: rgba(217, 119, 6, 0.12);
+  --effect-item-border: rgba(217, 119, 6, 0.3);
+  --effect-divider: rgba(217, 119, 6, 0.35);
 }
 
 .result-header {
@@ -136,6 +147,77 @@
   color: var(--color-text-primary, #1a2b3c);
 }
 
+.affected-plants {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--effect-divider, var(--color-border-light, #f0f2f4));
+}
+
+.affected-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.affected-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--effect-item-bg, var(--color-background, #f8fafb));
+  border: 1px solid var(--effect-item-border, var(--color-border-light, #f0f2f4));
+  font-size: 0.8125rem;
+  color: var(--color-text-primary, #1a2b3c);
+}
+
+.effect-chip {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.effect-chip.action-removed {
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--color-error, #f87171);
+}
+
+.effect-chip.action-boosted {
+  background: rgba(74, 222, 128, 0.2);
+  color: var(--color-success, #4ade80);
+}
+
+.effect-chip.action-reduced {
+  background: rgba(251, 191, 36, 0.2);
+  color: var(--color-warning, #fbbf24);
+}
+
+.effect-chip.action-duplicated {
+  background: rgba(96, 165, 250, 0.2);
+  color: var(--color-info, #60a5fa);
+}
+
+.plant-name {
+  font-weight: 600;
+}
+
+.plant-meta {
+  color: var(--color-text-muted, #8a9bac);
+  font-size: 0.75rem;
+}
+
+.plant-delta {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #5a6b7c);
+}
+
 .effects-rules {
   margin-top: 20px;
   padding-top: 20px;
@@ -153,23 +235,29 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  display: grid;
+  gap: 10px;
 }
 
 .effects-rules li {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
+  padding: 10px 12px;
   font-size: 0.8125rem;
-  border-bottom: 1px dashed var(--color-border-light, #f0f2f4);
+  border: 1px solid var(--color-border-light, #f0f2f4);
+  border-radius: 10px;
+  background: var(--color-background, #f8fafb);
+  gap: 12px;
 }
 
 .effects-rules li:last-child {
-  border-bottom: none;
+  border-bottom: 1px solid var(--color-border-light, #f0f2f4);
 }
 
 .rule-condition {
   color: var(--color-text-primary, #1a2b3c);
+  font-weight: 600;
 }
 
 .rule-effect {

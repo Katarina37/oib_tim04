@@ -7,6 +7,10 @@ export interface IWeatherService {
   getWeatherByDate(date: string): Promise<WeatherDTO>;
   getWeatherByMonth(yearMonth: string): Promise<WeatherDTO[]>;
   saveWeather(data: CreateWeatherDTO, userId?: number): Promise<WeatherDTO>;
-  deleteWeather(date: string): Promise<void>;
-  applyWeatherEffects(date: string): Promise<WeatherEffectResultDTO>;
+  deleteWeather(date: string, userId?: number): Promise<void>;
+  applyWeatherEffects(
+    date: string,
+    userId?: number,
+    demoDate?: string
+  ): Promise<WeatherEffectResultDTO>;
 }

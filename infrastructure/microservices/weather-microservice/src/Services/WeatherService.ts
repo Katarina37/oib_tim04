@@ -4,16 +4,23 @@ import { ILoggerService } from "../Domain/services/ILoggerService";
 import { IProductionClient } from "../Domain/services/IProductionClient";
 import { WeatherDTO } from "../Domain/DTOs/WeatherDTO";
 import { CreateWeatherDTO } from "../Domain/DTOs/CreateWeatherDTO";
-import { WeatherEffectResultDTO } from "../Domain/DTOs/WeatherEffectResultDTO";
+import {
+  PlantEffectAction,
+  PlantEffectDetail,
+  WeatherEffectResultDTO,
+} from "../Domain/DTOs/WeatherEffectResultDTO";
 import { WeatherDay } from "../Domain/models/WeatherDay";
 import { LogLevel } from "../Domain/enums/LogLevel";
 import { TemperatureState } from "../Domain/enums/TemperatureState";
 import { HumidityState } from "../Domain/enums/HumidityState";
 import { PrecipitationState } from "../Domain/enums/PrecipitationState";
+import { InvalidDemoDateError } from "../Domain/errors/InvalidDemoDateError";
+import { WeatherEffectDateNotAllowedError } from "../Domain/errors/WeatherEffectDateNotAllowedError";
 
 export class WeatherService implements IWeatherService {
   private static readonly MIN_OIL_STRENGTH = 1.0;
   private static readonly MAX_OIL_STRENGTH = 5.0;
+  private static readonly DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
   constructor(
     private readonly weatherRepository: IWeatherRepository,
@@ -36,6 +43,72 @@ export class WeatherService implements IWeatherService {
       createdAt: weather.createdAt,
       updatedAt: weather.updatedAt,
     };
+  }
+
+  private buildPlantEffectDetail(
+    plant: { id: number; commonName: string },
+    action: PlantEffectAction,
+    previousOilStrength?: number,
+    newOilStrength?: number
+  ): PlantEffectDetail {
+    const detail: PlantEffectDetail = {
+      id: plant.id,
+      commonName: plant.commonName,
+      action,
+    };
+
+    if (previousOilStrength !== undefined) {
+      detail.previousOilStrength = previousOilStrength;
+    }
+
+    if (newOilStrength !== undefined) {
+      detail.newOilStrength = newOilStrength;
+    }
+
+    return detail;
+  }
+
+  private static formatLocalDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  private static isValidDateString(value: string): boolean {
+    if (!WeatherService.DATE_REGEX.test(value)) {
+      return false;
+    }
+
+    const [year, month, day] = value.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
+    return (
+      date.getFullYear() === year &&
+      date.getMonth() === month - 1 &&
+      date.getDate() === day
+    );
+  }
+
+  private resolveEffectiveDate(
+    demoDate?: string
+  ): { date: string; isDemoDate: boolean } {
+    const normalizedDemoDate = demoDate?.trim();
+    if (normalizedDemoDate) {
+      if (!WeatherService.isValidDateString(normalizedDemoDate)) {
+        throw new InvalidDemoDateError(normalizedDemoDate);
+      }
+      return { date: normalizedDemoDate, isDemoDate: true };
+    }
+
+    return { date: WeatherService.formatLocalDate(new Date()), isDemoDate: false };
+  }
+
+  private ensureEffectsDateAllowed(date: string, demoDate?: string): void {
+    const { date: effectiveDate, isDemoDate } = this.resolveEffectiveDate(demoDate);
+
+    if (date !== effectiveDate) {
+      throw new WeatherEffectDateNotAllowedError(effectiveDate, date, isDemoDate);
+    }
   }
 
   async getAllWeather(): Promise<WeatherDTO[]> {
@@ -77,26 +150,32 @@ export class WeatherService implements IWeatherService {
     }
   }
 
-  async deleteWeather(date: string): Promise<void> {
+  async deleteWeather(date: string, userId?: number): Promise<void> {
     try {
       await this.weatherRepository.delete(date);
 
       await this.logger.log(
         `Obrisani vremenski podaci za ${date}`,
         LogLevel.INFO,
-        { additionalData: { date } }
+        { userId, additionalData: { date } }
       );
     } catch (error) {
       await this.logger.log(
         `Greška pri brisanju vremenskih podataka: ${(error as Error).message}`,
         LogLevel.ERROR,
-        { additionalData: { date } }
+        { userId, additionalData: { date } }
       );
       throw error;
     }
   }
 
-  async applyWeatherEffects(date: string): Promise<WeatherEffectResultDTO> {
+  async applyWeatherEffects(
+    date: string,
+    userId?: number,
+    demoDate?: string
+  ): Promise<WeatherEffectResultDTO> {
+    this.ensureEffectsDateAllowed(date, demoDate);
+
     const weather = await this.weatherRepository.findByDate(date);
     if (!weather) {
       throw new Error(`Vremenski podaci za datum ${date} nisu pronadjeni`);
@@ -110,6 +189,7 @@ export class WeatherService implements IWeatherService {
           affectedPlants: 0,
           effectType: "ideal",
           description: "Nema posađenih biljaka za obradu",
+          affectedPlantDetails: [],
         };
       }
 
@@ -119,11 +199,15 @@ export class WeatherService implements IWeatherService {
       if (temperatureState === TemperatureState.COLD && humidityState === HumidityState.HUMID) {
         const plantsToKill = Math.ceil(plants.length * 0.1);
         const killedPlants: number[] = [];
+        const killedPlantDetails: PlantEffectDetail[] = [];
 
         for (let i = 0; i < Math.min(plantsToKill, plants.length); i++) {
           try {
             await this.productionClient.deletePlant(plants[i].id);
             killedPlants.push(plants[i].id);
+            killedPlantDetails.push(
+              this.buildPlantEffectDetail(plants[i], "removed")
+            );
           } catch (e) {
             console.error(`Failed to delete plant ${plants[i].id}:`, e);
           }
@@ -132,14 +216,25 @@ export class WeatherService implements IWeatherService {
         await this.logger.log(
           `Mraz i vlaga: ${killedPlants.length} biljaka propalo`,
           LogLevel.WARNING,
-          { additionalData: { killedPlants, date } }
+          {
+            userId,
+            additionalData: {
+              killedPlantIds: killedPlants,
+              killedPlantNames: killedPlantDetails.map((plant) => plant.commonName),
+              date,
+            },
+          }
         );
 
         return {
-          affectedPlants: killedPlants.length,
+          affectedPlants: killedPlantDetails.length,
           effectType: "damage",
           description: `Hladno i vlažno vreme uzrokovalo propast ${killedPlants.length} biljaka`,
-          details: { killedPlantIds: killedPlants },
+          affectedPlantDetails: killedPlantDetails,
+          details: {
+            killedPlantIds: killedPlants,
+            killedPlantNames: killedPlantDetails.map((plant) => plant.commonName),
+          },
         };
       }
 
@@ -150,6 +245,7 @@ export class WeatherService implements IWeatherService {
         precipitationState === PrecipitationState.LIGHT
       ) {
         let boostedCount = 0;
+        const boostedPlantDetails: PlantEffectDetail[] = [];
 
         for (const plant of plants) {
           const currentStrength = Number(plant.oilStrength);
@@ -162,6 +258,14 @@ export class WeatherService implements IWeatherService {
             try {
               await this.productionClient.updatePlantOilStrength(plant.id, newStrength);
               boostedCount++;
+              boostedPlantDetails.push(
+                this.buildPlantEffectDetail(
+                  plant,
+                  "boosted",
+                  currentStrength,
+                  newStrength
+                )
+              );
             } catch (e) {
               console.error(`Failed to update plant ${plant.id}:`, e);
             }
@@ -171,21 +275,30 @@ export class WeatherService implements IWeatherService {
         await this.logger.log(
           `Toplo i blaga kiša: pojačana aromatičnost za ${boostedCount} biljaka`,
           LogLevel.INFO,
-          { additionalData: { boostedCount, date } }
+          {
+            userId,
+            additionalData: {
+              boostedCount,
+              boostedPlantIds: boostedPlantDetails.map((plant) => plant.id),
+              date,
+            },
+          }
         );
 
         return {
-          affectedPlants: boostedCount,
+          affectedPlants: boostedPlantDetails.length,
           effectType: "boost",
           description: `Idealni uslovi povećali jačinu ulja za ${boostedCount} biljaka`,
+          affectedPlantDetails: boostedPlantDetails,
         };
       }
 
       // Rule 3: DRY + NONE → drought: decrease oil -0.3 and kill some plants
       if (humidityState === HumidityState.DRY && precipitationState === PrecipitationState.NONE) {
-        let affectedCount = 0;
+        const reducedPlantDetailsById = new Map<number, PlantEffectDetail>();
         const plantsToKill = Math.ceil(plants.length * 0.05);
         const killedPlants: number[] = [];
+        const killedPlantDetails: PlantEffectDetail[] = [];
 
         // Decrease oil strength
         for (const plant of plants) {
@@ -198,7 +311,15 @@ export class WeatherService implements IWeatherService {
           if (newStrength !== currentStrength) {
             try {
               await this.productionClient.updatePlantOilStrength(plant.id, newStrength);
-              affectedCount++;
+              reducedPlantDetailsById.set(
+                plant.id,
+                this.buildPlantEffectDetail(
+                  plant,
+                  "oil-reduced",
+                  currentStrength,
+                  newStrength
+                )
+              );
             } catch (e) {
               console.error(`Failed to update plant ${plant.id}:`, e);
             }
@@ -210,22 +331,40 @@ export class WeatherService implements IWeatherService {
           try {
             await this.productionClient.deletePlant(plants[i].id);
             killedPlants.push(plants[i].id);
+            killedPlantDetails.push(
+              this.buildPlantEffectDetail(plants[i], "removed")
+            );
           } catch (e) {
             console.error(`Failed to delete plant ${plants[i].id}:`, e);
           }
         }
 
+        const killedPlantIds = new Set(killedPlantDetails.map((plant) => plant.id));
+        const reducedPlantDetails = Array.from(reducedPlantDetailsById.values()).filter(
+          (plant) => !killedPlantIds.has(plant.id)
+        );
+        const reducedCount = reducedPlantDetails.length;
+        const affectedPlantDetails = [...killedPlantDetails, ...reducedPlantDetails];
+
         await this.logger.log(
-          `Suša: ${killedPlants.length} biljaka uginulo, ${affectedCount} izgubilo jačinu ulja`,
+          `Suša: ${killedPlantDetails.length} biljaka uginulo, ${reducedCount} izgubilo jačinu ulja`,
           LogLevel.WARNING,
-          { additionalData: { killedPlants, affectedCount, date } }
+          {
+            userId,
+            additionalData: {
+              killedPlantIds: killedPlants,
+              reducedPlantIds: reducedPlantDetails.map((plant) => plant.id),
+              date,
+            },
+          }
         );
 
         return {
-          affectedPlants: affectedCount + killedPlants.length,
+          affectedPlants: affectedPlantDetails.length,
           effectType: "drought",
-          description: `Suša: ${killedPlants.length} biljaka uginulo, ${affectedCount} smanjene jačine ulja`,
-          details: { killedPlantIds: killedPlants, oilReduced: affectedCount },
+          description: `Suša: ${killedPlantDetails.length} biljaka uginulo, ${reducedCount} smanjene jačine ulja`,
+          affectedPlantDetails,
+          details: { killedPlantIds: killedPlants, oilReduced: reducedCount },
         };
       }
 
@@ -234,19 +373,36 @@ export class WeatherService implements IWeatherService {
         if (plants.length > 0) {
           try {
             const randomPlant = plants[Math.floor(Math.random() * plants.length)];
-            await this.productionClient.duplicatePlant(randomPlant.id);
+            const duplicatedPlant = await this.productionClient.duplicatePlant(randomPlant.id);
+            const duplicatedPlantDetail = this.buildPlantEffectDetail(
+              duplicatedPlant,
+              "duplicated"
+            );
 
             await this.logger.log(
               `Idealni uslovi: biljka ${randomPlant.commonName} se umnožila`,
               LogLevel.INFO,
-              { additionalData: { duplicatedPlantId: randomPlant.id, date } }
+              {
+                userId,
+                additionalData: {
+                  duplicatedPlantId: duplicatedPlant.id,
+                  sourcePlantId: randomPlant.id,
+                  date,
+                },
+              }
             );
 
             return {
               affectedPlants: 1,
               effectType: "ideal",
               description: `Idealni uslovi omogućili umnožavanje biljke ${randomPlant.commonName}`,
-              details: { duplicatedPlant: randomPlant.commonName },
+              affectedPlantDetails: [duplicatedPlantDetail],
+              details: {
+                duplicatedPlantId: duplicatedPlant.id,
+                duplicatedPlantName: duplicatedPlant.commonName,
+                sourcePlantId: randomPlant.id,
+                sourcePlantName: randomPlant.commonName,
+              },
             };
           } catch (e) {
             console.error("Failed to duplicate plant:", e);
@@ -259,12 +415,13 @@ export class WeatherService implements IWeatherService {
         affectedPlants: 0,
         effectType: "ideal",
         description: "Vremenski uslovi nisu imali značajan uticaj na biljke",
+        affectedPlantDetails: [],
       };
     } catch (error) {
       await this.logger.log(
         `Greška pri primeni vremenskih efekata: ${(error as Error).message}`,
         LogLevel.ERROR,
-        { additionalData: { date } }
+        { userId, additionalData: { date } }
       );
       throw error;
     }

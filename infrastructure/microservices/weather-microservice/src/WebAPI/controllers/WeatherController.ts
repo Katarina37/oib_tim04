@@ -8,6 +8,8 @@ import {
   validateDateParam,
   validateMonthParam,
 } from "../validators/WeatherValidator";
+import { InvalidDemoDateError } from "../../Domain/errors/InvalidDemoDateError";
+import { WeatherEffectDateNotAllowedError } from "../../Domain/errors/WeatherEffectDateNotAllowedError";
 
 export class WeatherController {
   private readonly router: Router;
@@ -46,6 +48,25 @@ export class WeatherController {
       return param[0] ?? "";
     }
     return param ?? "";
+  }
+
+  private getHeaderValue(header: string | string[] | undefined): string {
+    if (Array.isArray(header)) {
+      return header[0] ?? "";
+    }
+    return header ?? "";
+  }
+
+  private getUserId(req: Request): number | undefined {
+    const headerValue = req.headers["x-user-id"];
+    const rawValue = Array.isArray(headerValue) ? headerValue[0] : headerValue;
+    const parsedValue = rawValue ? Number.parseInt(String(rawValue), 10) : NaN;
+
+    if (!Number.isNaN(parsedValue)) {
+      return parsedValue;
+    }
+
+    return (req as Request & { user?: { id: number } }).user?.id;
   }
 
   private async getAllWeather(_req: Request, res: Response): Promise<void> {
@@ -93,6 +114,7 @@ export class WeatherController {
 
   private async saveWeather(req: Request, res: Response): Promise<void> {
     const clientIp = this.getClientIp(req);
+    const userId = this.getUserId(req);
 
     try {
       const data: CreateWeatherDTO = req.body;
@@ -102,14 +124,11 @@ export class WeatherController {
         await this.logger.log(
           `Validacija nije uspela: ${validation.message}`,
           LogLevel.WARNING,
-          { ipAddress: clientIp, additionalData: { data } }
+          { userId, ipAddress: clientIp, additionalData: { data } }
         );
         res.status(400).json({ success: false, message: validation.message });
         return;
       }
-
-      // Extract user ID from request if available (set by auth middleware)
-      const userId = (req as Request & { user?: { id: number } }).user?.id;
 
       const weather = await this.weatherService.saveWeather(data, userId);
       res.status(201).json({ success: true, data: weather });
@@ -117,7 +136,7 @@ export class WeatherController {
       await this.logger.log(
         `Greška pri čuvanju vremenskih podataka: ${(error as Error).message}`,
         LogLevel.ERROR,
-        { ipAddress: clientIp }
+        { userId, ipAddress: clientIp }
       );
       res.status(500).json({ success: false, message: (error as Error).message });
     }
@@ -126,6 +145,9 @@ export class WeatherController {
   private async applyWeatherEffects(req: Request, res: Response): Promise<void> {
     const clientIp = this.getClientIp(req);
     const date = this.getParamValue(req.params.date);
+    const userId = this.getUserId(req);
+    const demoDateHeader = this.getHeaderValue(req.headers["x-demo-date"]);
+    const demoDate = demoDateHeader ? demoDateHeader.trim() : undefined;
 
     const validation = validateDateParam(date);
     if (!validation.success) {
@@ -134,20 +156,33 @@ export class WeatherController {
     }
 
     try {
-      const result = await this.weatherService.applyWeatherEffects(date);
+      const result = await this.weatherService.applyWeatherEffects(date, userId, demoDate);
 
       await this.logger.log(
         `Primenjeni vremenski efekti za ${date}: ${result.description}`,
         LogLevel.INFO,
-        { ipAddress: clientIp, additionalData: { date, result } }
+        { userId, ipAddress: clientIp, additionalData: { date, result } }
       );
 
       res.status(200).json({ success: true, data: result });
     } catch (error) {
+      if (
+        error instanceof WeatherEffectDateNotAllowedError ||
+        error instanceof InvalidDemoDateError
+      ) {
+        await this.logger.log(
+          `Neuspešna primena vremenskih efekata: ${(error as Error).message}`,
+          LogLevel.WARNING,
+          { userId, ipAddress: clientIp, additionalData: { date, demoDate } }
+        );
+        res.status(400).json({ success: false, message: (error as Error).message });
+        return;
+      }
+
       await this.logger.log(
         `Greška pri primeni vremenskih efekata: ${(error as Error).message}`,
         LogLevel.ERROR,
-        { ipAddress: clientIp, additionalData: { date } }
+        { userId, ipAddress: clientIp, additionalData: { date } }
       );
       res.status(500).json({ success: false, message: (error as Error).message });
     }
@@ -156,6 +191,7 @@ export class WeatherController {
   private async deleteWeather(req: Request, res: Response): Promise<void> {
     const clientIp = this.getClientIp(req);
     const date = this.getParamValue(req.params.date);
+    const userId = this.getUserId(req);
 
     const validation = validateDateParam(date);
     if (!validation.success) {
@@ -164,12 +200,12 @@ export class WeatherController {
     }
 
     try {
-      await this.weatherService.deleteWeather(date);
+      await this.weatherService.deleteWeather(date, userId);
 
       await this.logger.log(
         `Obrisani vremenski podaci za ${date}`,
         LogLevel.INFO,
-        { ipAddress: clientIp }
+        { userId, ipAddress: clientIp }
       );
 
       res.status(200).json({ success: true, message: `Vremenski podaci za ${date} su obrisani` });
@@ -177,7 +213,7 @@ export class WeatherController {
       await this.logger.log(
         `Greška pri brisanju vremenskih podataka: ${(error as Error).message}`,
         LogLevel.ERROR,
-        { ipAddress: clientIp }
+        { userId, ipAddress: clientIp }
       );
       res.status(500).json({ success: false, message: (error as Error).message });
     }

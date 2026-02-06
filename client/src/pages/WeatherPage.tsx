@@ -4,6 +4,8 @@ import { useAuth } from '../hooks/useAuthHook';
 import { useServices } from '../contexts/ServiceContext';
 import { WeatherDTO, CreateWeatherDTO, WeatherEffectResultDTO } from '../models/weather/WeatherDTO';
 import { WeatherCalendar, WeatherModal, WeatherEffectsPanel } from '../components/weather';
+import ConfirmModal from '../components/common/ConfirmModal';
+import { formatDate } from '../helpers/formatters';
 import './WeatherPage.css';
 
 export const WeatherPage: React.FC = () => {
@@ -17,6 +19,8 @@ export const WeatherPage: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const yearMonth = useMemo(() => {
     const year = currentMonth.getFullYear();
@@ -50,7 +54,11 @@ export const WeatherPage: React.FC = () => {
     fetchWeatherData();
   }, [fetchWeatherData]);
 
-  const handleDateClick = (date: string) => {
+  const handleDateSelect = (date: string) => {
+    setSelectedDate(date);
+  };
+
+  const handleDateDoubleClick = (date: string) => {
     setSelectedDate(date);
     setIsModalOpen(true);
   };
@@ -68,18 +76,22 @@ export const WeatherPage: React.FC = () => {
 
   const handleDeleteWeather = async () => {
     if (!token || !selectedDate) return;
-
-    if (!confirm(`Da li ste sigurni da želite da obrišete vremenske podatke za ${selectedDate}?`)) {
-      return;
-    }
-
+    setIsDeleting(true);
     try {
       await weatherAPI.deleteWeather(selectedDate, token);
       await fetchWeatherData();
       setSelectedDate(null);
+      setIsDeleteModalOpen(false);
     } catch (err) {
       console.error('Greška pri brisanju:', err);
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const handleDeleteClick = () => {
+    if (!selectedDate) return;
+    setIsDeleteModalOpen(true);
   };
 
   return (
@@ -111,7 +123,8 @@ export const WeatherPage: React.FC = () => {
             <WeatherCalendar
               weatherData={weatherData}
               selectedDate={selectedDate}
-              onDateClick={handleDateClick}
+              onDateSelect={handleDateSelect}
+              onDateDoubleClick={handleDateDoubleClick}
               currentMonth={currentMonth}
               onMonthChange={setCurrentMonth}
             />
@@ -125,7 +138,7 @@ export const WeatherPage: React.FC = () => {
                 <Calendar size={18} />
                 <span>Izabrani datum</span>
               </div>
-              <div className="info-date">{selectedDate}</div>
+              <div className="info-date">{formatDate(selectedDate)}</div>
               {selectedWeather && (
                 <>
                   <div className="info-details">
@@ -142,7 +155,7 @@ export const WeatherPage: React.FC = () => {
                       <strong>{selectedWeather.precipitationMm}mm</strong>
                     </div>
                   </div>
-                  <button className="delete-btn" onClick={handleDeleteWeather}>
+                  <button className="delete-btn" onClick={handleDeleteClick}>
                     <Trash2 size={16} />
                     Obriši podatke
                   </button>
@@ -165,6 +178,18 @@ export const WeatherPage: React.FC = () => {
         onSave={handleSaveWeather}
         selectedDate={selectedDate || ''}
         existingWeather={selectedWeather}
+      />
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteWeather}
+        title="Obriši vremenske podatke"
+        message={`Da li ste sigurni da želite da obrišete vremenske podatke za ${selectedDate ? formatDate(selectedDate) : ''}?`}
+        confirmText="Obriši"
+        cancelText="Otkaži"
+        isLoading={isDeleting}
+        variant="danger"
       />
     </div>
   );

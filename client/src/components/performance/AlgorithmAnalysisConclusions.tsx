@@ -1,6 +1,7 @@
 import React from "react";
 import { Lightbulb, Info, Zap } from "lucide-react";
 import { PerformanceReportDTO } from "../../models/performance/PerformanceReportDTO";
+import { formatDate } from "../../helpers/formatters";
 
 interface AlgorithmAnalysisConclusionsProps {
     // Prosleđujemo selektovani izveštaj iz tabele
@@ -67,7 +68,7 @@ const AlgorithmAnalysisConclusions: React.FC<AlgorithmAnalysisConclusionsProps> 
             {/* Futerić sa dodatnim info */}
             <div className="bg-background/50 px-4 py-2 border-t border-border flex justify-between items-center text-[10px] text-text-muted">
                 <span>Tip: {selectedReport.tip_algoritma.replace('_', ' ')}</span>
-                <span>Datum: {new Date(selectedReport.datum_kreiranja).toLocaleDateString()}</span>
+                <span>Datum: {formatDate(selectedReport.datum_kreiranja)}</span>
             </div>
         </div>
     );

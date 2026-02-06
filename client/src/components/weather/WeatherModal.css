@@ -1,71 +1,15 @@
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
-}
-
 .weather-modal {
-  background: var(--color-white, #ffffff);
-  border-radius: 16px;
-  width: 100%;
-  max-width: 480px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  max-width: 520px;
 }
 
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--color-border-light, #f0f2f4);
-}
-
-.modal-header h2 {
-  font-size: 1.25rem;
+.weather-modal__date {
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  background: var(--color-background, #f8fafb);
+  color: var(--color-text-primary, #1a2b3c);
   font-weight: 600;
-  color: var(--color-text-primary, #1a2b3c);
-  margin: 0;
-}
-
-.modal-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: var(--color-background-light, #f8f9fa);
-  border-radius: 8px;
-  cursor: pointer;
-  color: var(--color-text-secondary, #5a6b7c);
-  transition: all 0.2s ease;
-}
-
-.modal-close:hover {
-  background: var(--color-error-light, #fee2e2);
-  color: var(--color-error, #ef4444);
-}
-
-.modal-date {
-  padding: 16px 24px;
-  background: var(--color-background-light, #f8f9fa);
-  font-weight: 500;
-  color: var(--color-text-primary, #1a2b3c);
-  text-transform: capitalize;
-}
-
-.modal-form {
-  padding: 24px;
+  font-size: 0.95rem;
 }
 
 .modal-error {
@@ -73,12 +17,18 @@
   color: var(--color-error, #ef4444);
   padding: 12px 16px;
   border-radius: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   font-size: 0.875rem;
 }
 
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .form-group label {
@@ -119,10 +69,12 @@
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .input-with-preview input[type="number"] {
   flex: 1;
+  min-width: 160px;
 }
 
 .state-preview {
@@ -172,51 +124,4 @@
 .range-slider::-webkit-slider-thumb:hover {
   transform: scale(1.1);
   box-shadow: 0 2px 8px rgba(102, 205, 170, 0.4);
-}
-
-.modal-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid var(--color-border-light, #f0f2f4);
-}
-
-.btn-secondary,
-.btn-primary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-secondary {
-  background: var(--color-background-light, #f8f9fa);
-  border: 1px solid var(--color-border, #e2e8f0);
-  color: var(--color-text-secondary, #5a6b7c);
-}
-
-.btn-secondary:hover {
-  background: var(--color-border-light, #f0f2f4);
-}
-
-.btn-primary {
-  background: var(--color-primary, #66cdaa);
-  border: none;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-dark, #4db892);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }

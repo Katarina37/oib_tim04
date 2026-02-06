@@ -6,7 +6,8 @@ import './WeatherCalendar.css';
 interface WeatherCalendarProps {
   weatherData: WeatherDTO[];
   selectedDate: string | null;
-  onDateClick: (date: string) => void;
+  onDateSelect: (date: string) => void;
+  onDateDoubleClick: (date: string) => void;
   currentMonth: Date;
   onMonthChange: (date: Date) => void;
 }
@@ -82,7 +83,8 @@ const formatPrecipitationState = (state: PrecipitationState): string => {
 export const WeatherCalendar: React.FC<WeatherCalendarProps> = ({
   weatherData,
   selectedDate,
-  onDateClick,
+  onDateSelect,
+  onDateDoubleClick,
   currentMonth,
   onMonthChange,
 }) => {
@@ -117,7 +119,10 @@ export const WeatherCalendar: React.FC<WeatherCalendarProps> = ({
   }, [currentMonth]);
 
   const formatDate = (date: Date): string => {
-    return date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const monthName = currentMonth.toLocaleString('sr-RS', { month: 'long', year: 'numeric' });
@@ -166,13 +171,14 @@ export const WeatherCalendar: React.FC<WeatherCalendarProps> = ({
           const weather = weatherMap.get(dateStr);
           const isSelected = selectedDate === dateStr;
           const isHovered = hoveredDate === dateStr;
-          const isToday = dateStr === new Date().toISOString().split('T')[0];
+          const isToday = dateStr === formatDate(new Date());
 
           return (
             <div
               key={dateStr}
               className={`calendar-day ${getDayClass(weather)} ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''}`}
-              onClick={() => onDateClick(dateStr)}
+              onClick={() => onDateSelect(dateStr)}
+              onDoubleClick={() => onDateDoubleClick(dateStr)}
               onMouseEnter={() => setHoveredDate(dateStr)}
               onMouseLeave={() => setHoveredDate(null)}
             >

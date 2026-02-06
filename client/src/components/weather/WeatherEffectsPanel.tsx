@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Zap, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
-import { WeatherEffectResultDTO } from '../../models/weather/WeatherDTO';
+import { PlantEffectDetail, WeatherEffectResultDTO } from '../../models/weather/WeatherDTO';
+import { formatDate } from '../../helpers/formatters';
 import './WeatherEffectsPanel.css';
 
 interface WeatherEffectsPanelProps {
@@ -57,6 +58,40 @@ export const WeatherEffectsPanel: React.FC<WeatherEffectsPanelProps> = ({
     }
   };
 
+  const formattedDate = useMemo(() => {
+    return selectedDate ? formatDate(selectedDate) : '';
+  }, [selectedDate]);
+
+  const getActionLabel = (action: PlantEffectDetail['action']) => {
+    switch (action) {
+      case 'removed':
+        return 'Uginula';
+      case 'boosted':
+        return 'Pojačana';
+      case 'oil-reduced':
+        return 'Smanjena jačina';
+      case 'duplicated':
+        return 'Umnožena';
+    }
+  };
+
+  const getActionClass = (action: PlantEffectDetail['action']) => {
+    switch (action) {
+      case 'removed':
+        return 'action-removed';
+      case 'boosted':
+        return 'action-boosted';
+      case 'oil-reduced':
+        return 'action-reduced';
+      case 'duplicated':
+        return 'action-duplicated';
+    }
+  };
+
+  const affectedPlants = useMemo(() => {
+    return result?.affectedPlantDetails ?? [];
+  }, [result]);
+
   return (
     <div className="weather-effects-panel">
       <h3>Primeni vremenske efekte</h3>
@@ -92,7 +127,7 @@ export const WeatherEffectsPanel: React.FC<WeatherEffectsPanelProps> = ({
             ) : (
               <>
                 <Zap size={18} />
-                Primeni efekte za {selectedDate}
+                Primeni efekte za {formattedDate}
               </>
             )}
           </button>
@@ -114,6 +149,28 @@ export const WeatherEffectsPanel: React.FC<WeatherEffectsPanelProps> = ({
               <div className="result-stats">
                 <span>Pogođeno biljaka: <strong>{result.affectedPlants}</strong></span>
               </div>
+
+              {affectedPlants.length > 0 && (
+                <div className="affected-plants">
+                  <div className="affected-list">
+                    {affectedPlants.map((plant) => (
+                      <div key={`${plant.action}-${plant.id}`} className="affected-item">
+                        <span className={`effect-chip ${getActionClass(plant.action)}`}>
+                          {getActionLabel(plant.action)}
+                        </span>
+                        <span className="plant-name">{plant.commonName}</span>
+                        <span className="plant-meta">#{plant.id}</span>
+                        {plant.previousOilStrength !== undefined &&
+                          plant.newOilStrength !== undefined && (
+                            <span className="plant-delta">
+                              {plant.previousOilStrength.toFixed(1)} → {plant.newOilStrength.toFixed(1)}
+                            </span>
+                          )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </>
