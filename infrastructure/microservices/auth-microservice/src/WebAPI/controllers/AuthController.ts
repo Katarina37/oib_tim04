@@ -4,6 +4,7 @@ import { IAuthService } from "../../Domain/services/IAuthService";
 import { ILogerService } from "../../Domain/services/ILogerService";
 import { LoginUserDTO } from "../../Domain/DTOs/LoginUserDTO";
 import { RegistrationUserDTO } from "../../Domain/DTOs/RegistrationUserDTO";
+import { UserRole } from "../../Domain/enums/UserRole";
 import { validateLoginData } from "../validators/LoginValidator";
 import { validateRegistrationData } from "../validators/RegisterValidator";
 import { LogType } from "../../Services/LogerService";
@@ -127,7 +128,17 @@ export class AuthController {
         ipAdresa: clientIp,
       });
 
-      const data: RegistrationUserDTO = req.body;
+      const data: RegistrationUserDTO = {
+        ...req.body,
+        username: typeof req.body.username === "string" ? req.body.username.trim() : req.body.username,
+        email: typeof req.body.email === "string" ? req.body.email.trim() : req.body.email,
+        firstName: typeof req.body.firstName === "string" ? req.body.firstName.trim() : req.body.firstName,
+        lastName: typeof req.body.lastName === "string" ? req.body.lastName.trim() : req.body.lastName,
+        role:
+          typeof req.body.role === "string"
+            ? (req.body.role.toUpperCase() as UserRole)
+            : req.body.role,
+      };
       const validation = validateRegistrationData(data);
 
       if (!validation.success) {

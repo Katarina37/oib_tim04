@@ -1,4 +1,6 @@
+import { UserContext } from "../types/UserContext";
+
 export interface IStorageClient {
-  sendPackages(quantity: number, token?: string): Promise<number>;
-  getInventory(token?: string): Promise<any>;
+  sendPackages(quantity: number, userContext?: UserContext): Promise<number>;
+  getInventory(userContext?: UserContext): Promise<any>;
 }

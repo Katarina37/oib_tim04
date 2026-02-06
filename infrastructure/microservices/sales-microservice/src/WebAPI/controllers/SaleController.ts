@@ -4,6 +4,7 @@ import { ILoggerService } from "../../Domain/services/ILoggerService";
 import { LogType } from "../../Domain/enums/LogType";
 import { CreateSaleDto } from "../../Domain/DTOs/CreateSaleDTO";
 import { validateCreateSale } from "../validators/SaleValidator";
+import { UserContext } from "../../Domain/types/UserContext";
 
 export class SalesController {
   private readonly router: Router;
@@ -30,9 +31,38 @@ export class SalesController {
     return typeof forwarded === "string" ? forwarded.split(",")[0].trim() : req.ip || "unknown";
   }
 
+  private getUserContext(req: Request): UserContext | null {
+    const roleHeader = req.headers["x-user-role"];
+    const userIdHeader = req.headers["x-user-id"];
+
+    const role = Array.isArray(roleHeader) ? roleHeader[0] : roleHeader;
+    const userIdRaw = Array.isArray(userIdHeader) ? userIdHeader[0] : userIdHeader;
+
+    if (!role || !userIdRaw) {
+      return null;
+    }
+
+    const userId = Number(userIdRaw);
+    if (!Number.isFinite(userId) || userId <= 0) {
+      return null;
+    }
+
+    return { id: userId, role: role.toString() };
+  }
+
   private async createSale(req: Request, res: Response): Promise<void> {
     const clientIp = this.getClientIp(req);
-    const data: CreateSaleDto = req.body;
+    const userContext = this.getUserContext(req);
+
+    if (!userContext) {
+      res.status(401).json({ success: false, message: "User context missing" });
+      return;
+    }
+
+    const data: CreateSaleDto = {
+      ...req.body,
+      userId: userContext.id,
+    };
 
     try {
       // 1. Logovanje početka
@@ -53,7 +83,7 @@ export class SalesController {
       }
 
       // 3. Izvršavanje prodaje
-      const sale = await this.salesService.executeSale(data);
+        const sale = await this.salesService.executeSale(data, userContext);
 
       // 4. Logovanje uspeha
       await this.logger.log(`Prodaja uspešno kreirana. Račun: ${sale.billNumber}`, LogType.INFO, {
@@ -134,7 +164,8 @@ export class SalesController {
 
   private async getAvailablePerfumes(req: Request, res: Response): Promise<void> {
     try {
-      const perfumes = await this.salesService.getAvailablePerfumes();
+      const userContext = this.getUserContext(req) ?? undefined;
+      const perfumes = await this.salesService.getAvailablePerfumes(userContext);
       res.status(200).json(perfumes);
     } catch (err) {
       res.status(500).json({ message: (err as Error).message });

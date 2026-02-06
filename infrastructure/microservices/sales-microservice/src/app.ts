@@ -6,7 +6,7 @@ import { CorsConfig } from "./WebAPI/middleware/CorsConfig";
 import { GatewayAuthMiddleware } from "./WebAPI/middleware/GatewayAuthMiddleware";
 import { RequestAuditMiddleware } from "./WebAPI/middleware/RequestAuditMiddleware";
 
-import { requireEnv } from "./config/env";
+import { getOptionalEnv, requireEnv } from "./config/env";
 
 import { SalesController } from "./WebAPI/controllers/SaleController";
 import { SaleService } from "./Services/SaleService";
@@ -15,10 +15,12 @@ import { TypeORMSaleRepository } from "./Infrastructure/repositories/TypeORMSale
 import { AxiosAuditClient } from "./Infrastructure/clients/AxiosAuditClient";
 import { AnalysisClient } from "./Infrastructure/clients/AnalysisClient";
 import { StorageClient } from "./Infrastructure/clients/StorageClient";
+import { StaticPerfumeCatalogClient } from "./Infrastructure/clients/StaticPerfumeCatalogClient";
 
 import { IAuditClient } from "./Domain/services/IAuditClient";
 import { IAnalysisClient } from "./Domain/services/IAnalysisClient";
 import { IStorageClient } from "./Domain/services/IStorageClient";
+import { IPerfumeCatalogClient } from "./Domain/services/IPerfumeCatalogClient";
 import { ILoggerService } from "./Domain/services/ILoggerService";
 
 import { LoggerService } from "./Services/LoggerService";
@@ -53,19 +55,38 @@ export async function createApp(): Promise<Application> {
   (auditClient as any).sendLog = (auditClient as any).sendLog;
   const loggerService: ILoggerService = new LoggerService(auditClient);
  
+  const normalizeApiBaseUrl = (baseURL: string): string => {
+    const trimmed = baseURL.trim().replace(/\/+$/, "");
+    if (!trimmed) return trimmed;
+    if (/\/api\/v1(\/|$)/.test(trimmed)) {
+      return trimmed;
+    }
+    return `${trimmed}/api/v1`;
+  };
+
+  const resolveServiceUrl = (primaryKey: string, fallbackKey: string): string => {
+    const primary = getOptionalEnv(primaryKey);
+    if (primary) {
+      return normalizeApiBaseUrl(primary);
+    }
+    return normalizeApiBaseUrl(requireEnv(fallbackKey));
+  };
+
   // ===== ANALYSIS CLIENT =====
-  const analysisServiceUrl = requireEnv("GATEWAY_ANALYSIS_URL");
+  const analysisServiceUrl = resolveServiceUrl("ANALYSIS_BASE_URL", "GATEWAY_ANALYSIS_URL");
   const analysisClient: IAnalysisClient = new AnalysisClient(
     analysisServiceUrl,
     gatewayApiKey
   );
 
   // ===== STORAGE CLIENT =====
-  const storageServiceUrl = requireEnv("GATEWAY_STORAGE_URL");
+  const storageServiceUrl = resolveServiceUrl("STORAGE_BASE_URL", "GATEWAY_STORAGE_URL");
   const storageClient: IStorageClient = new StorageClient(
     storageServiceUrl,
     gatewayApiKey
   );
+
+  const perfumeCatalogClient: IPerfumeCatalogClient = new StaticPerfumeCatalogClient();
 
   // ===== DEPENDENCY INJECTION =====
   const saleRepository = new TypeORMSaleRepository();
@@ -73,7 +94,8 @@ export async function createApp(): Promise<Application> {
     saleRepository, 
     auditClient,
     storageClient,
-    analysisClient
+    analysisClient,
+    perfumeCatalogClient
   );
   
   const salesController = new SalesController(

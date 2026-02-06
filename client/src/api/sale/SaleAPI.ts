@@ -7,17 +7,21 @@ import { PerfumeDTO } from "../../models/sales/PerfumeDTO";
 
 export class SalesAPI implements ISaleAPI {
     private readonly basePath = "/sales";
-    private readonly gatewayKey = import.meta.env.VITE_GATEWAY_KEY;
+    private readonly gatewayKey =
+        import.meta.env.VITE_GATEWAY_API_KEY ?? import.meta.env.VITE_GATEWAY_KEY;
 
     constructor(private readonly httpClient: IHttpClient) {}
 
     private getHeaders(token: string) {
-        return {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "X-Gateway-Key": this.gatewayKey,
-            },
+        const headers: Record<string, string> = {
+            Authorization: `Bearer ${token}`,
         };
+
+        if (this.gatewayKey) {
+            headers["X-Gateway-Key"] = this.gatewayKey;
+        }
+
+        return { headers };
     }
 
     // Pomoćna funkcija za čišćenje podataka ako bek vraća { data: ... }

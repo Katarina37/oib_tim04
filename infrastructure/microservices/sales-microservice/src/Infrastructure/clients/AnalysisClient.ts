@@ -1,6 +1,8 @@
 import axios, { AxiosInstance } from "axios";
-import { CreateFiscalBillDTO } from "Domain/DTOs/CreateFiscallBillDTO";
-import { IAnalysisClient } from "Domain/services/IAnalysisClient";
+import { CreateFiscalBillDTO } from "../../Domain/DTOs/CreateFiscallBillDTO";
+import { PaymentMethod } from "../../Domain/enums/PaymentMethod";
+import { SaleType } from "../../Domain/enums/SaleType";
+import { IAnalysisClient } from "../../Domain/services/IAnalysisClient";
 
 export class AnalysisClient implements IAnalysisClient {
     private readonly http: AxiosInstance;
@@ -16,11 +18,41 @@ export class AnalysisClient implements IAnalysisClient {
         });
     }
 
+    private mapSaleType(type: SaleType): "retail" | "wholesale" {
+        if (type === SaleType.WHOLESALE) {
+            return "wholesale";
+        }
+        return "retail";
+    }
+
+    private mapPaymentMethod(method: PaymentMethod): "cash" | "bank_transfer" | "card" {
+        switch (method) {
+            case PaymentMethod.TRANSFER:
+                return "bank_transfer";
+            case PaymentMethod.CARD:
+                return "card";
+            default:
+                return "cash";
+        }
+    }
+
     async createFiscalBill(data: CreateFiscalBillDTO): Promise<{ billId: number; }> {
-        const response = await this.http.post<{ billId: number }>(
-            "/analysis/fiscal-bills",
-            data
+        const payload = {
+            ...data,
+            saleType: this.mapSaleType(data.saleType),
+            paymentMethod: this.mapPaymentMethod(data.paymentMethod),
+        };
+
+        const response = await this.http.post<{
+            success?: boolean;
+            data?: { id?: number };
+            billId?: number;
+        }>(
+            "/data-analysis/fiscal-bills",
+            payload
         );
-        return { billId: response.data.billId };
+
+        const billId = response.data?.data?.id ?? response.data?.billId ?? 0;
+        return { billId };
     }
 }

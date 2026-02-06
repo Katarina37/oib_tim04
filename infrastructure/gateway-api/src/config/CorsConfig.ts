@@ -56,7 +56,7 @@ export class CorsConfig {
         callback(new Error("Not allowed by CORS"));
       },
       methods: this.allowedMethods,
-      allowedHeaders: ["Content-Type", "Authorization", "X-Demo-Date"],
+      allowedHeaders: ["Content-Type", "Authorization", "X-Demo-Date", "X-Gateway-Key"],
       credentials: true,
     };
   }

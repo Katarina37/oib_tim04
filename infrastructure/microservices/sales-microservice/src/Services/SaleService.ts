@@ -7,25 +7,37 @@ import { SaleItem } from "../Domain/models/SaleItem";
 import { PaymentMethod } from "../Domain/enums/PaymentMethod";
 import { SaleType } from "../Domain/enums/SaleType";
 import { IAuditClient } from "../Domain/services/IAuditClient";
-import { IStorageClient } from "Domain/services/IStorageClient";
-import { IAnalysisClient } from "Domain/services/IAnalysisClient";
+import { IStorageClient } from "../Domain/services/IStorageClient";
+import { IAnalysisClient } from "../Domain/services/IAnalysisClient";
+import { IPerfumeCatalogClient } from "../Domain/services/IPerfumeCatalogClient";
+import { PerfumeDTO } from "../Domain/DTOs/PerfumeDTO";
+import { UserContext } from "../Domain/types/UserContext";
+import { StaticPerfumeCatalogClient } from "../Infrastructure/clients/StaticPerfumeCatalogClient";
 
 export class SaleService implements ISaleService {
+    private readonly perfumeCatalogClient: IPerfumeCatalogClient;
+
     constructor(
         private readonly saleRepository: ISaleRepository,
         private readonly auditClient: IAuditClient,
         private readonly storageClient: IStorageClient,
-        private readonly analysisClient: IAnalysisClient
-    ) {}
+        private readonly analysisClient: IAnalysisClient,
+        perfumeCatalogClient?: IPerfumeCatalogClient
+    ) {
+        this.perfumeCatalogClient = perfumeCatalogClient ?? new StaticPerfumeCatalogClient();
+    }
 
-    async executeSale(data: CreateSaleDto): Promise<SaleResponseDTO> {
+    async executeSale(data: CreateSaleDto, userContext: UserContext): Promise<SaleResponseDTO> {
         //trazenje ambalaze od mikroservisa za skladistenje
         const requestedPackages = data.items.reduce(
             (sum, item) => sum + item.quantity, 
             0
         );
 
-        const sentPackages = await this.storageClient.sendPackages(requestedPackages);
+        const sentPackages = await this.storageClient.sendPackages(
+            requestedPackages,
+            userContext
+        );
         
         if (sentPackages < requestedPackages) {
             await this.auditClient.sendLog({
@@ -82,7 +94,7 @@ export class SaleService implements ISaleService {
                 productId: item.perfumeId,
                 productName: item.perfumeName,
                 quantity: item.quantity,
-                price: item.totalPrice,
+                price: item.pricePerUnit,
             })),
         });
 
@@ -146,11 +158,6 @@ export class SaleService implements ISaleService {
         });
     }
 
-    async getAvailableProducts(): Promise<any[]> {
-        const rawInventory = await this.storageClient.getInventory();
-        return rawInventory; 
-    }
-
     private toDTO(sale: Sale): SaleResponseDTO {
         return {
             id: sale.id,
@@ -167,14 +174,22 @@ export class SaleService implements ISaleService {
         };
     }
 
-    async getAvailablePerfumes(): Promise<any[]> {
-        // TODO: Ovo treba da bude pravi poziv ka storage/processing servisu za parfeme
-        // Za sada vraćamo mock podatke
-        return [
-            { id: 1, name: "Rosa Mistika", type: "parfem", volumeMl: 150, price: 12500, stock: 45, serialNumber: "PP-2026-1", plantId: 1, expiryDate: "2027-12-31" },
-            { id: 2, name: "Lavander Noir", type: "parfem", volumeMl: 250, price: 8900, stock: 67, serialNumber: "PP-2026-2", plantId: 2, expiryDate: "2027-12-31" },
-            { id: 3, name: "Bergamot Esenc", type: "kolonjska_voda", volumeMl: 150, price: 13200, stock: 23, serialNumber: "PP-2026-3", plantId: 3, expiryDate: "2027-12-31" },
-            { id: 4, name: "Jasmin De Nuit", type: "parfem", volumeMl: 250, price: 9500, stock: 38, serialNumber: "PP-2026-4", plantId: 4, expiryDate: "2027-12-31" },
-        ];
+    async getAvailablePerfumes(userContext?: UserContext): Promise<PerfumeDTO[]> {
+        try {
+            return await this.perfumeCatalogClient.getAvailablePerfumes(userContext);
+        } catch (error) {
+            try {
+                await this.auditClient.sendLog({
+                    tip_zapisa: "ERROR",
+                    opis: `Neuspešno preuzimanje dostupnih parfema: ${(error as Error).message}`,
+                    mikroservis: "sales-microservice",
+                    dodatni_podaci: { source: "perfume-catalog" },
+                });
+            } catch {
+                // Ignore audit failures to keep the catalog endpoint resilient
+            }
+            // Fallback to static catalog to avoid hard failures on the UI
+            return new StaticPerfumeCatalogClient().getAvailablePerfumes(userContext);
+        }
     }
 }
