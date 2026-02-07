@@ -30,11 +30,18 @@ export const requireIntEnv = (key: string): number => {
   return value;
 };
 
-export const requireOneOfEnv = (keys: string[]): string => {
+export const getOneOfEnv = (keys: string[]): string | undefined => {
   for (const key of keys) {
     const value = getOptionalEnv(key);
     if (value) return value;
   }
+
+  return undefined;
+};
+
+export const requireOneOfEnv = (keys: string[]): string => {
+  const value = getOneOfEnv(keys);
+  if (value) return value;
 
   throw new Error(`Missing required environment variable (one of): ${keys.join(", ")}`);
 };

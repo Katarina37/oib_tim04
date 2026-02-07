@@ -9,7 +9,6 @@ import { ProxyRequest } from "../Domain/clients/IMicroserviceClient";
 
 export class GatewayController {
   private readonly router: Router;
-  private readonly operationalAuditScopes = new Set(["proizvodnja", "prerada"]);
 
   constructor(
     private readonly gatewayService: IGatewayService,
@@ -52,6 +51,14 @@ export class GatewayController {
       authenticate,
       authorize(UserRole.SELLER, UserRole.SALES_MANAGER),
       this.proxyToProcessing.bind(this)
+    );
+
+    // Packaging microservice routes (Seller, Sales Manager)
+    this.router.all(
+      "/packaging/*path",
+      authenticate,
+      authorize(UserRole.SELLER, UserRole.SALES_MANAGER),
+      this.proxyToPackaging.bind(this)
     );
 
     // Storage microservice routes (Seller, Sales Manager)
@@ -106,12 +113,11 @@ export class GatewayController {
       this.proxyToPerformanceAnalysis.bind(this)
     );
 
-    // Audit microservice - limited access log search for operational roles
+    // Audit microservice - log search (Admin only)
     this.router.get(
       "/audit/logs/search",
       authenticate,
-      authorize(UserRole.ADMIN, UserRole.SELLER, UserRole.SALES_MANAGER),
-      this.enforceAuditLogSearchScope.bind(this),
+      authorize(UserRole.ADMIN),
       this.proxyToAudit.bind(this)
     );
 
@@ -134,35 +140,6 @@ export class GatewayController {
       authorize(UserRole.ADMIN),
       this.proxyToAudit.bind(this)
     );
-  }
-
-  private enforceAuditLogSearchScope(req: Request, res: Response, next: () => void): void {
-    const userRole = req.user?.role?.toUpperCase();
-    if (!userRole) {
-      res.status(401).json({ success: false, message: "Korisnik nije autentifikovan!" });
-      return;
-    }
-
-    if (userRole === UserRole.ADMIN) {
-      next();
-      return;
-    }
-
-    const mikroservisQuery = req.query.mikroservis;
-    const mikroservisCandidate = Array.isArray(mikroservisQuery)
-      ? mikroservisQuery[0]
-      : mikroservisQuery;
-    const mikroservis = typeof mikroservisCandidate === "string" ? mikroservisCandidate : undefined;
-
-    if (!mikroservis || !this.operationalAuditScopes.has(mikroservis)) {
-      res.status(403).json({
-        success: false,
-        message: "Nemate ovlascenja za pristup audit zapisima ovog mikroservisa!",
-      });
-      return;
-    }
-
-    next();
   }
 
   private async login(req: Request, res: Response): Promise<void> {
@@ -244,6 +221,12 @@ export class GatewayController {
   private async proxyToStorage(req: Request, res: Response): Promise<void> {
     const proxyRequest = this.buildProxyRequest(req);
     const response = await this.gatewayService.proxyToStorage(proxyRequest);
+    res.status(response.status).json(response.success ? response.data : { error: response.error });
+  }
+
+  private async proxyToPackaging(req: Request, res: Response): Promise<void> {
+    const proxyRequest = this.buildProxyRequest(req);
+    const response = await this.gatewayService.proxyToPackaging(proxyRequest);
     res.status(response.status).json(response.success ? response.data : { error: response.error });
   }
 

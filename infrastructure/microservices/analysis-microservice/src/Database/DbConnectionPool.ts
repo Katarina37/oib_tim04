@@ -1,10 +1,10 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
 import { requireEnv, requireIntEnv } from "../config/env";
-import { FiscalBill } from "../Domain/models/FiscalBill";
 import { SalesReport } from "../Domain/models/SalesReport";
 import { TopProductReport } from "../Domain/models/TopProductReport";
 import { TrendAnalysis } from "../Domain/models/TrendAnalysis";
+import { FiscalBillEntity } from "../Infrastructure/entities/FiscalBillEntity";
 
 
 export const AppDataSource = new DataSource({
@@ -17,7 +17,7 @@ export const AppDataSource = new DataSource({
   ssl: { rejectUnauthorized: false },
   synchronize: false, 
   logging: false, 
-  entities: [FiscalBill, SalesReport, TopProductReport, TrendAnalysis],
+  entities: [FiscalBillEntity, SalesReport, TopProductReport, TrendAnalysis],
 });
 
 export const Db = AppDataSource;

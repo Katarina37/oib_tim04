@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from "react";
-import { BarChart3, FileText, TrendingUp, Package, Download, Calendar, Filter, RefreshCw, DollarSign, ShoppingBag, TrendingDown, TrendingUp as TrendingUpIcon, PieChart } from "lucide-react";
+import { BarChart3, FileText, TrendingUp, Package, Download, Calendar, Filter, RefreshCw, DollarSign, ShoppingBag, TrendingDown, PieChart } from "lucide-react";
 import { useAuth } from "../hooks/useAuthHook";
 import { useServices } from "../contexts/ServiceContext";
 import { FiscalBillDTO } from "../models/analysis/FiscalBillDTO";
@@ -29,10 +29,6 @@ export const AnalysisPage: React.FC = () => {
 
     //filteri
     const [period, setPeriod] = useState<string>('this-month');
-    const [dateRange, setDateRange] = useState<{start: Date | null; end: Date | null}>({
-        start: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-        end: new Date()
-    });
 
     //modeli
     const [isGenerateReportModelOpen, setIsGenerateReportModelOpen] = useState(false);

@@ -1,10 +1,10 @@
 import React from "react";
 import { ShoppingBag, Trash2 } from "lucide-react";
-import { SaleItemDTO } from "../../models/sales/SaleItemDTO";
+import { CartSaleItemDTO } from "../../models/sales/SaleItemDTO";
 import { PaymentMethod } from "../../enums/PaymentMethod";
 
 interface ShoppingCartContainerProps {
-  items: SaleItemDTO[];
+  items: CartSaleItemDTO[];
   total: number;
   totalItems: number;
   availablePackages: number;

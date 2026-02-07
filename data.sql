@@ -81,7 +81,6 @@ CREATE TABLE IF NOT EXISTS parfem (
     serijski_broj VARCHAR(50) NOT NULL UNIQUE,               -- Format: PP-2025-ID_PARFEMA
     biljka_id INT NOT NULL,                                  -- ID biljke od koje je napravljen
     rok_trajanja DATE NOT NULL,
-    spakovan TINYINT(1) NOT NULL DEFAULT 0,
     datum_kreiranja DATETIME DEFAULT CURRENT_TIMESTAMP,
     datum_azuriranja DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
@@ -404,3 +403,7 @@ VALUES
   ('2026-01-03', 5.0, 45, 0.0, 'COLD', 'OK', 'NONE', 'Sunčano ali hladno'),
   ('2026-01-10', 8.0, 55, 2.0, 'MODERATE', 'OK', 'LIGHT', 'Blaga kiša'),
   ('2026-01-15', 12.0, 50, 0.0, 'MODERATE', 'OK', 'NONE', 'Idealni uslovi za biljke');
+
+ALTER TABLE fiskalni_racun
+ADD COLUMN prodati_proizvodi JSON NOT NULL, 
+ADD COLUMN korisnik_id INT NULL;

@@ -67,17 +67,6 @@ const App: React.FC = () => {
       />
 
       <Route
-        path="/packaging"
-        element={
-          <ProtectedRoute requiredRole="seller,sales_manager">
-            <AppLayout>
-              <StoragePage />
-            </AppLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
         path="/storage"
         element={
           <ProtectedRoute requiredRole="seller,sales_manager">

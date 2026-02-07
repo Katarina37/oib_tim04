@@ -13,6 +13,7 @@ app.listen(port, () => {
   console.log(`  GET  /api/v1/users/:id (ADMIN)`);
   console.log(`  ALL  /api/v1/production/*path (SELLER, SALES_MANAGER)`);
   console.log(`  ALL  /api/v1/processing/*path (SELLER, SALES_MANAGER)`);
+  console.log(`  ALL  /api/v1/packaging/*path (SELLER, SALES_MANAGER)`);
   console.log(`  ALL  /api/v1/storage/*path (SELLER, SALES_MANAGER)`);
   console.log(`  ALL  /api/v1/sales/*path (SELLER, SALES_MANAGER)`);
   console.log(`  ALL  /api/v1/data-analysis/*path (ADMIN)`);

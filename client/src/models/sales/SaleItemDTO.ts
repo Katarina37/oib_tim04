@@ -4,3 +4,8 @@ export interface SaleItemDTO {
     price: number;
     name: string;
 }
+
+export interface CartSaleItemDTO extends SaleItemDTO {
+    name: string;
+    price: number;
+}

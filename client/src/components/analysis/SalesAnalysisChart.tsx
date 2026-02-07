@@ -1,6 +1,6 @@
 import React from "react";
 import { SalesReportDTO } from "../../models/analysis/SalesReportDTO";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { formatCurrency } from "../../helpers/formatters";
 
 interface SalesAnalysisChartProps{

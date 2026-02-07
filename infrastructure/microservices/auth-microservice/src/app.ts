@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import "reflect-metadata";
-import { User } from "./Domain/models/User";
 import { Db } from "./Database/DbConnectionPool";
 import { initialize_database } from "./Database/InitializeConnection";
 import { IAuthService } from "./Domain/services/IAuthService";
@@ -17,6 +16,7 @@ import { IAuditClient } from "./Domain/services/IAuditClient";
 import { CorsConfig } from "./WebAPI/middleware/CorsConfig";
 import { GatewayAuthMiddleware } from "./WebAPI/middleware/GatewayAuthMiddleware";
 import { requireEnv, requireIntEnv } from "./config/env";
+import { UserEntity } from "./Infrastructure/entities/UserEntity";
 
 const app = express();
 
@@ -35,7 +35,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 const initializeApp = async (): Promise<void> => {
   await initialize_database();
 
-  const userRepository: IUserRepository = new TypeOrmUserRepository(Db.getRepository(User));
+  const userRepository: IUserRepository = new TypeOrmUserRepository(Db.getRepository(UserEntity));
 
   const auditServiceUrl = requireEnv("GATEWAY_AUDIT_URL");
   const auditHttpClient = axios.create({

@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {X, FileText, TrendingUp, Package, Calendar} from 'lucide-react';
+import {X, FileText, TrendingUp, Package} from 'lucide-react';
 
 interface GenerateReportModelProps {
     isOpen: boolean;

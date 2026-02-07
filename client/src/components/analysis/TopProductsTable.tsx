@@ -1,5 +1,5 @@
 import React from "react";
-import { TrendingUp, TrendingDown, Minus, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { formatCurrency } from "../../helpers/formatters";
 
 interface TopProduct{
@@ -21,17 +21,6 @@ const TopProductsTable: React.FC<TopProductsTableProps> = ({
     onExport,
     compact = false
 }) => {
-    const getTrendIcon = (index: number, previousIndex?: number) => {
-        if(!previousIndex) return <Minus size={12}/>;
-
-        if(index < previousIndex){
-            return <TrendingUp size={12} className="text-success"/>;
-        }else if(index > previousIndex){
-            return <TrendingDown size={12} className="text-error"/>;
-        }
-        return <Minus size={12}/>;
-    };
-
     if(products.length === 0){
         return(
             <div className="text-center py-8">

@@ -2,6 +2,7 @@ import { IStorageService } from "../Domain/services/IStorageService";
 import { ILoggerService } from "../Domain/services/ILoggerService";
 import { LogLevel } from "../Domain/enums/LogLevel";
 import { IStorageRepository } from "../Domain/services/IStorageRepository";
+import { IPackagingClient } from "../Domain/services/IPackagingClient";
 
 export interface DispatchProfile {
     maxPerDispatch: number;
@@ -15,6 +16,7 @@ export interface DispatchProfile {
 export class TimedBatchStorageService implements IStorageService {
     constructor(
         private readonly repository: IStorageRepository,
+        private readonly packagingClient: IPackagingClient,
         private readonly logger: ILoggerService,
         private readonly profile: DispatchProfile
     ) {}
@@ -24,8 +26,12 @@ export class TimedBatchStorageService implements IStorageService {
 
         const before = await this.repository.getAvailablePackages();
         const beforeCount = Number(before.distributiveCenter ?? 0);
-        const afterCount = await this.repository.ensureAvailablePackages(quantity);
-        const created = Math.max(0, afterCount - beforeCount);
+        const ensureResult = await this.packagingClient.ensureAvailablePackages(quantity);
+        const created = Math.max(0, Number(ensureResult.createdPackages ?? 0));
+        const afterCountCandidate = Number(ensureResult.availableAfter ?? Number.NaN);
+        const afterCount = Number.isFinite(afterCountCandidate)
+            ? afterCountCandidate
+            : beforeCount + created;
 
         await this.logger.log(
             `Automatsko pakovanje parfema: kreirano ${created} ambalaza`,
@@ -36,6 +42,7 @@ export class TimedBatchStorageService implements IStorageService {
                     beforeCount,
                     afterCount,
                     created,
+                    ensureResult,
                     type: this.profile.type,
                 },
             }

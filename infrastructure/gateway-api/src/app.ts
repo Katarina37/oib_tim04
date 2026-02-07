@@ -1,7 +1,7 @@
 import express, { Application, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import axios from "axios";
-import { getOptionalEnv, requireEnv, requireOneOfEnv } from "./config/env";
+import { getOneOfEnv, getOptionalEnv, requireEnv, requireOneOfEnv } from "./config/env";
 import { CorsConfig } from "./config/CorsConfig";
 
 import { IGatewayService } from "./Domain/services/IGatewayService";
@@ -49,6 +49,15 @@ const normalizeApiBaseUrl = (baseURL: string): string => {
   return trimmed.endsWith("/api/v1") ? trimmed : `${trimmed}/api/v1`;
 };
 
+const createGatewayMicroserviceClient = (baseURL: string): IMicroserviceClient => {
+  const httpClient = createHttpClient(baseURL);
+  return new AxiosMicroserviceClient(httpClient, gatewayApiKey);
+};
+
+const createRequiredGatewayMicroserviceClient = (envKeys: string[]): IMicroserviceClient => {
+  return createGatewayMicroserviceClient(normalizeApiBaseUrl(requireOneOfEnv(envKeys)));
+};
+
 // Auth service client
 const authServiceUrl = normalizeApiBaseUrl(
   requireOneOfEnv(["AUTH_SERVICE_URL", "AUTH_SERVICE_API"])
@@ -64,68 +73,62 @@ const userHttpClient = createHttpClient(userServiceUrl, true);
 const userClient: IUserClient = new AxiosUserClient(userHttpClient);
 
 // Production service client
-const productionServiceUrl = normalizeApiBaseUrl(
-  requireOneOfEnv(["PRODUCTION_SERVICE_URL", "PRODUCTION_SERVICE_API"])
-);
-const productionHttpClient = createHttpClient(productionServiceUrl);
-const productionClient: IMicroserviceClient = new AxiosMicroserviceClient(
-  productionHttpClient,
-  gatewayApiKey
-);
+const productionClient: IMicroserviceClient = createRequiredGatewayMicroserviceClient([
+  "PRODUCTION_SERVICE_URL",
+  "PRODUCTION_SERVICE_API",
+]);
 
 // Processing service client
-const processingHttpClient = createHttpClient(
-  normalizeApiBaseUrl(requireOneOfEnv(["PROCESSING_SERVICE_URL", "PROCESSING_SERVICE_API"]))
-);
-const processingClient: IMicroserviceClient = new AxiosMicroserviceClient(
-  processingHttpClient,
-  gatewayApiKey
+const processingClient: IMicroserviceClient = createRequiredGatewayMicroserviceClient([
+  "PROCESSING_SERVICE_URL",
+  "PROCESSING_SERVICE_API",
+]);
+
+// Packaging service client
+const packagingServiceUrlFromEnv = getOneOfEnv([
+  "PACKAGING_SERVICE_URL",
+  "PACKAGING_SERVICE_API",
+  "PACKAGING_BASE_URL",
+]);
+const packagingServiceUrl = packagingServiceUrlFromEnv || "http://localhost:5008/api/v1";
+if (!packagingServiceUrlFromEnv) {
+  console.warn(
+    "[Gateway API] Packaging URL not found in env, using fallback http://localhost:5008/api/v1"
+  );
+}
+const packagingClient: IMicroserviceClient = createGatewayMicroserviceClient(
+  normalizeApiBaseUrl(packagingServiceUrl)
 );
 
 // Storage service client
-const storageHttpClient = createHttpClient(
-  normalizeApiBaseUrl(requireEnv("STORAGE_SERVICE_URL"))
-);
-const storageClient: IMicroserviceClient = new AxiosMicroserviceClient(
-  storageHttpClient,
-  gatewayApiKey
-);
+const storageClient: IMicroserviceClient = createRequiredGatewayMicroserviceClient([
+  "STORAGE_SERVICE_URL",
+]);
 
 // Sales service client
-const salesHttpClient = createHttpClient(
-  normalizeApiBaseUrl(requireEnv("SALES_SERVICE_URL"))
-);
-const salesClient: IMicroserviceClient = new AxiosMicroserviceClient(salesHttpClient, gatewayApiKey);
+const salesClient: IMicroserviceClient = createRequiredGatewayMicroserviceClient([
+  "SALES_SERVICE_URL",
+]);
 
 // Data Analysis service client
-const dataAnalysisHttpClient = createHttpClient(
-  normalizeApiBaseUrl(requireEnv("DATA_ANALYSIS_SERVICE_URL"))
-);
-const dataAnalysisClient: IMicroserviceClient = new AxiosMicroserviceClient(
-  dataAnalysisHttpClient,
-  gatewayApiKey
-);
+const dataAnalysisClient: IMicroserviceClient = createRequiredGatewayMicroserviceClient([
+  "DATA_ANALYSIS_SERVICE_URL",
+]);
 
 // Performance Analysis service client
-const performanceAnalysisHttpClient = createHttpClient(
-  normalizeApiBaseUrl(requireEnv("PERFORMANCE_ANALYSIS_SERVICE_URL"))
-);
-const performanceAnalysisClient: IMicroserviceClient = new AxiosMicroserviceClient(
-  performanceAnalysisHttpClient,
-  gatewayApiKey
-);
+const performanceAnalysisClient: IMicroserviceClient = createRequiredGatewayMicroserviceClient([
+  "PERFORMANCE_ANALYSIS_SERVICE_URL",
+]);
 
 // Audit service client
-const auditHttpClient = createHttpClient(
-  normalizeApiBaseUrl(requireEnv("AUDIT_SERVICE_URL"))
-);
-const auditClient: IMicroserviceClient = new AxiosMicroserviceClient(auditHttpClient, gatewayApiKey);
+const auditClient: IMicroserviceClient = createRequiredGatewayMicroserviceClient([
+  "AUDIT_SERVICE_URL",
+]);
 
 // Weather service client
-const weatherHttpClient = createHttpClient(
-  normalizeApiBaseUrl(requireEnv("WEATHER_SERVICE_URL"))
-);
-const weatherClient: IMicroserviceClient = new AxiosMicroserviceClient(weatherHttpClient, gatewayApiKey);
+const weatherClient: IMicroserviceClient = createRequiredGatewayMicroserviceClient([
+  "WEATHER_SERVICE_URL",
+]);
 
 // Create gateway service with all dependencies
 const gatewayService: IGatewayService = new GatewayService(
@@ -133,6 +136,7 @@ const gatewayService: IGatewayService = new GatewayService(
   userClient,
   productionClient,
   processingClient,
+  packagingClient,
   storageClient,
   salesClient,
   dataAnalysisClient,

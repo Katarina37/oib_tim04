@@ -1,9 +1,9 @@
 import React from 'react';
 import { Trash2, ShoppingBag } from 'lucide-react';
-import { SaleItemDTO } from '../../models/sales/SaleItemDTO';
+import { CartSaleItemDTO } from '../../models/sales/SaleItemDTO';
 
 interface ShoppingCartProps {
-  items: SaleItemDTO[];
+  items: CartSaleItemDTO[];
   onRemove: (index: number) => void;
   total: number;
 }

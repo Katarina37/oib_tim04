@@ -5,19 +5,22 @@ import { SalesReport } from "../Domain/models/SalesReport";
 import { TopProductReport } from "../Domain/models/TopProductReport";
 import { TrendAnalysis } from "../Domain/models/TrendAnalysis";
 import { IAnalysisRepository } from "../Domain/services/IAnalysisRepository";
-import { end } from "pdfkit";
 import { SalesAnalysisDTO } from "../Domain/DTOs/SalesAnalysisDTO";
 import { TrendAnalysisDTO } from "../Domain/DTOs/TrendAnalysisDTO";
+<<<<<<< HEAD
+import { FiscalBillEntity } from "../Infrastructure/entities/FiscalBillEntity";
+=======
 import { diff } from "util";
+>>>>>>> 17e011c06949883abad9eac932eea24ddad2a45e
 
 export class AnalysisRepository implements IAnalysisRepository{
-    private fiscalBillRepo: Repository<FiscalBill>;
+    private fiscalBillRepo: Repository<FiscalBillEntity>;
     private salesReportRepo: Repository<SalesReport>;
     private topProductRepo: Repository<TopProductReport>;
     private trendAnalysisRepo: Repository<TrendAnalysis>;
 
     constructor(){
-        this.fiscalBillRepo = AppDataSource.getRepository(FiscalBill);
+        this.fiscalBillRepo = AppDataSource.getRepository(FiscalBillEntity);
         this.salesReportRepo = AppDataSource.getRepository(SalesReport);
         this.topProductRepo = AppDataSource.getRepository(TopProductReport);
         this.trendAnalysisRepo = AppDataSource.getRepository(TrendAnalysis);
@@ -28,12 +31,15 @@ export class AnalysisRepository implements IAnalysisRepository{
         const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
         const endDate = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59);
 
-        return this.fiscalBillRepo.find({
+        const bills = await this.fiscalBillRepo.find({
             where: {
                 createdAt: Between(startDate, endDate)
             },
             order: { createdAt: "DESC"}
         });
+<<<<<<< HEAD
+        return bills.map((bill) => this.toDomainFiscalBill(bill));
+=======
     }*/
 
     async findFiscalBillsByPeriod(period: string): Promise<FiscalBill[]> {
@@ -88,6 +94,7 @@ export class AnalysisRepository implements IAnalysisRepository{
                 endDate = new Date(year, month, 0, 23, 59, 59);
             }
             break;
+>>>>>>> 17e011c06949883abad9eac932eea24ddad2a45e
     }
 
     return this.fiscalBillRepo.find({
@@ -99,19 +106,22 @@ export class AnalysisRepository implements IAnalysisRepository{
 }
 
     async findFiscalBillsByDateRange(startDate: Date, endDate: Date): Promise<FiscalBill[]> {
-        return this.fiscalBillRepo.find({
+        const bills = await this.fiscalBillRepo.find({
             where: {createdAt: Between(startDate, endDate)},
             order: {createdAt: "DESC"}
         });
+        return bills.map((bill) => this.toDomainFiscalBill(bill));
     }
 
     async findFiscalBillById(id: number): Promise<FiscalBill | null> {
-        return this.fiscalBillRepo.findOneBy({id});
+        const bill = await this.fiscalBillRepo.findOneBy({id});
+        return bill ? this.toDomainFiscalBill(bill) : null;
     }
 
     async createFiscalBill(data: Partial<FiscalBill>): Promise<FiscalBill> {
-        const bill = this.fiscalBillRepo.create(data);
-        return this.fiscalBillRepo.save(bill);
+        const bill = this.fiscalBillRepo.create(this.toEntityFiscalBill(data));
+        const saved = await this.fiscalBillRepo.save(bill);
+        return this.toDomainFiscalBill(saved);
     }
 
     async findSalesReportByPeriod(periodType: SalesAnalysisDTO["periodType"], periodValue: string): Promise<SalesReport | null> {
@@ -232,5 +242,29 @@ export class AnalysisRepository implements IAnalysisRepository{
         }
     
         return result; 
+    }
+
+    private toDomainFiscalBill(entity: FiscalBillEntity): FiscalBill {
+        return {
+            id: entity.id,
+            saleType: entity.saleType,
+            paymentMethod: entity.paymentMethod,
+            soldItems: entity.soldItems,
+            totalAmount: Number(entity.totalAmount),
+            createdAt: entity.createdAt,
+            userId: entity.userId,
+        };
+    }
+
+    private toEntityFiscalBill(data: Partial<FiscalBill>): Partial<FiscalBillEntity> {
+        return {
+            id: data.id,
+            saleType: data.saleType,
+            paymentMethod: data.paymentMethod,
+            soldItems: data.soldItems,
+            totalAmount: data.totalAmount,
+            createdAt: data.createdAt,
+            userId: data.userId,
+        };
     }
 }

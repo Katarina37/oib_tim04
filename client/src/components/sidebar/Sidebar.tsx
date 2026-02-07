@@ -3,7 +3,6 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   Leaf,
   FlaskConical,
-  Package,
   Warehouse,
   ShoppingCart,
   BarChart3,
@@ -68,13 +67,6 @@ export const Sidebar: React.FC = () => {
       to: "/processing",
       icon: <FlaskConical size={20} />,
       label: "Prerada",
-      allowedRoles: ["seller", "sales_manager"],
-      section: "operations",
-    },
-    {
-      to: "/packaging",
-      icon: <Package size={20} />,
-      label: "Pakovanje",
       allowedRoles: ["seller", "sales_manager"],
       section: "operations",
     },

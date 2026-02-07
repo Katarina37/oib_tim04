@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+export class FiscalBill {
+  id!: number;
+
+  saleType!: "retail" | "wholesale";
+
+  paymentMethod!: "cash" | "bank_transfer" | "card";
+=======
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -19,8 +27,8 @@ import {
     length: 30
   })
   paymentMethod!: "gotovina" | "uplata_na_racun" | "karticno";
+>>>>>>> 17e011c06949883abad9eac932eea24ddad2a45e
 
-  @Column({ name: "prodati_proizvodi", type: "json" })
   soldItems!: Array<{
     productId: number;
     productName: string;
@@ -28,13 +36,10 @@ import {
     price: number;
   }>;
 
-  @Column({ name: "ukupan_iznos", type: "decimal", precision: 10, scale: 2 })
   totalAmount!: number;
 
-  @CreateDateColumn({ name: "datum_kreiranja" })
   createdAt!: Date;
 
-  @Column({ name: "korisnik_id", nullable: true})
   userId?: number;
   
 }*/

@@ -1,4 +1,5 @@
 import { SendPackageDTO } from "../../Domain/DTOs/SendPackageDTO";
+import { PackagingSyncDTO } from "../../Domain/DTOs/PackagingSyncDTO";
 
 export interface ValidationResult {
     success: boolean;
@@ -32,6 +33,26 @@ export function validatePackageIds(packageIds: unknown): ValidationResult {
 
     if (hasInvalidId) {
         return { success: false, message: "Svi ID-jevi ambalaza moraju biti pozitivni celi brojevi" };
+    }
+
+    return { success: true };
+}
+
+export function validatePackagingSyncData(data: PackagingSyncDTO): ValidationResult {
+    const idsValidation = validatePackageIds(data.packageIds);
+    if (!idsValidation.success) {
+        return idsValidation;
+    }
+
+    if (data.operation !== "created" && data.operation !== "moved") {
+        return { success: false, message: "Operacija sinhronizacije mora biti created ili moved." };
+    }
+
+    if (
+        data.targetWarehouseId !== undefined &&
+        (!Number.isInteger(data.targetWarehouseId) || data.targetWarehouseId <= 0)
+    ) {
+        return { success: false, message: "ID ciljnog skladista mora biti pozitivan ceo broj." };
     }
 
     return { success: true };

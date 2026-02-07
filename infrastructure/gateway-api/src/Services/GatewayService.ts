@@ -13,6 +13,7 @@ export class GatewayService implements IGatewayService {
     private readonly userClient: IUserClient,
     private readonly productionClient: IMicroserviceClient,
     private readonly processingClient: IMicroserviceClient,
+    private readonly packagingClient: IMicroserviceClient,
     private readonly storageClient: IMicroserviceClient,
     private readonly salesClient: IMicroserviceClient,
     private readonly dataAnalysisClient: IMicroserviceClient,
@@ -55,6 +56,10 @@ export class GatewayService implements IGatewayService {
 
   async proxyToStorage(request: ProxyRequest): Promise<ProxyResponse> {
     return this.storageClient.proxy(request);
+  }
+
+  async proxyToPackaging(request: ProxyRequest): Promise<ProxyResponse> {
+    return this.packagingClient.proxy(request);
   }
 
   async proxyToSales(request: ProxyRequest): Promise<ProxyResponse> {

@@ -1,5 +1,6 @@
 import { ILoggerService } from "../Domain/services/ILoggerService";
 import { IStorageRepository } from "../Domain/services/IStorageRepository";
+import { IPackagingClient } from "../Domain/services/IPackagingClient";
 import { DispatchProfile, TimedBatchStorageService } from "./TimedBatchStorageService";
 
 const WAREHOUSE_PROFILE: DispatchProfile = {
@@ -14,8 +15,9 @@ const WAREHOUSE_PROFILE: DispatchProfile = {
 export class WarehouseStorageService extends TimedBatchStorageService {
     constructor(
         repository: IStorageRepository,
+        packagingClient: IPackagingClient,
         logger: ILoggerService
     ) {
-        super(repository, logger, WAREHOUSE_PROFILE);
+        super(repository, packagingClient, logger, WAREHOUSE_PROFILE);
     }
 }

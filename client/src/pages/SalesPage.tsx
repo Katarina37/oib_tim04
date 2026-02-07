@@ -6,7 +6,7 @@ import { useServices } from "../contexts/ServiceContext";
 import { SaleType } from "../enums/SaleType";
 import { PaymentMethod } from "../enums/PaymentMethod";
 import { CreateSaleDTO } from "../models/sales/CreateSaleDTO";
-import { SaleItemDTO } from "../models/sales/SaleItemDTO";
+import { CartSaleItemDTO } from "../models/sales/SaleItemDTO";
 import { PerfumeDTO } from "../models/sales/PerfumeDTO";
 import { SaleResponseDTO } from "../models/sales/SaleResponseDTO";
 import StatsCard from "../components/production/StatsCard";
@@ -55,7 +55,7 @@ export const SalesPage: React.FC = () => {
   const [perfumes, setPerfumes] = useState<PerfumeDTO[]>([]);
   const [salesHistory, setSalesHistory] = useState<SaleResponseDTO[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
-  const [cart, setCart] = useState<SaleItemDTO[]>([]);
+  const [cart, setCart] = useState<CartSaleItemDTO[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -201,8 +201,6 @@ export const SalesPage: React.FC = () => {
           perfumeId: item.perfumeId,
           productID: item.perfumeId,
           quantity: item.quantity || 1,
-          price: item.price,
-          name: item.name,
         })),
       };
 

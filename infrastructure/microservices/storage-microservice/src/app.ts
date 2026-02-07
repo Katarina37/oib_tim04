@@ -4,20 +4,23 @@ import axios from "axios";
 
 import { StorageController } from "./WebAPI/controllers/StorageController";
 import { StorageOverviewController } from "./WebAPI/controllers/StorageOverviewController";
+import { StorageSyncController } from "./WebAPI/controllers/StorageSyncController";
 
 import { StorageFacadeService } from "./Services/StorageFacadeService";
 import { DistributionCenterStorageService } from "./Services/DistributionCenterStorageService";
 import { WarehouseStorageService } from "./Services/WarehouseStorageService";
 import { StorageOverviewService } from "./Services/StorageOverviewService";
+import { StorageSyncService } from "./Services/StorageSyncService";
 
 import { StorageRepository } from "./Services/StorageRepository";
 import { LoggerService } from "./Services/LoggerService";
-import { AxiosProcessingClient } from "./Infrastructure/clients/AxiosProcessingClient";
+import { AxiosPackagingClient } from "./Infrastructure/clients/AxiosPackagingClient";
 
 import { AxiosAuditClient } from "./Infrastructure/clients/AxiosAuditClient";
 import { IAuditClient } from "./Domain/services/IAuditClient";
-import { IProcessingClient } from "./Domain/services/IProcessingClient";
+import { IPackagingClient } from "./Domain/services/IPackagingClient";
 import { IStorageRepository } from "./Domain/services/IStorageRepository";
+import { IStorageSyncService } from "./Domain/services/IStorageSyncService";
 
 import { CorsConfig } from "./WebAPI/middleware/CorsConfig";
 import { GatewayAuthMiddleware } from "./WebAPI/middleware/GatewayAuthMiddleware";
@@ -44,19 +47,19 @@ export function createApp(): Application {
         return trimmed.endsWith("/api/v1") ? trimmed : `${trimmed}/api/v1`;
     };
 
-    const processingServiceUrl =
-        getOptionalEnv("PROCESSING_BASE_URL") ||
-        getOptionalEnv("PROCESSING_SERVICE_URL") ||
-        "http://localhost:5001/api/v1";
-    const processingClient: IProcessingClient = new AxiosProcessingClient(
-        normalizeApiBaseUrl(processingServiceUrl),
+    const packagingServiceUrl =
+        getOptionalEnv("PACKAGING_BASE_URL") ||
+        getOptionalEnv("PACKAGING_SERVICE_URL") ||
+        "http://localhost:5008/api/v1";
+    const packagingClient: IPackagingClient = new AxiosPackagingClient(
+        normalizeApiBaseUrl(packagingServiceUrl),
         gatewayApiKey
     );
 
     // Dependency Injection
    
     // Repository
-    const storageRepository: IStorageRepository = new StorageRepository(processingClient);
+    const storageRepository: IStorageRepository = new StorageRepository();
 
     // Audit + Logger
     const auditServiceUrl = requireEnv("GATEWAY_AUDIT_URL");
@@ -74,10 +77,10 @@ export function createApp(): Application {
 
     // WRITE services
     const distributionCenterService =
-        new DistributionCenterStorageService(storageRepository, loggerService);
+        new DistributionCenterStorageService(storageRepository, packagingClient, loggerService);
 
     const warehouseStorageService =
-        new WarehouseStorageService(storageRepository, loggerService);
+        new WarehouseStorageService(storageRepository, packagingClient, loggerService);
 
     // WRITE facade
     const storageFacade = new StorageFacadeService(
@@ -88,6 +91,8 @@ export function createApp(): Application {
     // READ service
     const storageOverviewService =
         new StorageOverviewService(storageRepository);
+    const storageSyncService: IStorageSyncService =
+        new StorageSyncService(storageRepository);
 
     // Controllers
 
@@ -96,6 +101,8 @@ export function createApp(): Application {
 
     const storageOverviewController =
         new StorageOverviewController(storageOverviewService, loggerService);
+    const storageSyncController =
+        new StorageSyncController(storageSyncService, loggerService);
 
     // Health check
 
@@ -119,6 +126,7 @@ export function createApp(): Application {
 
     apiRouter.use(storageController.getRouter());
     apiRouter.use(storageOverviewController.getRouter());
+    apiRouter.use(storageSyncController.getRouter());
 
     app.use("/api/v1", apiRouter);
 

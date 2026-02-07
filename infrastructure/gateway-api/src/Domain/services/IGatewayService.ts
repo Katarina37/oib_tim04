@@ -16,6 +16,7 @@ export interface IGatewayService {
   // Proxy operations for other microservices
   proxyToProduction(request: ProxyRequest): Promise<ProxyResponse>;
   proxyToProcessing(request: ProxyRequest): Promise<ProxyResponse>;
+  proxyToPackaging(request: ProxyRequest): Promise<ProxyResponse>;
   proxyToStorage(request: ProxyRequest): Promise<ProxyResponse>;
   proxyToSales(request: ProxyRequest): Promise<ProxyResponse>;
   proxyToDataAnalysis(request: ProxyRequest): Promise<ProxyResponse>;

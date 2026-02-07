@@ -84,7 +84,7 @@
 ### 🎯 Ukupan Napredak
 
 ```
-██████████████████████████████░░░░░░░░░░░░░░░░░░░░░░░░ 55%
+██████████████████████████████████████████████████████ 100%
 ```
 
 
@@ -103,10 +103,10 @@
 | Routing & Guards | ✅ Završeno | Zaštićene rute, role-based pristup |
 | Proizvodnja Page | ✅ Završeno | CRUD za biljke, pretraga, filtriranje |
 | Sidebar navigacija | ✅ Završeno | Dinamička navigacija po ulogama |
-| Prerada Page | 🔄 U toku | Interfejs za preradu |
-| Skladištenje Page | 🔄 U toku | Pregled skladišta i ambalaža |
-| Prodaja Page | 🔄 U toku | Katalog i kupovina |
-| Analiza Page | 🔄 U toku | Grafici i izveštaji |
+| Prerada Page | ✅ Završeno | Interfejs za preradu |
+| Skladištenje Page | ✅ Završeno | Pakovanje + prijem + pregled skladišta i ambalaža |
+| Prodaja Page | ✅ Završeno | Katalog i kupovina |
+| Analiza Page | ✅ Završeno | Grafici i izveštaji |
 
 <br/>
 
@@ -119,11 +119,11 @@
 | 👤 User Microservice | ✅ Završeno | `4002` | `korisnici` |
 | 📝 Audit Microservice | ✅ Završeno | `4003` | `audit_logovi` |
 | 🌱 Production Microservice | ✅ Završeno | `4004` | `proizvodnja` |
-| ⚗️ Processing Microservice | 🔄 U toku | `4005` | `prerada` |
-| 📦 Storage Microservice | 🔄 U toku | `4006` | `skladista` |
-| 🛒 Sales Microservice | 🔄 U toku | `4007` | `prodaja` |
-| 📊 Analytics Microservice | 🔄 U toku | `4008` | `izvestaji_analize` |
-| ⚡ Performance Microservice | 🔄 U toku | `4009` | `izvestaji_performanse` |
+| ⚗️ Processing Microservice | ✅ Završeno | `4005` | `prerada` |
+| 📦 Storage Microservice | ✅ Završeno | `4006` | `skladista` |
+| 🛒 Sales Microservice | ✅ Završeno | `4007` | `prodaja` |
+| 📊 Analytics Microservice | ✅ Završeno | `4008` | `izvestaji_analize` |
+| ⚡ Performance Microservice | ✅ Završeno | `4009` | `izvestaji_performanse` |
 
 <br/>
 
@@ -336,6 +336,22 @@
 ├── 📄 data.sql                                   # Inicijalni podaci
 └── 📄 README.md                                  # Dokumentacija
 ```
+
+<br/>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+## 📦 Packaging Refactor (Backend Only)
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
+- Uklonjena je zasebna klijentska ruta `/packaging` i navigaciona stavka za pakovanje.
+- Svi UI tokovi pakovanja premešteni su na stranicu skladišta (`/storage`).
+- Klijent sada koristi gateway rute:
+  - `POST /api/v1/packaging/package-perfumes`
+  - `POST /api/v1/packaging/send-to-warehouse`
+  - `GET /api/v1/storage/overview`
+  - `POST /api/v1/storage/send-package`
+- Packaging mikroservis je backend-only i sada ima eksplicitan port ka Storage servisu za internu sinhronizaciju:
+  - `POST /api/v1/storage/internal/packaging-sync` (service-to-service, `X-Gateway-Key`)
 
 <br/>
 

@@ -15,6 +15,15 @@ import { AuditLogDTO } from '../models/audit/AuditLogDTO';
 
 const PRODUCTION_LOG_SCOPES = ['proizvodnja', 'prerada'];
 
+const isHttpStatus = (error: unknown, status: number): boolean => {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const maybeError = error as { response?: { status?: number } };
+  return maybeError.response?.status === status;
+};
+
 const mapLogLevelToEntryType = (level: AuditLogDTO['tip_zapisa']): LogEntry['type'] => {
   const normalized = String(level ?? '').toLowerCase();
 
@@ -42,7 +51,7 @@ const toLogEntry = (auditLog: AuditLogDTO): LogEntry => ({
 });
 
 export const ProductionPage: React.FC = () => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { plantAPI, auditAPI } = useServices();
   
   // State for plants data
@@ -100,6 +109,13 @@ export const ProductionPage: React.FC = () => {
       return;
     }
 
+    if (user?.role?.toLowerCase() !== 'admin') {
+      setLogs([]);
+      setLogsError(null);
+      setLogsLoading(false);
+      return;
+    }
+
     setLogsLoading(true);
     setLogsError(null);
 
@@ -113,12 +129,18 @@ export const ProductionPage: React.FC = () => {
       );
       setLogs(sortedLogs.map(toLogEntry));
     } catch (err) {
+      if (isHttpStatus(err, 403)) {
+        setLogs([]);
+        setLogsError(null);
+        return;
+      }
+
       setLogsError('Greska pri ucitavanju dnevnika');
       console.error(err);
     } finally {
       setLogsLoading(false);
     }
-  }, [auditAPI, token]);
+  }, [auditAPI, token, user?.role]);
 
   useEffect(() => {
     fetchPlants();
