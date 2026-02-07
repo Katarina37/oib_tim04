@@ -13,6 +13,7 @@ import PerformancePage from './pages/PerformancePage';
 import { getDefaultRouteForRole } from './helpers/roleAccess';
 import StoragePage from './pages/StoragePage';
 import { SalesPage } from './pages/SalesPage';
+import ProcessingPage from './pages/ProcessingPage';
 
 const App: React.FC = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -59,10 +60,7 @@ const App: React.FC = () => {
         element={
           <ProtectedRoute requiredRole="seller,sales_manager">
             <AppLayout>
-              <UnderConstructionPage 
-                title="Prerada sirovina" 
-                description="Mikroservis za preradu biljaka u parfeme"
-              />
+              <ProcessingPage />
             </AppLayout>
           </ProtectedRoute>
         }
@@ -73,10 +71,7 @@ const App: React.FC = () => {
         element={
           <ProtectedRoute requiredRole="seller,sales_manager">
             <AppLayout>
-              <UnderConstructionPage 
-                title="Pakovanje" 
-                description="Mikroservis za pakovanje parfema u ambalažu"
-              />
+              <StoragePage />
             </AppLayout>
           </ProtectedRoute>
         }

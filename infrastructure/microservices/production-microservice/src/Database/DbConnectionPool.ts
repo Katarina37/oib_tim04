@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
-import { Plant } from "../Domain/models/Plant";
 import { requireEnv, requireIntEnv } from "../config/env";
+import { PlantEntity } from "../Infrastructure/entities/PlantEntity";
 
 export const AppDataSource = new DataSource({
   type: "mysql",
@@ -13,7 +13,7 @@ export const AppDataSource = new DataSource({
   ssl: { rejectUnauthorized: false },
   synchronize: true, // automatsko kreiranje tabela u bazi
   logging: false, // debug sql gresaka
-  entities: [Plant],
+  entities: [PlantEntity],
 });
 
 // Alias za kompatibilnost (ako negdje koristiš Db)

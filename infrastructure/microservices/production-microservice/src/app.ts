@@ -13,6 +13,7 @@ import { CorsConfig } from "./WebAPI/middleware/CorsConfig";
 import { GatewayAuthMiddleware } from "./WebAPI/middleware/GatewayAuthMiddleware";
 import { RequestAuditMiddleware } from "./WebAPI/middleware/RequestAuditMiddleware";
 import { requireEnv } from "./config/env";
+import { AppDataSource } from "./Database/DbConnectionPool";
 
 export function createApp(): Application {
   const app: Application = express();
@@ -28,7 +29,7 @@ export function createApp(): Application {
   app.use(cors(corsConfig.buildOptions()));
 
   // Dependency Injection
-  const plantRepository = new PlantRepository();
+  const plantRepository = new PlantRepository(AppDataSource);
   const auditServiceUrl = requireEnv("GATEWAY_AUDIT_URL");
   const auditHttpClient = axios.create({
     baseURL: auditServiceUrl,

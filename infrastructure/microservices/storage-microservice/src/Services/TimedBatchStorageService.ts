@@ -19,6 +19,31 @@ export class TimedBatchStorageService implements IStorageService {
         private readonly profile: DispatchProfile
     ) {}
 
+    async packagePerfumes(quantity: number): Promise<number> {
+        await this.ensureValidQuantity(quantity);
+
+        const before = await this.repository.getAvailablePackages();
+        const beforeCount = Number(before.distributiveCenter ?? 0);
+        const afterCount = await this.repository.ensureAvailablePackages(quantity);
+        const created = Math.max(0, afterCount - beforeCount);
+
+        await this.logger.log(
+            `Automatsko pakovanje parfema: kreirano ${created} ambalaza`,
+            created > 0 ? LogLevel.INFO : LogLevel.WARNING,
+            {
+                additionalData: {
+                    requested: quantity,
+                    beforeCount,
+                    afterCount,
+                    created,
+                    type: this.profile.type,
+                },
+            }
+        );
+
+        return created;
+    }
+
     async sendPackages(quantity: number): Promise<number> {
         try {
             const reservedPackageIds = await this.reservePackages(quantity);
@@ -57,6 +82,7 @@ export class TimedBatchStorageService implements IStorageService {
     async reservePackages(quantity: number): Promise<number[]> {
         try {
             await this.ensureValidQuantity(quantity);
+            await this.packagePerfumes(quantity);
 
             let remaining = quantity;
             const reservedPackageIds: number[] = [];

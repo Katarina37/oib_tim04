@@ -13,7 +13,7 @@ import SearchFilterBar from '../components/production/SearchFilterBar';
 import ConfirmModal from '../components/common/ConfirmModal';
 import { AuditLogDTO } from '../models/audit/AuditLogDTO';
 
-const PRODUCTION_MICROSERVICE = 'proizvodnja';
+const PRODUCTION_LOG_SCOPES = ['proizvodnja', 'prerada'];
 
 const mapLogLevelToEntryType = (level: AuditLogDTO['tip_zapisa']): LogEntry['type'] => {
   const normalized = String(level ?? '').toLowerCase();
@@ -104,7 +104,10 @@ export const ProductionPage: React.FC = () => {
     setLogsError(null);
 
     try {
-      const auditLogs = await auditAPI.searchLogs({ mikroservis: PRODUCTION_MICROSERVICE }, token);
+      const logResponses = await Promise.all(
+        PRODUCTION_LOG_SCOPES.map((scope) => auditAPI.searchLogs({ mikroservis: scope }, token))
+      );
+      const auditLogs = logResponses.flat();
       const sortedLogs = [...auditLogs].sort(
         (first, second) => new Date(second.datum_vreme).getTime() - new Date(first.datum_vreme).getTime()
       );

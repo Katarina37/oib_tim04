@@ -87,9 +87,17 @@ export async function createApp(): Promise<Application> {
     gatewayApiKey
   );
 
+  // ===== PROCESSING SERVICE URL =====
+  const processingServiceUrl = resolveServiceUrl(
+    "PROCESSING_BASE_URL",
+    "PROCESSING_SERVICE_URL"
+  );
+
   const perfumeCatalogClient: IPerfumeCatalogClient = new DatabasePerfumeCatalogClient(
     Db,
-    storageClient
+    storageClient,
+    processingServiceUrl,
+    gatewayApiKey
   );
   const fallbackPerfumeCatalogClient: IPerfumeCatalogClient = new StaticPerfumeCatalogClient();
 

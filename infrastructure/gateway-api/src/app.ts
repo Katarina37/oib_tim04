@@ -1,7 +1,7 @@
 import express, { Application, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import axios from "axios";
-import { requireEnv, requireOneOfEnv } from "./config/env";
+import { getOptionalEnv, requireEnv, requireOneOfEnv } from "./config/env";
 import { CorsConfig } from "./config/CorsConfig";
 
 import { IGatewayService } from "./Domain/services/IGatewayService";
@@ -26,7 +26,11 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 // Environment variables
 const gatewayApiKey = requireEnv("GATEWAY_API_KEY");
 requireEnv("JWT_SECRET");
-const timeout = 5000;
+const timeoutFromEnv = Number.parseInt(
+  getOptionalEnv("MICROSERVICE_TIMEOUT_MS") ?? "30000",
+  10
+);
+const timeout = Number.isFinite(timeoutFromEnv) && timeoutFromEnv > 0 ? timeoutFromEnv : 30000;
 
 // Create HTTP clients for each microservice
 const createHttpClient = (baseURL: string, includeGatewayKey = false) =>
@@ -71,7 +75,7 @@ const productionClient: IMicroserviceClient = new AxiosMicroserviceClient(
 
 // Processing service client
 const processingHttpClient = createHttpClient(
-  normalizeApiBaseUrl(requireEnv("PROCESSING_SERVICE_URL"))
+  normalizeApiBaseUrl(requireOneOfEnv(["PROCESSING_SERVICE_URL", "PROCESSING_SERVICE_API"]))
 );
 const processingClient: IMicroserviceClient = new AxiosMicroserviceClient(
   processingHttpClient,
