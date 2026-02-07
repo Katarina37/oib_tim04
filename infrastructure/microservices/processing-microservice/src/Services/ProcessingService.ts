@@ -5,7 +5,6 @@ import { ProcessingSummaryDTO } from "../Domain/DTOs/ProcessingSummaryDTO";
 import { RequestPerfumesDTO } from "../Domain/DTOs/RequestPerfumesDTO";
 import { StartProcessingDTO } from "../Domain/DTOs/StartProcessingDTO";
 import { LogLevel } from "../Domain/enums/LogLevel";
-import { PerfumeType } from "../Domain/enums/PerfumeType";
 import { PlantState } from "../Domain/enums/PlantState";
 import { IProcessingRepository } from "../Domain/services/IProcessingRepository";
 import { IProcessingService } from "../Domain/services/IProcessingService";
@@ -23,8 +22,7 @@ type PlantProfile = {
 
 export class ProcessingService implements IProcessingService {
   private static readonly ML_PER_PLANT = 50;
-  private static readonly TARGET_OIL_STRENGTH_PERFUME = 4.0;
-  private static readonly TARGET_OIL_STRENGTH_COLOGNE = 3.0;
+  private static readonly OIL_STRENGTH_THRESHOLD = 4.0;
   private static readonly MIN_PERCENTAGE_CORRECTION = 0.1;
   private static readonly DEFAULT_PLANT_PROFILE: PlantProfile = {
     commonName: "Lavanda",
@@ -46,11 +44,10 @@ export class ProcessingService implements IProcessingService {
     const plantsPerBottle = this.calculatePlantsPerBottle(data.bottleVolumeMl);
 
     try {
-      await this.ensureRequiredHarvestedPlants(requiredPlants, data);
+      await this.ensureRequiredHarvestedPlants(requiredPlants);
       const harvestedPlants = await this.productionClient.getPlantsByState(PlantState.HARVESTED);
-      const harvestedPlantIds = harvestedPlants
-        .slice(0, requiredPlants)
-        .map((plant) => plant.id);
+      const plantsForProcessing = harvestedPlants.slice(0, requiredPlants);
+      const harvestedPlantIds = plantsForProcessing.map((plant) => plant.id);
 
       if (harvestedPlantIds.length < requiredPlants) {
         throw new Error(
@@ -66,6 +63,7 @@ export class ProcessingService implements IProcessingService {
       });
 
       await this.safeMarkPlantsAsProcessed(result.usedPlantIds);
+      await this.safeBalanceHighOilPlants(plantsForProcessing);
 
       await this.logger.log(
         `Uspesno pokrenuta prerada: ${data.bottleQuantity} bocica (${data.bottleVolumeMl}ml) za ${data.perfumeName}`,
@@ -184,8 +182,7 @@ export class ProcessingService implements IProcessingService {
   }
 
   private async ensureRequiredHarvestedPlants(
-    requiredPlants: number,
-    data: StartProcessingDTO
+    requiredPlants: number
   ): Promise<void> {
     const harvestedPlants = await this.productionClient.getPlantsByState(PlantState.HARVESTED);
     const missingPlants = requiredPlants - harvestedPlants.length;
@@ -194,11 +191,10 @@ export class ProcessingService implements IProcessingService {
       return;
     }
 
-    const targetOilStrength = this.resolveTargetOilStrength(data.perfumeType);
     const profile = await this.resolvePlantProfile();
 
     await this.logger.log(
-      `Nedovoljno ubranih biljaka (${harvestedPlants.length}/${requiredPlants}). Pokretanje auto-sadnje i korekcije jacine ulja.`,
+      `Nedovoljno ubranih biljaka (${harvestedPlants.length}/${requiredPlants}). Pokretanje auto-sadnje i berbe.`,
       LogLevel.WARNING,
       {
         additionalData: {
@@ -206,13 +202,11 @@ export class ProcessingService implements IProcessingService {
           harvestedPlants: harvestedPlants.length,
           missingPlants,
           commonName: profile.commonName,
-          targetOilStrength,
         },
       }
     );
 
-    await this.ensurePlantedInventory(profile, missingPlants, targetOilStrength);
-    await this.correctOilStrengthForHarvest(profile.commonName, missingPlants, targetOilStrength);
+    await this.ensurePlantedInventory(profile, missingPlants);
     await this.productionClient.harvestPlants(profile.commonName, missingPlants);
   }
 
@@ -233,8 +227,7 @@ export class ProcessingService implements IProcessingService {
 
   private async ensurePlantedInventory(
     profile: PlantProfile,
-    requiredQuantity: number,
-    targetOilStrength: number
+    requiredQuantity: number
   ): Promise<void> {
     const plantedPlants = await this.productionClient.getPlantedPlantsByCommonName(profile.commonName);
     const missingPlants = requiredQuantity - plantedPlants.length;
@@ -248,56 +241,75 @@ export class ProcessingService implements IProcessingService {
         commonName: profile.commonName,
         latinName: profile.latinName,
         countryOfOrigin: profile.countryOfOrigin,
-        oilStrength: targetOilStrength,
       });
     }
   }
 
-  private async correctOilStrengthForHarvest(
-    commonName: string,
-    requiredQuantity: number,
-    targetOilStrength: number
-  ): Promise<void> {
-    const plantedPlants = await this.productionClient.getPlantedPlantsByCommonName(commonName);
-    const plantsToCorrect = plantedPlants.slice(0, requiredQuantity);
+  private async safeBalanceHighOilPlants(plantsForProcessing: ProductionPlantDTO[]): Promise<void> {
+    const overThresholdPlants = plantsForProcessing.filter(
+      (plant) => Number(plant.oilStrength) > ProcessingService.OIL_STRENGTH_THRESHOLD
+    );
 
-    if (plantsToCorrect.length < requiredQuantity) {
-      throw new Error(
-        `Nedovoljno zasadenih biljaka za korekciju jacine. Dostupno: ${plantsToCorrect.length}, potrebno: ${requiredQuantity}.`
-      );
+    if (overThresholdPlants.length === 0) {
+      return;
     }
 
-    for (const plant of plantsToCorrect) {
-      const percentageChange = this.calculateOilStrengthCorrection(
-        plant,
-        targetOilStrength
-      );
+    for (const processedPlant of overThresholdPlants) {
+      try {
+        const replacementPlant = await this.productionClient.plant({
+          commonName: processedPlant.commonName,
+          latinName: processedPlant.latinName,
+          countryOfOrigin: processedPlant.countryOfOrigin,
+        });
 
-      if (Math.abs(percentageChange) < ProcessingService.MIN_PERCENTAGE_CORRECTION) {
-        continue;
+        const percentageChange = this.calculateOilStrengthCorrectionFromThreshold(
+          processedPlant.oilStrength
+        );
+
+        if (Math.abs(percentageChange) >= ProcessingService.MIN_PERCENTAGE_CORRECTION) {
+          await this.productionClient.changeOilStrength(replacementPlant.id, percentageChange);
+        }
+
+        await this.logger.log(
+          `Izvrsena korekcija ravnoteze aroma nakon prerade biljke ${processedPlant.id}`,
+          LogLevel.INFO,
+          {
+            additionalData: {
+              processedPlantId: processedPlant.id,
+              processedPlantOilStrength: processedPlant.oilStrength,
+              plantedReplacementId: replacementPlant.id,
+              percentageChange,
+            },
+          }
+        );
+      } catch (error) {
+        await this.logger.log(
+          `Neuspesna korekcija ravnoteze aroma nakon prerade biljke ${processedPlant.id}: ${(error as Error).message}`,
+          LogLevel.WARNING,
+          {
+            additionalData: {
+              processedPlantId: processedPlant.id,
+              processedPlantOilStrength: processedPlant.oilStrength,
+            },
+          }
+        );
       }
-
-      await this.productionClient.changeOilStrength(plant.id, percentageChange);
     }
   }
 
-  private calculateOilStrengthCorrection(
-    plant: Pick<ProductionPlantDTO, "oilStrength">,
-    targetOilStrength: number
-  ): number {
-    const current = Number(plant.oilStrength);
-    if (!Number.isFinite(current) || current <= 0) {
+  private calculateOilStrengthCorrectionFromThreshold(processedOilStrength: number): number {
+    const processed = Number(processedOilStrength);
+    if (!Number.isFinite(processed)) {
       return 0;
     }
 
-    const rawPercentage = ((targetOilStrength - current) / current) * 100;
-    return Math.round(rawPercentage * 10) / 10;
-  }
+    const overflow = processed - ProcessingService.OIL_STRENGTH_THRESHOLD;
+    if (overflow <= 0) {
+      return 0;
+    }
 
-  private resolveTargetOilStrength(perfumeType: PerfumeType): number {
-    return perfumeType === PerfumeType.PERFUME
-      ? ProcessingService.TARGET_OIL_STRENGTH_PERFUME
-      : ProcessingService.TARGET_OIL_STRENGTH_COLOGNE;
+    const keepPercentage = Math.max(0, Math.min(100, overflow * 100));
+    return Math.round((keepPercentage - 100) * 10) / 10;
   }
 
   private async safeMarkPlantsAsProcessed(plantIds: number[]): Promise<void> {

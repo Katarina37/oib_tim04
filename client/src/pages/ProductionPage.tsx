@@ -51,7 +51,7 @@ const toLogEntry = (auditLog: AuditLogDTO): LogEntry => ({
 });
 
 export const ProductionPage: React.FC = () => {
-  const { token, user } = useAuth();
+  const { token } = useAuth();
   const { plantAPI, auditAPI } = useServices();
   
   // State for plants data
@@ -109,13 +109,6 @@ export const ProductionPage: React.FC = () => {
       return;
     }
 
-    if (user?.role?.toLowerCase() !== 'admin') {
-      setLogs([]);
-      setLogsError(null);
-      setLogsLoading(false);
-      return;
-    }
-
     setLogsLoading(true);
     setLogsError(null);
 
@@ -140,7 +133,7 @@ export const ProductionPage: React.FC = () => {
     } finally {
       setLogsLoading(false);
     }
-  }, [auditAPI, token, user?.role]);
+  }, [auditAPI, token]);
 
   useEffect(() => {
     fetchPlants();

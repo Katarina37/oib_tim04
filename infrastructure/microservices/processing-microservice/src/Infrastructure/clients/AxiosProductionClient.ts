@@ -41,7 +41,7 @@ export class AxiosProductionClient implements IProductionClient {
     commonName: string;
     latinName: string;
     countryOfOrigin: string;
-    oilStrength: number;
+    oilStrength?: number;
   }): Promise<ProductionPlantDTO> {
     const response = await this.httpClient.post<ApiSuccessPayload<ProductionPlantDTO>>(
       "/production/plant",

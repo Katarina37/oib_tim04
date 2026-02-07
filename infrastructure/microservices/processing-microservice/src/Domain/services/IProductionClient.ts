@@ -18,7 +18,7 @@ export interface IProductionClient {
     commonName: string;
     latinName: string;
     countryOfOrigin: string;
-    oilStrength: number;
+    oilStrength?: number;
   }): Promise<ProductionPlantDTO>;
   changeOilStrength(plantId: number, percentageChange: number): Promise<ProductionPlantDTO>;
   harvestPlants(commonName: string, quantity: number): Promise<ProductionPlantDTO[]>;

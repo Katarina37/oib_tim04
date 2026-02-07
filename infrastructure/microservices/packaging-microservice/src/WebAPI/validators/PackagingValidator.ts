@@ -60,8 +60,12 @@ export function validateSendToWarehouseData(data: SendToWarehouseDTO): Validatio
     return { success: false, message: "ID ciljnog skladista mora biti pozitivan ceo broj." };
   }
 
+  if (data.packageIds === undefined) {
+    return { success: true };
+  }
+
   if (!Array.isArray(data.packageIds) || data.packageIds.length === 0) {
-    return { success: false, message: "Lista paketa je obavezna." };
+    return { success: false, message: "Ako su prosledjeni, ID-jevi paketa ne smeju biti prazni." };
   }
 
   const hasInvalidId = data.packageIds.some(

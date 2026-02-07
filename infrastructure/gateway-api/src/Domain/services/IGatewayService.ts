@@ -11,7 +11,11 @@ export interface IGatewayService {
 
   // User operations
   getAllUsers(): Promise<UserDTO[]>;
+  searchUsers(criteria: Record<string, unknown>): Promise<UserDTO[]>;
   getUserById(id: number): Promise<UserDTO>;
+  createUser(data: RegistrationUserDTO): Promise<UserDTO>;
+  updateUser(id: number, data: Partial<RegistrationUserDTO>): Promise<UserDTO>;
+  deleteUser(id: number): Promise<void>;
 
   // Proxy operations for other microservices
   proxyToProduction(request: ProxyRequest): Promise<ProxyResponse>;

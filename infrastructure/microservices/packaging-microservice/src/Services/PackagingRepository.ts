@@ -72,13 +72,9 @@ export class PackagingRepository implements PackagingRepositoryPort {
   }
 
   async sendPackagesToWarehouse(
-    packageIds: number[],
-    targetWarehouseId: number
+    targetWarehouseId: number,
+    packageIds: number[] = []
   ): Promise<number[]> {
-    if (!Array.isArray(packageIds) || packageIds.length === 0) {
-      return [];
-    }
-
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -93,13 +89,22 @@ export class PackagingRepository implements PackagingRepositoryPort {
         throw new Error("Ciljno skladiste nije pronadjeno.");
       }
 
-      const packages = await queryRunner.manager.find(PackageEntity, {
-        where: {
-          id: In(packageIds),
-          state: PackageState.AVAILABLE,
-        },
-        order: { id: "ASC" },
-      });
+      const packages =
+        packageIds.length > 0
+          ? await queryRunner.manager.find(PackageEntity, {
+              where: {
+                id: In(packageIds),
+                state: PackageState.AVAILABLE,
+              },
+              order: { id: "ASC" },
+            })
+          : await queryRunner.manager.find(PackageEntity, {
+              where: {
+                state: PackageState.AVAILABLE,
+              },
+              order: { id: "ASC" },
+              take: 1,
+            });
 
       if (packages.length === 0) {
         await queryRunner.commitTransaction();
@@ -117,6 +122,7 @@ export class PackagingRepository implements PackagingRepositoryPort {
         }
 
         packaging.warehouse = warehouse;
+        packaging.state = PackageState.SENT;
         await queryRunner.manager.save(PackageEntity, packaging);
         movedPackageIds.push(packaging.id);
       }

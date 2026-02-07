@@ -41,12 +41,6 @@ export class SaleService implements ISaleService {
             0
         );
 
-        const packageBudget = this.getSharedPackageBudget(catalog);
-        if (packageBudget !== null && requestedPackages > packageBudget) {
-            await this.logInsufficientPackages(data.userId, requestedPackages, packageBudget);
-            throw new Error("Nema dovoljno paketa na stanju za izvršenje prodaje.");
-        }
-
         const reservedPackageIds = await this.storageClient.reservePackages(
             requestedPackages,
             userContext
@@ -279,16 +273,6 @@ export class SaleService implements ISaleService {
         }
 
         return Array.from(resolvedItemsByPerfume.values());
-    }
-
-    private getSharedPackageBudget(catalog: PerfumeDTO[]): number | null {
-        if (catalog.length === 0) {
-            return 0;
-        }
-
-        const firstStock = catalog[0].stock;
-        const hasSharedBudget = catalog.every((perfume) => perfume.stock === firstStock);
-        return hasSharedBudget ? firstStock : null;
     }
 
     private async logInsufficientPackages(

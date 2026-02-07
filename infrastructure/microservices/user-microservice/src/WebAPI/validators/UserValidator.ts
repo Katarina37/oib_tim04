@@ -24,6 +24,10 @@ export function validateCreateUserData(data: CreateUserDTO): ValidationResult {
     return { success: false, message: "Invalid role" };
   }
 
+  if (data.profileImage !== undefined && !isValidBase64Image(data.profileImage)) {
+    return { success: false, message: "Profile image must be a valid base64 string" };
+  }
+
   return { success: true };
 }
 
@@ -44,10 +48,30 @@ export function validateUpdateUserData(data: UpdateUserDTO): ValidationResult {
     return { success: false, message: "Invalid role" };
   }
 
+  if (data.profileImage !== undefined && !isValidBase64Image(data.profileImage)) {
+    return { success: false, message: "Profile image must be a valid base64 string" };
+  }
+
   return { success: true };
 }
 
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
+}
+
+function isValidBase64Image(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return true;
+  }
+
+  const dataUriMatch = trimmed.match(/^data:image\/[a-zA-Z0-9.+-]+;base64,(.+)$/);
+  const payload = dataUriMatch ? dataUriMatch[1] : trimmed;
+
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(payload)) {
+    return false;
+  }
+
+  return payload.length % 4 === 0;
 }

@@ -8,6 +8,7 @@ export class StorageSyncService implements IStorageSyncService {
   async syncPackagingPackages(data: PackagingSyncDTO): Promise<PackagingSyncResultDTO> {
     const result = await this.storageRepository.syncPackagedPackages(
       data.packageIds,
+      data.operation,
       data.targetWarehouseId
     );
 

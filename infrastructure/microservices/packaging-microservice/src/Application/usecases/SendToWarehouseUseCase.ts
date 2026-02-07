@@ -13,9 +13,10 @@ export class SendToWarehouseUseCase {
   ) {}
 
   async execute(data: SendToWarehouseDTO): Promise<SendToWarehouseResultDTO> {
+    const requestedPackageIds = Array.isArray(data.packageIds) ? data.packageIds : [];
     const movedPackageIds = await this.repository.sendPackagesToWarehouse(
-      data.packageIds,
-      data.targetWarehouseId
+      data.targetWarehouseId,
+      requestedPackageIds
     );
 
     if (movedPackageIds.length > 0) {
@@ -26,7 +27,7 @@ export class SendToWarehouseUseCase {
     }
 
     const movedPackages = movedPackageIds.length;
-    const requestedPackages = data.packageIds.length;
+    const requestedPackages = requestedPackageIds.length > 0 ? requestedPackageIds.length : 1;
     const missingPackages = Math.max(0, requestedPackages - movedPackages);
     const level = missingPackages === 0 ? LogLevel.INFO : LogLevel.WARNING;
 
@@ -36,6 +37,7 @@ export class SendToWarehouseUseCase {
       {
         additionalData: {
           targetWarehouseId: data.targetWarehouseId,
+          requestMode: requestedPackageIds.length > 0 ? "manual" : "first-available",
           requestedPackages,
           movedPackages,
           missingPackages,

@@ -31,10 +31,34 @@ export class GatewayController {
       this.getAllUsers.bind(this)
     );
     this.router.get(
+      "/users/search",
+      authenticate,
+      authorize(UserRole.ADMIN),
+      this.searchUsers.bind(this)
+    );
+    this.router.get(
       "/users/:id",
       authenticate,
       authorize(UserRole.ADMIN),
       this.getUserById.bind(this)
+    );
+    this.router.post(
+      "/users",
+      authenticate,
+      authorize(UserRole.ADMIN),
+      this.createUser.bind(this)
+    );
+    this.router.put(
+      "/users/:id",
+      authenticate,
+      authorize(UserRole.ADMIN),
+      this.updateUser.bind(this)
+    );
+    this.router.delete(
+      "/users/:id",
+      authenticate,
+      authorize(UserRole.ADMIN),
+      this.deleteUser.bind(this)
     );
 
     // Production microservice routes (Seller, Sales Manager)
@@ -113,11 +137,11 @@ export class GatewayController {
       this.proxyToPerformanceAnalysis.bind(this)
     );
 
-    // Audit microservice - log search (Admin only)
+    // Audit microservice - constrained log search (needed for production diary view)
     this.router.get(
       "/audit/logs/search",
       authenticate,
-      authorize(UserRole.ADMIN),
+      authorize(UserRole.ADMIN, UserRole.SELLER, UserRole.SALES_MANAGER),
       this.proxyToAudit.bind(this)
     );
 
@@ -177,6 +201,17 @@ export class GatewayController {
     }
   }
 
+  private async searchUsers(req: Request, res: Response): Promise<void> {
+    try {
+      const users = await this.gatewayService.searchUsers(
+        req.query as Record<string, unknown>
+      );
+      res.status(200).json(users);
+    } catch (error) {
+      res.status(500).json({ message: (error as Error).message });
+    }
+  }
+
   private async getUserById(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params.id, 10);
@@ -184,6 +219,37 @@ export class GatewayController {
       res.status(200).json(user);
     } catch (error) {
       res.status(404).json({ message: (error as Error).message });
+    }
+  }
+
+  private async createUser(req: Request, res: Response): Promise<void> {
+    try {
+      const data: RegistrationUserDTO = req.body;
+      const user = await this.gatewayService.createUser(data);
+      res.status(201).json({ success: true, data: user });
+    } catch (error) {
+      res.status(400).json({ success: false, message: (error as Error).message });
+    }
+  }
+
+  private async updateUser(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const data: Partial<RegistrationUserDTO> = req.body;
+      const user = await this.gatewayService.updateUser(id, data);
+      res.status(200).json({ success: true, data: user });
+    } catch (error) {
+      res.status(400).json({ success: false, message: (error as Error).message });
+    }
+  }
+
+  private async deleteUser(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id, 10);
+      await this.gatewayService.deleteUser(id);
+      res.status(200).json({ success: true, message: "User deleted successfully" });
+    } catch (error) {
+      res.status(404).json({ success: false, message: (error as Error).message });
     }
   }
 

@@ -54,7 +54,6 @@ export class ProcessingRepository implements IProcessingRepository {
       }
 
       const usedPlantIds = harvestedPlantIds.slice(0, requiredPlantCount);
-      const currentYear = new Date().getFullYear();
       const serialStart = await this.resolveSerialStart(queryRunner);
 
       const perfumesToCreate: PerfumeEntity[] = [];
@@ -69,7 +68,7 @@ export class ProcessingRepository implements IProcessingRepository {
           name: perfumeData.perfumeName.trim(),
           type: perfumeData.perfumeType,
           netVolumeMl: perfumeData.bottleVolumeMl,
-          serialNumber: this.buildSerialNumber(currentYear, serialStart + bottleIndex),
+          serialNumber: this.buildSerialNumber(serialStart + bottleIndex),
           plantId: plantForBottle,
           expiryDate: this.resolveExpiryDate(),
           isPackaged: false,
@@ -244,8 +243,8 @@ export class ProcessingRepository implements IProcessingRepository {
     return Number.isFinite(maxId) ? maxId + 1 : 1;
   }
 
-  private buildSerialNumber(year: number, index: number): string {
-    return `PP-${year}-${String(index).padStart(3, "0")}`;
+  private buildSerialNumber(index: number): string {
+    return `PP-2025-${index}`;
   }
 
   private resolveExpiryDate(): string {

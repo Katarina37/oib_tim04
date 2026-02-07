@@ -35,8 +35,8 @@ export function validateRegistrationData(data: RegistrationUserDTO): ValidationR
     return { success: false, message: "Last name cannot exceed 100 characters" };
   }
 
-  if (data.profileImage && !isValidImage(data.profileImage)) {
-    return { success: false, message: "Profile image must be a valid URL or base64 string" };
+  if (data.profileImage && !isValidBase64Image(data.profileImage)) {
+    return { success: false, message: "Profile image must be a valid base64 string" };
   }
 
   return { success: true };
@@ -47,12 +47,18 @@ function isValidEmail(email: string): boolean {
   return emailRegex.test(email);
 }
 
-function isValidImage(str: string): boolean {
-  if (!str || str.length === 0) return true;
+function isValidBase64Image(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return true;
+  }
 
-  const base64Regex = /^(data:image\/[a-zA-Z]+;base64,)?[A-Za-z0-9+/]+=*$/;
-  const urlRegex =
-    /^(https?:\/\/)([\w-]+\.)+[\w-]+(\/[\w\-./?%&=+]*)?$/i;
+  const dataUriMatch = trimmed.match(/^data:image\/[a-zA-Z0-9.+-]+;base64,(.+)$/);
+  const payload = dataUriMatch ? dataUriMatch[1] : trimmed;
 
-  return base64Regex.test(str) || urlRegex.test(str);
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(payload)) {
+    return false;
+  }
+
+  return payload.length % 4 === 0;
 }

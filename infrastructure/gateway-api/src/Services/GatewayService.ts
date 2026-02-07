@@ -42,8 +42,24 @@ export class GatewayService implements IGatewayService {
     return this.userClient.getAll();
   }
 
+  async searchUsers(criteria: Record<string, unknown>): Promise<UserDTO[]> {
+    return this.userClient.search(criteria);
+  }
+
   async getUserById(id: number): Promise<UserDTO> {
     return this.userClient.getById(id);
+  }
+
+  async createUser(data: RegistrationUserDTO): Promise<UserDTO> {
+    return this.userClient.create(data);
+  }
+
+  async updateUser(id: number, data: Partial<RegistrationUserDTO>): Promise<UserDTO> {
+    return this.userClient.update(id, data);
+  }
+
+  async deleteUser(id: number): Promise<void> {
+    await this.userClient.delete(id);
   }
 
   async proxyToProduction(request: ProxyRequest): Promise<ProxyResponse> {

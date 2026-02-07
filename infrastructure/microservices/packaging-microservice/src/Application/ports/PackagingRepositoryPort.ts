@@ -10,7 +10,7 @@ export interface CreatePackagesOptions {
 export interface PackagingRepositoryPort {
   countAvailablePackages(): Promise<number>;
   createPackagesFromPerfumes(perfumeIds: number[], options: CreatePackagesOptions): Promise<number[]>;
-  sendPackagesToWarehouse(packageIds: number[], targetWarehouseId: number): Promise<number[]>;
+  sendPackagesToWarehouse(targetWarehouseId: number, packageIds?: number[]): Promise<number[]>;
   getWarehouses(): Promise<WarehouseSummaryDTO[]>;
   getPackages(): Promise<PackageSummaryDTO[]>;
 }

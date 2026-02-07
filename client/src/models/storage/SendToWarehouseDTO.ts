@@ -1,4 +1,4 @@
 export interface SendToWarehouseDTO {
-    packageIds: number[];
+    packageIds?: number[];
     targetWarehouseId: number;
 }

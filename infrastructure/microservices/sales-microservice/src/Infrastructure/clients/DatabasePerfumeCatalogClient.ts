@@ -32,6 +32,11 @@ type LatestPriceRow = {
     price: string | number;
 };
 
+type PerfumeStockRow = {
+    perfumeId: number;
+    stock: string | number;
+};
+
 const SALES_MANAGER_ROLE = "sales_manager";
 
 export class DatabasePerfumeCatalogClient implements IPerfumeCatalogClient {
@@ -54,12 +59,21 @@ export class DatabasePerfumeCatalogClient implements IPerfumeCatalogClient {
     }
 
     async getAvailablePerfumes(userContext?: UserContext): Promise<PerfumeDTO[]> {
-        const [catalogRows, availablePackages] = await Promise.all([
+        const [catalogRows, stockByPerfume, roleInventoryLimit] = await Promise.all([
             this.fetchCatalogRows(),
-            this.getAvailablePackages(userContext),
+            this.fetchAvailablePerfumeStocks(),
+            this.getRoleInventoryLimit(userContext),
         ]);
 
-        return catalogRows.map((row) => this.toPerfumeDTO(row, availablePackages));
+        return catalogRows.map((row) => {
+            const perfumeSpecificStock = stockByPerfume.get(Number(row.id)) ?? 0;
+            const stock =
+                roleInventoryLimit === null
+                    ? perfumeSpecificStock
+                    : Math.min(perfumeSpecificStock, roleInventoryLimit);
+
+            return this.toPerfumeDTO(row, stock);
+        });
     }
 
     private async fetchCatalogRows(): Promise<PerfumeCatalogRow[]> {
@@ -129,7 +143,26 @@ export class DatabasePerfumeCatalogClient implements IPerfumeCatalogClient {
         return rows as LatestPriceRow[];
     }
 
-    private async getAvailablePackages(userContext?: UserContext): Promise<number> {
+    private async fetchAvailablePerfumeStocks(): Promise<Map<number, number>> {
+        const rows = await this.dataSource.query(
+            `
+            SELECT
+                ap.parfem_id AS perfumeId,
+                COUNT(*) AS stock
+            FROM skladista.ambalaza_parfem ap
+            INNER JOIN skladista.ambalaza a ON a.id = ap.ambalaza_id
+            WHERE a.status = 'spakovana'
+            GROUP BY ap.parfem_id
+            `
+        );
+
+        const mappedRows = rows as PerfumeStockRow[];
+        return new Map<number, number>(
+            mappedRows.map((row) => [Number(row.perfumeId), Number(row.stock)])
+        );
+    }
+
+    private async getRoleInventoryLimit(userContext?: UserContext): Promise<number | null> {
         try {
             const inventory = await this.storageClient.getInventory(userContext);
             const role = userContext?.role?.toLowerCase();
@@ -145,11 +178,11 @@ export class DatabasePerfumeCatalogClient implements IPerfumeCatalogClient {
 
             return Math.floor(quantity);
         } catch {
-            return 0;
+            return null;
         }
     }
 
-    private toPerfumeDTO(row: PerfumeCatalogRow, availablePackages: number): PerfumeDTO {
+    private toPerfumeDTO(row: PerfumeCatalogRow, stock: number): PerfumeDTO {
         const type = this.normalizeType(row.type);
         const volumeMl = this.normalizeVolume(row.volumeMl);
 
@@ -162,7 +195,7 @@ export class DatabasePerfumeCatalogClient implements IPerfumeCatalogClient {
             plantId: Number(row.plantId),
             expiryDate: this.normalizeDate(row.expiryDate),
             price: this.normalizePrice(row.price, type, volumeMl),
-            stock: availablePackages,
+            stock: Math.max(0, Math.floor(stock)),
         };
     }
 

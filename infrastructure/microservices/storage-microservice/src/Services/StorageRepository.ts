@@ -137,6 +137,7 @@ export class StorageRepository implements IStorageRepository {
 
     async syncPackagedPackages(
         packageIds: number[],
+        operation: "created" | "moved",
         targetWarehouseId?: number
     ): Promise<{ recordedPackages: number; missingPackages: number }> {
         if (!Array.isArray(packageIds) || packageIds.length === 0) {
@@ -167,7 +168,7 @@ export class StorageRepository implements IStorageRepository {
         }
 
         for (const pkg of packages) {
-            pkg.state = PackageState.AVAILABLE;
+            pkg.state = operation === "moved" ? PackageState.SENT : PackageState.AVAILABLE;
             if (warehouse) {
                 pkg.warehouse = warehouse;
             }
@@ -182,37 +183,77 @@ export class StorageRepository implements IStorageRepository {
     }
 
     async getWarehouses(): Promise<WarehouseSummaryDTO[]> {
-        const warehouses = await this.warehouseRepo
+        const rows = await this.warehouseRepo
             .createQueryBuilder("warehouse")
-            .loadRelationCountAndMap(
-                "warehouse.usedCapacity",
-                "warehouse.packages"
+            .leftJoin(
+                Package,
+                "package",
+                "package.skladiste_id = warehouse.id"
             )
-            .getMany();
+            .select("warehouse.id", "id")
+            .addSelect("warehouse.name", "name")
+            .addSelect("warehouse.address", "address")
+            .addSelect("warehouse.capacity", "capacity")
+            .addSelect("COUNT(package.id)", "usedCapacity")
+            .groupBy("warehouse.id")
+            .addGroupBy("warehouse.name")
+            .addGroupBy("warehouse.address")
+            .addGroupBy("warehouse.capacity")
+            .orderBy("warehouse.id", "ASC")
+            .getRawMany<{
+                id: number;
+                name: string;
+                address: string;
+                capacity: number;
+                usedCapacity: string;
+            }>();
 
-        return warehouses.map((w: any) => ({
-            id: w.id,
-            name: w.name,
-            address: w.address,
-            capacity: w.capacity,
-            usedCapacity: w.usedCapacity ?? 0,
+        return rows.map((row) => ({
+            id: Number(row.id),
+            name: row.name,
+            address: row.address,
+            capacity: Number(row.capacity),
+            usedCapacity: Number.parseInt(row.usedCapacity, 10) || 0,
         }));
     }
 
     async getPackages(): Promise<PackageSummaryDTO[]> {
-        const packages = await this.packageRepo.find({
-            relations: {
-                warehouse: true,
-                perfumes: true,
-            },
-        });
+        const rows = await this.packageRepo
+            .createQueryBuilder("package")
+            .leftJoin(
+                Warehouse,
+                "warehouse",
+                "warehouse.id = package.skladiste_id"
+            )
+            .leftJoin(
+                "ambalaza_parfem",
+                "package_perfume",
+                "package_perfume.ambalaza_id = package.id"
+            )
+            .select("package.id", "id")
+            .addSelect("package.sender", "sender")
+            .addSelect("package.state", "status")
+            .addSelect("warehouse.name", "warehouseName")
+            .addSelect("COUNT(package_perfume.parfem_id)", "perfumeCount")
+            .groupBy("package.id")
+            .addGroupBy("package.sender")
+            .addGroupBy("package.state")
+            .addGroupBy("warehouse.name")
+            .orderBy("package.id", "ASC")
+            .getRawMany<{
+                id: number;
+                sender: string;
+                status: PackageState;
+                warehouseName: string | null;
+                perfumeCount: string;
+            }>();
 
-        return packages.map((p) => ({
-            id: p.id.toString(),
-            sender: p.sender,
-            perfumeCount: p.perfumes?.length ?? 0,
-            warehouseName: p.warehouse?.name ?? "",
-            status: p.state,
+        return rows.map((row) => ({
+            id: String(row.id),
+            sender: row.sender,
+            perfumeCount: Number.parseInt(row.perfumeCount, 10) || 0,
+            warehouseName: row.warehouseName ?? "",
+            status: row.status,
         }));
     }
 

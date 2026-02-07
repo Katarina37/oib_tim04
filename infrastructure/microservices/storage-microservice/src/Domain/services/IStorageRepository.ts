@@ -11,6 +11,7 @@ export interface IStorageRepository {
     releasePackages(packageIds: number[]): Promise<number>;
     syncPackagedPackages(
         packageIds: number[],
+        operation: "created" | "moved",
         targetWarehouseId?: number
     ): Promise<{ recordedPackages: number; missingPackages: number }>;
     getWarehouses(): Promise<WarehouseSummaryDTO[]>;

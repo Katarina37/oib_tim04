@@ -26,8 +26,6 @@ const StoragePage: React.FC = () => {
         setBottleVolume,
         targetWarehouseId,
         setTargetWarehouseId,
-        packageIdsInput,
-        setPackageIdsInput,
         packageStats,
         loadData,
         packagePerfumes,
@@ -203,24 +201,13 @@ const StoragePage: React.FC = () => {
                         <div className="storage-toolbar__section">
                             <p className="storage-toolbar__title">Posalji u skladiste</p>
                             <div className="storage-toolbar__row storage-toolbar__row--warehouse">
-                                <div className="input-group">
-                                    <label className="input-group__label">ID paketa za prijem</label>
-                                    <input
-                                        className="input"
-                                        type="text"
-                                        placeholder="npr. 1, 2, 3"
-                                        value={packageIdsInput}
-                                        onChange={(event) => setPackageIdsInput(event.target.value)}
-                                    />
-                                </div>
-
                                 <button
                                     className="btn btn--secondary storage-toolbar__action"
                                     onClick={() => void sendToWarehouse()}
                                     disabled={hasPendingActions || !hasWarehouses}
                                 >
                                     <Warehouse size={16} />
-                                    {isMovingToWarehouse ? "Prijem..." : "Posalji u skladiste"}
+                                    {isMovingToWarehouse ? "Slanje..." : "Posalji prvu dostupnu u skladiste"}
                                 </button>
                             </div>
                         </div>

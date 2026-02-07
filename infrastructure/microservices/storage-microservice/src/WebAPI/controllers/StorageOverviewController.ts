@@ -84,8 +84,10 @@ export class StorageOverviewController {
         const { userId, role, rawUserId } = this.resolveUserContext(req);
 
         try {
-            const warehouses = await this.overviewService.getWarehouses();
-            const packages = await this.overviewService.getPackages();
+            const [warehouses, packages] = await Promise.all([
+                this.overviewService.getWarehouses(),
+                this.overviewService.getPackages(),
+            ]);
 
             await this.logger.log(
                 "Uspesno preuzet pregled skladista i ambalaza",
@@ -104,8 +106,10 @@ export class StorageOverviewController {
 
             res.status(200).json({ warehouses, packages });
         } catch (error) {
+            const message =
+                error instanceof Error ? error.message : "Nepoznata greska";
             await this.logger.log(
-                `Greska pri preuzimanju pregleda skladista: ${(error as Error).message}`,
+                `Greska pri preuzimanju pregleda skladista: ${message}`,
                 LogLevel.ERROR,
                 {
                     ipAddress: clientIp,
@@ -113,7 +117,7 @@ export class StorageOverviewController {
                     additionalData: { role, rawUserId },
                 }
             );
-            res.status(500).json({ success: false, message: "Internal Server Error", error: error });
+            res.status(500).json({ success: false, message: "Internal Server Error" });
         }
     }
 }

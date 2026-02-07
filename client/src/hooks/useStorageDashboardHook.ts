@@ -37,19 +37,6 @@ const parsePositiveInteger = (value: string): number | null => {
     return quantity;
 };
 
-const parsePackageIds = (raw: string): number[] => {
-    const unique = new Set<number>();
-
-    for (const token of raw.split(",")) {
-        const value = Number(token.trim());
-        if (Number.isInteger(value) && value > 0) {
-            unique.add(value);
-        }
-    }
-
-    return [...unique];
-};
-
 export const useStorageDashboard = () => {
     const { token } = useAuth();
     const { storageAPI } = useServices();
@@ -68,7 +55,6 @@ export const useStorageDashboard = () => {
     const [perfumeType, setPerfumeType] = useState<"" | StoragePerfumeType>("");
     const [bottleVolume, setBottleVolume] = useState<"" | "150" | "250">("");
     const [targetWarehouseId, setTargetWarehouseId] = useState("");
-    const [packageIdsInput, setPackageIdsInput] = useState("");
 
     const loadData = useCallback(
         async (showLoader = true): Promise<void> => {
@@ -178,10 +164,6 @@ export const useStorageDashboard = () => {
                     : `Spakovano je ${result.packagedQuantity}/${result.requestedQuantity} parfema.`,
             });
 
-            if (result.packageIds.length > 0) {
-                setPackageIdsInput(result.packageIds.join(", "));
-            }
-
             await loadData(false);
         } catch (err: unknown) {
             setActionMessage({
@@ -217,15 +199,6 @@ export const useStorageDashboard = () => {
             return;
         }
 
-        const packageIds = parsePackageIds(packageIdsInput);
-        if (packageIds.length === 0) {
-            setActionMessage({
-                type: "error",
-                text: "Unesite barem jedan validan ID paketa.",
-            });
-            return;
-        }
-
         setIsMovingToWarehouse(true);
         setActionMessage(null);
         setError(null);
@@ -233,21 +206,18 @@ export const useStorageDashboard = () => {
         try {
             const result = await storageAPI.sendToWarehouse(
                 {
-                    packageIds,
                     targetWarehouseId: parsedWarehouseId,
                 },
                 token
             );
 
-            const isComplete = result.movedPackages === result.requestedPackages;
+            const isComplete = result.movedPackages > 0;
             setActionMessage({
                 type: isComplete ? "success" : "warning",
                 text: isComplete
-                    ? `Uspesno je prebaceno ${result.movedPackages} paketa u skladiste.`
-                    : `Prebaceno je ${result.movedPackages}/${result.requestedPackages} paketa.`,
+                    ? `Uspesno je poslata prva dostupna ambalaza u skladiste (ID: ${result.movedPackageIds[0]}).`
+                    : "Nema dostupnih spakovanih ambalaza za slanje u skladiste.",
             });
-
-            setPackageIdsInput(result.movedPackageIds.join(", "));
             await loadData(false);
         } catch (err: unknown) {
             setActionMessage({
@@ -257,7 +227,7 @@ export const useStorageDashboard = () => {
         } finally {
             setIsMovingToWarehouse(false);
         }
-    }, [loadData, packageIdsInput, storageAPI, targetWarehouseId, token]);
+    }, [loadData, storageAPI, targetWarehouseId, token]);
 
     const sendPackages = useCallback(async (): Promise<void> => {
         if (!token) {
@@ -325,8 +295,6 @@ export const useStorageDashboard = () => {
         setBottleVolume,
         targetWarehouseId,
         setTargetWarehouseId,
-        packageIdsInput,
-        setPackageIdsInput,
         packageStats,
         loadData,
         packagePerfumes,
