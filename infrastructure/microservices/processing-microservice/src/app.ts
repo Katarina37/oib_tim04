@@ -11,6 +11,7 @@ import { IProductionClient } from "./Domain/services/IProductionClient";
 import { AxiosProductionClient } from "./Infrastructure/clients/AxiosProductionClient";
 import { CorsConfig } from "./WebAPI/middleware/CorsConfig";
 import { GatewayAuthMiddleware } from "./WebAPI/middleware/GatewayAuthMiddleware";
+import { InternalServiceOnlyMiddleware } from "./WebAPI/middleware/InternalServiceOnlyMiddleware";
 import { RequestAuditMiddleware } from "./WebAPI/middleware/RequestAuditMiddleware";
 import { getOptionalEnv, requireEnv } from "./config/env";
 import { AppDataSource } from "./Database/DbConnectionPool";
@@ -78,6 +79,11 @@ export function createApp(): Application {
 
   const apiRouter = express.Router();
   apiRouter.use(gatewayAuthMiddleware.getHandler());
+  const internalServiceOnlyMiddleware = new InternalServiceOnlyMiddleware();
+  apiRouter.use(
+    "/processing/request-perfumes",
+    internalServiceOnlyMiddleware.getHandler()
+  );
 
   if (process.env.ENABLE_REQUEST_AUDIT_LOGS === "true") {
     const requestAuditMiddleware = new RequestAuditMiddleware(loggerService);

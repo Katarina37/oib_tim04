@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
 import {
   FlaskConical,
-  PackageSearch,
   RefreshCw,
   Beaker,
   Package,
@@ -14,13 +13,11 @@ import { useServices } from "../contexts/ServiceContext";
 import StatsCard from "../components/production/StatsCard";
 import {
   BottleVolume,
-  PerfumeBatchDTO,
   PerfumeDTO,
   PerfumeSearchCriteriaDTO,
   PerfumeType,
   ProcessingStatsDTO,
   ProcessingSummaryDTO,
-  RequestPerfumesDTO,
   StartProcessingDTO,
 } from "../models/processing/ProcessingDTO";
 
@@ -34,13 +31,6 @@ const initialStartForm: StartProcessingDTO = {
   perfumeType: PerfumeType.PERFUME,
   bottleQuantity: 1,
   bottleVolumeMl: BottleVolume.ML_150,
-};
-
-const initialRequestForm: RequestPerfumesDTO = {
-  quantity: 1,
-  perfumeType: undefined,
-  perfumeName: "",
-  bottleVolumeMl: undefined,
 };
 
 const initialFilters: PerfumeSearchCriteriaDTO = {
@@ -88,17 +78,14 @@ const ProcessingPage: React.FC = () => {
   const [stats, setStats] = useState<ProcessingStatsDTO | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isRequesting, setIsRequesting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<ActionMessage | null>(null);
 
   const [startForm, setStartForm] = useState<StartProcessingDTO>(initialStartForm);
-  const [requestForm, setRequestForm] = useState<RequestPerfumesDTO>(initialRequestForm);
   const [activeFilters, setActiveFilters] = useState<PerfumeSearchCriteriaDTO>(initialFilters);
   const [draftFilters, setDraftFilters] = useState<PerfumeSearchCriteriaDTO>(initialFilters);
 
   const [lastProcessingResult, setLastProcessingResult] = useState<ProcessingSummaryDTO | null>(null);
-  const [lastRequestedBatch, setLastRequestedBatch] = useState<PerfumeBatchDTO | null>(null);
 
   const loadData = useCallback(
     async (criteria: PerfumeSearchCriteriaDTO): Promise<void> => {
@@ -164,45 +151,6 @@ const ProcessingPage: React.FC = () => {
     }
   };
 
-  const handleRequestPerfumes = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!token) {
-      return;
-    }
-
-    setIsRequesting(true);
-    setActionMessage(null);
-    setError(null);
-
-    try {
-      const payload: RequestPerfumesDTO = {
-        quantity: requestForm.quantity,
-        perfumeType: requestForm.perfumeType,
-        perfumeName: requestForm.perfumeName?.trim() || undefined,
-        bottleVolumeMl: requestForm.bottleVolumeMl,
-      };
-
-      const result = await processingAPI.requestPerfumes(payload, token);
-      setLastRequestedBatch(result);
-      setActionMessage({
-        type: result.returnedQuantity < result.requestedQuantity ? "warning" : "success",
-        text:
-          result.returnedQuantity < result.requestedQuantity
-            ? `Preuzeto ${result.returnedQuantity}/${result.requestedQuantity} parfema (trenutno dostupno manje od trazenog).`
-            : `Preuzeto ${result.returnedQuantity} parfema za pakovanje.`,
-      });
-
-      await loadData(activeFilters);
-    } catch (requestError) {
-      const message =
-        parseApiErrorMessage(requestError) ??
-        "Neuspesno preuzimanje parfema za pakovanje.";
-      setActionMessage({ type: "error", text: message });
-    } finally {
-      setIsRequesting(false);
-    }
-  };
-
   const displayedStats = useMemo(
     () => ({
       totalPerfumes: stats?.totalPerfumes ?? 0,
@@ -225,7 +173,7 @@ const ProcessingPage: React.FC = () => {
         <button
           className="btn btn--secondary"
           onClick={() => void loadData(activeFilters)}
-          disabled={isLoading || isProcessing || isRequesting}
+          disabled={isLoading || isProcessing}
         >
           <RefreshCw size={16} className={isLoading ? "icon-spin" : ""} />
           {isLoading ? "Osvezavanje..." : "Osvezi"}
@@ -447,7 +395,7 @@ const ProcessingPage: React.FC = () => {
 
               <div className="processing-form__row">
                 <div className="input-group">
-                  <label className="input-group__label">Broj bocica</label>
+                  <label className="input-group__label">Broj bočica</label>
                   <input
                     className="input"
                     type="number"
@@ -500,111 +448,18 @@ const ProcessingPage: React.FC = () => {
           <div className="card">
             <div className="card__header">
               <h2 className="card__title">
-                <PackageSearch size={20} className="card__title-icon" />
-                Preuzmi za pakovanje
+                <PackageCheck size={20} className="card__title-icon" />
+                Tok pakovanja
               </h2>
             </div>
-            <form className="card__body processing-form" onSubmit={handleRequestPerfumes}>
-              <div className="input-group">
-                <label className="input-group__label">Kolicina</label>
-                <input
-                  className="input"
-                  type="number"
-                  min={1}
-                  step={1}
-                  value={requestForm.quantity}
-                  onChange={(event) =>
-                    setRequestForm((prev) => ({
-                      ...prev,
-                      quantity: Number(event.target.value) || 0,
-                    }))
-                  }
-                  required
-                />
-              </div>
-
-              <div className="input-group">
-                <label className="input-group__label">Tip (opciono)</label>
-                <select
-                  className="input select"
-                  value={requestForm.perfumeType ?? ""}
-                  onChange={(event) =>
-                    setRequestForm((prev) => ({
-                      ...prev,
-                      perfumeType: event.target.value
-                        ? (event.target.value as PerfumeType)
-                        : undefined,
-                    }))
-                  }
-                >
-                  <option value="">Svi tipovi</option>
-                  <option value={PerfumeType.PERFUME}>Parfem</option>
-                  <option value={PerfumeType.COLOGNE_WATER}>Kolonjska voda</option>
-                </select>
-              </div>
-
-              <div className="processing-form__row">
-                <div className="input-group">
-                  <label className="input-group__label">Naziv (opciono)</label>
-                  <input
-                    className="input"
-                    value={requestForm.perfumeName ?? ""}
-                    onChange={(event) =>
-                      setRequestForm((prev) => ({
-                        ...prev,
-                        perfumeName: event.target.value,
-                      }))
-                    }
-                    placeholder="Deo naziva parfema"
-                  />
-                </div>
-
-                <div className="input-group">
-                  <label className="input-group__label">Zapremina (opciono)</label>
-                  <select
-                    className="input select"
-                    value={requestForm.bottleVolumeMl ?? ""}
-                    onChange={(event) =>
-                      setRequestForm((prev) => ({
-                        ...prev,
-                        bottleVolumeMl: event.target.value
-                          ? (Number(event.target.value) as BottleVolume)
-                          : undefined,
-                      }))
-                    }
-                  >
-                    <option value="">Sve</option>
-                    <option value={BottleVolume.ML_150}>150 ml</option>
-                    <option value={BottleVolume.ML_250}>250 ml</option>
-                  </select>
-                </div>
-              </div>
-
-              <button className="btn btn--secondary" type="submit" disabled={isRequesting}>
-                {isRequesting ? "Preuzimanje..." : "Preuzmi parfeme"}
-              </button>
-            </form>
-
-            <div className="card__footer">
-              {!lastRequestedBatch ? (
-                <span className="text-muted" style={{ fontSize: "var(--font-size-sm)" }}>
-                  Nema poslednjeg zahteva za pakovanje.
-                </span>
-              ) : (
-                <div className="processing-batch">
-                  <span className="text-muted" style={{ fontSize: "var(--font-size-sm)" }}>
-                    Poslednji zahtev: {lastRequestedBatch.returnedQuantity}/
-                    {lastRequestedBatch.requestedQuantity} parfema
-                  </span>
-                  <div className="processing-batch__list">
-                    {lastRequestedBatch.perfumes.slice(0, 6).map((perfume) => (
-                      <span key={perfume.id} className="badge badge--info">
-                        {perfume.serialNumber}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+            <div className="card__body">
+              <p className="text-muted">
+                Preuzimanje parfema za ambalazu vodi se iskljucivo kroz mikroservis pakovanja.
+              </p>
+              <p className="text-muted mt-sm">
+                Za sledeci korak koristi stranu <strong>Skladistenje</strong> i akcije{" "}
+                <strong>Spakuj artikle</strong> i <strong>Posalji prvu dostupnu u skladiste</strong>.
+              </p>
             </div>
           </div>
         </div>

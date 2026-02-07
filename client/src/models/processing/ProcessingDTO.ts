@@ -28,19 +28,6 @@ export interface StartProcessingDTO {
   bottleVolumeMl: BottleVolume;
 }
 
-export interface RequestPerfumesDTO {
-  quantity: number;
-  perfumeType?: PerfumeType;
-  perfumeName?: string;
-  bottleVolumeMl?: BottleVolume;
-}
-
-export interface PerfumeBatchDTO {
-  requestedQuantity: number;
-  returnedQuantity: number;
-  perfumes: PerfumeDTO[];
-}
-
 export interface ProcessingSummaryDTO {
   requiredPlants: number;
   requestedBottleQuantity: number;

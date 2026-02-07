@@ -81,14 +81,15 @@ export function createApp(): Application {
     storageClient,
     loggerService
   );
-  const sendToWarehouseUseCase = new SendToWarehouseUseCase(
-    packagingRepository,
-    storageClient,
-    loggerService
-  );
   const ensureAvailablePackagesUseCase = new EnsureAvailablePackagesUseCase(
     packagingRepository,
     packagePerfumesUseCase
+  );
+  const sendToWarehouseUseCase = new SendToWarehouseUseCase(
+    packagingRepository,
+    storageClient,
+    loggerService,
+    ensureAvailablePackagesUseCase
   );
   const getAvailablePackagesUseCase = new GetAvailablePackagesUseCase(packagingRepository);
   const getPackagingOverviewUseCase = new GetPackagingOverviewUseCase(packagingRepository);

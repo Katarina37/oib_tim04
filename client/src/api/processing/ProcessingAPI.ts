@@ -1,12 +1,10 @@
 import { IHttpClient } from "../http/IHttpClient";
 import { IProcessingAPI } from "./IProcessingAPI";
 import {
-  PerfumeBatchDTO,
   PerfumeDTO,
   PerfumeSearchCriteriaDTO,
   ProcessingStatsDTO,
   ProcessingSummaryDTO,
-  RequestPerfumesDTO,
   StartProcessingDTO,
 } from "../../models/processing/ProcessingDTO";
 
@@ -52,15 +50,6 @@ export class ProcessingAPI implements IProcessingAPI {
       { headers: this.getAuthHeaders(token) }
     );
     return this.unwrapResponse<ProcessingSummaryDTO>(response);
-  }
-
-  async requestPerfumes(data: RequestPerfumesDTO, token: string): Promise<PerfumeBatchDTO> {
-    const response = await this.httpClient.post<PerfumeBatchDTO>(
-      `${this.basePath}/request-perfumes`,
-      data,
-      { headers: this.getAuthHeaders(token) }
-    );
-    return this.unwrapResponse<PerfumeBatchDTO>(response);
   }
 
   async getPerfumes(token: string, criteria?: PerfumeSearchCriteriaDTO): Promise<PerfumeDTO[]> {
