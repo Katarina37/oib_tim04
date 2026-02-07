@@ -44,14 +44,15 @@ export class AnalysisService implements IAnalysisService{
         }
     }
 
-    /*async getFiscalBills(period?: string): Promise<FiscalBill[]> {
+    async getFiscalBills(period?: string): Promise<FiscalBill[]> {
         try{
-            if(period){
+            if(period && period !== "all"){
                 return await this.analysisRepository.findFiscalBillsByPeriod(period);
             }
+
             const endDate = new Date();
             const startDate = new Date();
-            startDate.setDate(startDate.getDate() - 30);
+            startDate.setFullYear(startDate.getFullYear() - 1);
             return await this.analysisRepository.findFiscalBillsByDateRange(startDate, endDate);
 
         }catch(error){
@@ -61,42 +62,7 @@ export class AnalysisService implements IAnalysisService{
             );
             throw error;
         }
-    }*/
-    async getFiscalBills(period?: string): Promise<FiscalBill[]> {
-    try {
-        let bills: FiscalBill[];
-        
-        if (period && period !== 'all') {
-            bills = await this.analysisRepository.findFiscalBillsByPeriod(period);
-        } else {
-            const endDate = new Date();
-            const startDate = new Date();
-            startDate.setFullYear(startDate.getFullYear() - 1);
-            bills = await this.analysisRepository.findFiscalBillsByDateRange(startDate, endDate);
-        }
-
-        // Mapiramo podatke i koristimo 'as unknown as FiscalBill[]' da rešimo TS grešku
-        return bills.map(bill => ({
-            ...bill,
-            id: bill.id,
-            billNumber: bill.billNumber || (bill as any).broj_racuna,
-            // Mapiranje na engleske nazive koje tvoj Frontend (FiscalBillsTable) očekuje
-            saleType: (bill.saleType as any) === 'maloprodaja' ? 'retail' : 'wholesale',
-            paymentMethod: (bill.paymentMethod as any) === 'karticno' ? 'card' : 
-                           (bill.paymentMethod as any) === 'gotovina' ? 'cash' : 'bank_transfer',
-            totalAmount: Number(bill.totalAmount),
-            createdAt: bill.createdAt || (bill as any).datum_kreiranja,
-            soldItems: bill.soldItems || []
-        })) as unknown as FiscalBill[]; // OVO REŠAVA GREŠKU IZ TERMINALA
-
-    } catch (error) {
-        await this.logger.log(
-            `Greska pri dobavljanju fiskalnih racuna: ${(error as Error).message}`,
-            LogLevel.ERROR
-        );
-        throw error;
     }
-}
 
     async getFiscalBillById(id: number): Promise<FiscalBill> {
         const bill = await this.analysisRepository.findFiscalBillById(id);

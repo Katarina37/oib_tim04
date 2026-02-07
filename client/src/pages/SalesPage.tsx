@@ -16,11 +16,21 @@ import ShoppingCartContainer from "../components/sale/ShoppingCartContainer";
 const getErrorMessage = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
     const responsePayload = error.response?.data as
-      | { message?: string; error?: string }
+      | { message?: string; error?: string | { message?: string } }
       | undefined;
+    const flatError =
+      typeof responsePayload?.error === "string"
+        ? responsePayload.error
+        : undefined;
+    const nestedError =
+      typeof responsePayload?.error === "object"
+        ? responsePayload.error?.message
+        : undefined;
+
     return (
       responsePayload?.message ??
-      responsePayload?.error ??
+      nestedError ??
+      flatError ??
       error.message ??
       "Greska pri obradi zahteva."
     );
@@ -193,15 +203,29 @@ export const SalesPage: React.FC = () => {
     setSuccessMessage(null);
 
     try {
+      const normalizedItems = cart
+        .map((item) => ({
+          perfumeId: Number(item.perfumeId),
+          quantity: Math.max(1, Number(item.quantity) || 1),
+        }))
+        .filter(
+          (item) =>
+            Number.isInteger(item.perfumeId) &&
+            item.perfumeId > 0 &&
+            Number.isInteger(item.quantity) &&
+            item.quantity > 0
+        );
+
+      if (normalizedItems.length === 0) {
+        setError("Korpa sadrzi neispravne stavke. Osvezite stranicu i pokusajte ponovo.");
+        return;
+      }
+
       const dto: CreateSaleDTO = {
         userId: user.id,
         type: SaleType.RETAIL,
         paymentMethod,
-        items: cart.map((item) => ({
-          perfumeId: item.perfumeId,
-          productID: item.perfumeId,
-          quantity: item.quantity || 1,
-        })),
+        items: normalizedItems,
       };
 
       const result = await saleAPI.executeSale(dto, token);

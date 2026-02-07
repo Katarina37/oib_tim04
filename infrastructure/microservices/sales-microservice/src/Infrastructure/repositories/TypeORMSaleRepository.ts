@@ -51,19 +51,22 @@ export class TypeORMSaleRepository implements ISaleRepository {
     }
 
     private toEntityPartial(sale: Partial<Sale>): Partial<SaleEntity> {
+        const saleItems = sale.items ?? [];
         return {
             id: sale.id,
             billNumber: sale.billNumber,
             salesType: sale.salesType,
             paymentMethod: sale.paymentMethod,
+            soldProducts: this.toSoldProductsPayload(saleItems),
             totalAmount: sale.totalAmount,
             createdAt: sale.createdAt,
-            items: sale.items?.map((item) => this.toItemEntity(item)),
+            items: saleItems.map((item) => this.toItemEntity(item)),
         };
     }
 
     private toEntity(sale: Sale): SaleEntity {
         const entity = new SaleEntity();
+        const saleItems = sale.items ?? [];
         if (sale.id) {
             entity.id = sale.id;
         }
@@ -71,15 +74,30 @@ export class TypeORMSaleRepository implements ISaleRepository {
         entity.billNumber = sale.billNumber;
         entity.salesType = sale.salesType;
         entity.paymentMethod = sale.paymentMethod;
+        entity.soldProducts = this.toSoldProductsPayload(saleItems);
         entity.totalAmount = sale.totalAmount;
         entity.createdAt = sale.createdAt;
-        entity.items = (sale.items ?? []).map((item) => {
+        entity.items = saleItems.map((item) => {
             const itemEntity = this.toItemEntity(item);
             itemEntity.sale = entity;
             return itemEntity;
         });
 
         return entity;
+    }
+
+    private toSoldProductsPayload(items: SaleItem[]): Array<{
+        productId: number;
+        productName: string;
+        quantity: number;
+        price: number;
+    }> {
+        return items.map((item) => ({
+            productId: item.perfumeId,
+            productName: item.perfumeName,
+            quantity: item.quantity,
+            price: item.pricePerUnit,
+        }));
     }
 
     private toItemEntity(item: SaleItem): SaleItemEntity {

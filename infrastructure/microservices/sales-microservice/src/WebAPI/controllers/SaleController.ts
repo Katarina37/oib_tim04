@@ -50,6 +50,35 @@ export class SalesController {
     return { id: userId, role: role.toString() };
   }
 
+  private normalizeCreateSaleData(body: unknown, userId: number): CreateSaleDto {
+    const source =
+      body && typeof body === "object"
+        ? (body as Record<string, unknown>)
+        : {};
+
+    const rawItems = Array.isArray(source["items"]) ? source["items"] : [];
+
+    return {
+      userId,
+      type: source["type"] as CreateSaleDto["type"],
+      paymentMethod: source["paymentMethod"] as CreateSaleDto["paymentMethod"],
+      items: rawItems.map((rawItem) => {
+        const item =
+          rawItem && typeof rawItem === "object"
+            ? (rawItem as Record<string, unknown>)
+            : {};
+
+        const perfumeIdCandidate =
+          item["perfumeId"] ?? item["productId"] ?? item["productID"];
+
+        return {
+          perfumeId: Number(perfumeIdCandidate),
+          quantity: Number(item["quantity"]),
+        };
+      }),
+    };
+  }
+
   private async createSale(req: Request, res: Response): Promise<void> {
     const clientIp = this.getClientIp(req);
     const userContext = this.getUserContext(req);
@@ -59,10 +88,7 @@ export class SalesController {
       return;
     }
 
-    const data: CreateSaleDto = {
-      ...req.body,
-      userId: userContext.id,
-    };
+    const data = this.normalizeCreateSaleData(req.body, userContext.id);
 
     try {
       // 1. Logovanje početka

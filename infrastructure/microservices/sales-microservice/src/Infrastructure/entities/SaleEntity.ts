@@ -17,6 +17,14 @@ export class SaleEntity {
     @Column({ name: "nacin_placanja", type: "enum", default: PaymentMethod.CASH, enum: PaymentMethod })
     paymentMethod!: PaymentMethod;
 
+    @Column({ name: "prodati_proizvodi", type: "json" })
+    soldProducts!: Array<{
+        productId: number;
+        productName: string;
+        quantity: number;
+        price: number;
+    }>;
+
     @Column({
         name: "ukupan_iznos",
         type: "decimal",

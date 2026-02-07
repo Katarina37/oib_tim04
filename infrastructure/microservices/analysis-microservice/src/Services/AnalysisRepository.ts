@@ -7,11 +7,7 @@ import { TrendAnalysis } from "../Domain/models/TrendAnalysis";
 import { IAnalysisRepository } from "../Domain/services/IAnalysisRepository";
 import { SalesAnalysisDTO } from "../Domain/DTOs/SalesAnalysisDTO";
 import { TrendAnalysisDTO } from "../Domain/DTOs/TrendAnalysisDTO";
-<<<<<<< HEAD
 import { FiscalBillEntity } from "../Infrastructure/entities/FiscalBillEntity";
-=======
-import { diff } from "util";
->>>>>>> 17e011c06949883abad9eac932eea24ddad2a45e
 
 export class AnalysisRepository implements IAnalysisRepository{
     private fiscalBillRepo: Repository<FiscalBillEntity>;
@@ -26,84 +22,18 @@ export class AnalysisRepository implements IAnalysisRepository{
         this.trendAnalysisRepo = AppDataSource.getRepository(TrendAnalysis);
     }
 
-    /*async findFiscalBillsByPeriod(period: string): Promise<FiscalBill[]> {
-        const [year, month] = period.split('-');
-        const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
-        const endDate = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59);
+    async findFiscalBillsByPeriod(period: string): Promise<FiscalBill[]> {
+        const { startDate, endDate } = this.resolvePeriodRange(period);
 
         const bills = await this.fiscalBillRepo.find({
             where: {
                 createdAt: Between(startDate, endDate)
             },
-            order: { createdAt: "DESC"}
+            order: { createdAt: "DESC" }
         });
-<<<<<<< HEAD
+
         return bills.map((bill) => this.toDomainFiscalBill(bill));
-=======
-    }*/
-
-    async findFiscalBillsByPeriod(period: string): Promise<FiscalBill[]> {
-    const now = new Date();
-    let startDate = new Date();
-    let endDate = new Date();
-
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(23, 59, 59, 999);
-
-    switch (period) {
-        case 'today':
-            break;
-
-        case 'yesterday':
-            startDate.setDate(now.getDate() - 1);
-            endDate.setDate(now.getDate() - 1);
-            break;
-        
-        case 'this-week':
-            const day = now.getDay(); 
-            const diff = now.getDate() - day + (day === 0 ? -6 : 1); 
-    
-            startDate = new Date(now.getFullYear(), now.getMonth(), diff, 0, 0, 0);
-            endDate = new Date(now.getFullYear(), now.getMonth(), diff + 6, 23, 59, 59);
-            break;
-
-        case 'this-month':
-            startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
-            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-            break;
-
-        case 'last-month':
-            startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
-            endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-            break;
-
-        case 'this-year':
-            startDate = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
-            endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
-            break;
-
-        case 'all':
-            startDate = new Date(2000, 0, 1); 
-            endDate = new Date(2100, 11, 31); 
-            break;
-
-        default:
-            if (period.includes('-')) {
-                const [year, month] = period.split('-').map(Number);
-                startDate = new Date(year, month - 1, 1, 0, 0, 0);
-                endDate = new Date(year, month, 0, 23, 59, 59);
-            }
-            break;
->>>>>>> 17e011c06949883abad9eac932eea24ddad2a45e
     }
-
-    return this.fiscalBillRepo.find({
-        where: {
-            createdAt: Between(startDate, endDate)
-        },
-        order: { createdAt: "DESC" }
-    });
-}
 
     async findFiscalBillsByDateRange(startDate: Date, endDate: Date): Promise<FiscalBill[]> {
         const bills = await this.fiscalBillRepo.find({
@@ -244,9 +174,91 @@ export class AnalysisRepository implements IAnalysisRepository{
         return result; 
     }
 
+    private resolvePeriodRange(period: string): { startDate: Date; endDate: Date } {
+        const now = new Date();
+
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+
+        const todayEnd = new Date(now);
+        todayEnd.setHours(23, 59, 59, 999);
+
+        switch (period) {
+            case "today":
+                return { startDate: todayStart, endDate: todayEnd };
+
+            case "yesterday": {
+                const startDate = new Date(todayStart);
+                startDate.setDate(startDate.getDate() - 1);
+
+                const endDate = new Date(todayEnd);
+                endDate.setDate(endDate.getDate() - 1);
+
+                return { startDate, endDate };
+            }
+
+            case "this-week": {
+                const day = now.getDay();
+                const diffToMonday = day === 0 ? -6 : 1 - day;
+
+                const startDate = new Date(now);
+                startDate.setDate(now.getDate() + diffToMonday);
+                startDate.setHours(0, 0, 0, 0);
+
+                const endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 6);
+                endDate.setHours(23, 59, 59, 999);
+
+                return { startDate, endDate };
+            }
+
+            case "this-month": {
+                const startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+                const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+                return { startDate, endDate };
+            }
+
+            case "last-month": {
+                const startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
+                const endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+                return { startDate, endDate };
+            }
+
+            case "this-year": {
+                const startDate = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+                const endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+                return { startDate, endDate };
+            }
+
+            case "all":
+                return {
+                    startDate: new Date(2000, 0, 1, 0, 0, 0, 0),
+                    endDate: new Date(2100, 11, 31, 23, 59, 59, 999)
+                };
+
+            default:
+                break;
+        }
+
+        if (/^\d{4}-\d{2}$/.test(period)) {
+            const [yearRaw, monthRaw] = period.split("-");
+            const year = Number(yearRaw);
+            const month = Number(monthRaw);
+
+            if (month >= 1 && month <= 12) {
+                const startDate = new Date(year, month - 1, 1, 0, 0, 0, 0);
+                const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+                return { startDate, endDate };
+            }
+        }
+
+        return { startDate: todayStart, endDate: todayEnd };
+    }
+
     private toDomainFiscalBill(entity: FiscalBillEntity): FiscalBill {
         return {
             id: entity.id,
+            billNumber: undefined,
             saleType: entity.saleType,
             paymentMethod: entity.paymentMethod,
             soldItems: entity.soldItems,
