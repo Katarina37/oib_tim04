@@ -1,6 +1,6 @@
 export interface CreateFiscalBillDTO {
-    saleType: "retail" | "wholesale";
-    paymentMethod: "cash" | "bank_transfer" | "card";
+    saleType: "maloprodaja" | "veleprodaja";
+    paymentMethod: "gotovina" | "uplata_na_racun" | "karticno";
     soldItems: Array<{
         productId: number;
         productName: string;

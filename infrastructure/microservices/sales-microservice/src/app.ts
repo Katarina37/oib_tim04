@@ -26,10 +26,28 @@ import { ILoggerService } from "./Domain/services/ILoggerService";
 
 import { LoggerService } from "./Services/LoggerService";
 import { Db } from "./DataBase/DbConnectionPool";
+import { createProxyMiddleware } from "http-proxy-middleware/dist/factory";
 
 export async function createApp(): Promise<Application> {
   const app = express();
-
+  const analysisServiceUrl = getOptionalEnv("ANALYSIS_BASE_URL") || requireEnv("GATEWAY_ANALYSIS_URL");
+ 
+  app.use(
+      "/api/v1/data-analysis",
+      createProxyMiddleware({
+        target: analysisServiceUrl, 
+        changeOrigin: true,
+        on: {
+          proxyReq: (proxyReq, req, res) => {
+            proxyReq.setHeader('X-Gateway-Key', requireEnv("GATEWAY_API_KEY"));
+            console.log(`[Gateway] Prosleđujem zahtev: ${req.method} ${req.url}`);
+          },
+        error: (err, req, res) => {
+          console.error('[Gateway] Proxy Error:', err);
+        }
+      }
+    })
+  );
   // ===== BASIC MIDDLEWARE =====
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
@@ -74,7 +92,7 @@ export async function createApp(): Promise<Application> {
   };
 
   // ===== ANALYSIS CLIENT =====
-  const analysisServiceUrl = resolveServiceUrl("ANALYSIS_BASE_URL", "GATEWAY_ANALYSIS_URL");
+ // const analysisServiceUrl = resolveServiceUrl("ANALYSIS_BASE_URL", "GATEWAY_ANALYSIS_URL");
   const analysisClient: IAnalysisClient = new AnalysisClient(
     analysisServiceUrl,
     gatewayApiKey

@@ -15,7 +15,7 @@ export const AppDataSource = new DataSource({
   password: requireEnv("DB_PASSWORD"),
   database: requireEnv("DB_NAME"),  // "izvestaji_analize"
   ssl: { rejectUnauthorized: false },
-  synchronize: true, 
+  synchronize: false, 
   logging: false, 
   entities: [FiscalBill, SalesReport, TopProductReport, TrendAnalysis],
 });

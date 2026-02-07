@@ -38,9 +38,14 @@ export class AnalysisClient implements IAnalysisClient {
 
     async createFiscalBill(data: CreateFiscalBillDTO): Promise<{ billId: number; }> {
         const payload = {
-            ...data,
             saleType: this.mapSaleType(data.saleType),
             paymentMethod: this.mapPaymentMethod(data.paymentMethod),
+            soldItems: data.soldItems.map(item => ({
+                productId: (item as any).perfumeId || (item as any).productId, 
+                productName: (item as any).name || (item as any).productName, 
+                quantity: item.quantity,
+                price: item.price
+        }))
         };
 
         const response = await this.http.post<{
@@ -48,7 +53,7 @@ export class AnalysisClient implements IAnalysisClient {
             data?: { id?: number };
             billId?: number;
         }>(
-            "/data-analysis/fiscal-bills",
+            "data-analysis/fiscal-bills",
             payload
         );
 

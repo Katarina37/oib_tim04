@@ -8,6 +8,7 @@ import { IAnalysisRepository } from "../Domain/services/IAnalysisRepository";
 import { end } from "pdfkit";
 import { SalesAnalysisDTO } from "../Domain/DTOs/SalesAnalysisDTO";
 import { TrendAnalysisDTO } from "../Domain/DTOs/TrendAnalysisDTO";
+import { diff } from "util";
 
 export class AnalysisRepository implements IAnalysisRepository{
     private fiscalBillRepo: Repository<FiscalBill>;
@@ -22,7 +23,7 @@ export class AnalysisRepository implements IAnalysisRepository{
         this.trendAnalysisRepo = AppDataSource.getRepository(TrendAnalysis);
     }
 
-    async findFiscalBillsByPeriod(period: string): Promise<FiscalBill[]> {
+    /*async findFiscalBillsByPeriod(period: string): Promise<FiscalBill[]> {
         const [year, month] = period.split('-');
         const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
         const endDate = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59);
@@ -33,7 +34,69 @@ export class AnalysisRepository implements IAnalysisRepository{
             },
             order: { createdAt: "DESC"}
         });
+    }*/
+
+    async findFiscalBillsByPeriod(period: string): Promise<FiscalBill[]> {
+    const now = new Date();
+    let startDate = new Date();
+    let endDate = new Date();
+
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+
+    switch (period) {
+        case 'today':
+            break;
+
+        case 'yesterday':
+            startDate.setDate(now.getDate() - 1);
+            endDate.setDate(now.getDate() - 1);
+            break;
+        
+        case 'this-week':
+            const day = now.getDay(); 
+            const diff = now.getDate() - day + (day === 0 ? -6 : 1); 
+    
+            startDate = new Date(now.getFullYear(), now.getMonth(), diff, 0, 0, 0);
+            endDate = new Date(now.getFullYear(), now.getMonth(), diff + 6, 23, 59, 59);
+            break;
+
+        case 'this-month':
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+            break;
+
+        case 'last-month':
+            startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
+            endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+            break;
+
+        case 'this-year':
+            startDate = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
+            endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+            break;
+
+        case 'all':
+            startDate = new Date(2000, 0, 1); 
+            endDate = new Date(2100, 11, 31); 
+            break;
+
+        default:
+            if (period.includes('-')) {
+                const [year, month] = period.split('-').map(Number);
+                startDate = new Date(year, month - 1, 1, 0, 0, 0);
+                endDate = new Date(year, month, 0, 23, 59, 59);
+            }
+            break;
     }
+
+    return this.fiscalBillRepo.find({
+        where: {
+            createdAt: Between(startDate, endDate)
+        },
+        order: { createdAt: "DESC" }
+    });
+}
 
     async findFiscalBillsByDateRange(startDate: Date, endDate: Date): Promise<FiscalBill[]> {
         return this.fiscalBillRepo.find({

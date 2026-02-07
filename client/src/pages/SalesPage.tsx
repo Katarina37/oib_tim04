@@ -199,6 +199,7 @@ export const SalesPage: React.FC = () => {
         paymentMethod,
         items: cart.map((item) => ({
           perfumeId: item.perfumeId,
+          productID: item.perfumeId,
           quantity: item.quantity || 1,
           price: item.price,
           name: item.name,

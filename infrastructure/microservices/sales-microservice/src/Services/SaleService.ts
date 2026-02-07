@@ -351,7 +351,8 @@ export class SaleService implements ISaleService {
             throw new Error("Analitika nije vratila validan broj fiskalnog racuna.");
         }
 
-        return String(billId);
+        const year = new Date().getFullYear(); 
+        return `PP-${year}-${billId}`;
     }
 
     private async safeReleasePackages(
