@@ -19,6 +19,8 @@ import { IPerformanceAPI } from "../api/performance/IPerformanceAPI";
 import { PerformanceAPI } from "../api/performance/PerformanceAPI";
 import { ISaleAPI } from "../api/sale/ISaleAPI";
 import { SalesAPI } from "../api/sale/SaleAPI";
+import { IProcessingAPI } from "../api/processing/IProcessingAPI";
+import { ProcessingAPI } from "../api/processing/ProcessingAPI";
 
 type ServiceContextValue = {
   plantAPI: IPlantAPI;
@@ -30,6 +32,7 @@ type ServiceContextValue = {
   weatherAPI: IWeatherAPI;
   performanceAPI: IPerformanceAPI;
   saleAPI: ISaleAPI;
+  processingAPI: IProcessingAPI;
 };
 
 type ServiceProviderProps = {
@@ -57,6 +60,7 @@ export const ServiceProvider: React.FC<ServiceProviderProps> = ({ children, http
       weatherAPI: new WeatherAPI(resolvedHttpClient),
       performanceAPI: new PerformanceAPI(resolvedHttpClient),
       saleAPI: new SalesAPI(resolvedHttpClient),
+      processingAPI: new ProcessingAPI(resolvedHttpClient),
     }),
     [resolvedHttpClient]
   );

@@ -964,6 +964,70 @@ body {
 }
 
 /* ============================================
+   Processing Page
+   ============================================ */
+
+.processing-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.grid--processing {
+  grid-template-columns: minmax(0, 1fr) 400px;
+}
+
+.processing-side-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.processing-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.processing-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.processing-filters {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.processing-filters > .input:first-child {
+  grid-column: span 2;
+}
+
+.processing-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  padding: 0 var(--space-sm);
+}
+
+.processing-batch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.processing-batch__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+/* ============================================
    Search & Filter Bar
    ============================================ */
 
@@ -1554,12 +1618,28 @@ body {
   .grid--storage {
     grid-template-columns: 1fr;
   }
+
+  .grid--processing {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {
   .grid--2,
   .grid--3 {
     grid-template-columns: 1fr;
+  }
+
+  .processing-form__row {
+    grid-template-columns: 1fr;
+  }
+
+  .processing-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .processing-filters > .input:first-child {
+    grid-column: auto;
   }
 }
 

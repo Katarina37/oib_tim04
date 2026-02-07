@@ -1,55 +1,79 @@
-import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual, FindOptionsWhere } from "typeorm";
+import {
+  Between,
+  DataSource,
+  FindOptionsWhere,
+  LessThanOrEqual,
+  Like,
+  MoreThanOrEqual,
+  Repository,
+} from "typeorm";
 import { Plant } from "../Domain/models/Plant";
 import { IPlantRepository } from "../Domain/services/IPlantRepository";
 import { CreatePlantDTO } from "../Domain/DTOs/CreatePlantDTO";
 import { UpdatePlantDTO } from "../Domain/DTOs/UpdatePlantDTO";
-import { PlantSearchCriteriaDTO, PlantSortField, SortDirection } from "../Domain/DTOs/PlantSearchCriteriaDTO";
+import {
+  PlantSearchCriteriaDTO,
+  PlantSortField,
+  SortDirection,
+} from "../Domain/DTOs/PlantSearchCriteriaDTO";
 import { PlantState } from "../Domain/enums/PlantState";
-import { AppDataSource } from "../Database/DbConnectionPool";
+import { PlantEntity } from "../Infrastructure/entities/PlantEntity";
 
 export class PlantRepository implements IPlantRepository {
-  private readonly repository: Repository<Plant>;
+  private readonly repository: Repository<PlantEntity>;
 
-  constructor() {
-    this.repository = AppDataSource.getRepository(Plant);
+  constructor(dataSource: DataSource) {
+    this.repository = dataSource.getRepository(PlantEntity);
   }
 
   async findAll(criteria: PlantSearchCriteriaDTO = {}): Promise<Plant[]> {
-    return this.repository.find({
+    const rows = await this.repository.find({
       order: this.buildOrder(criteria.sortBy, criteria.sortDirection),
     });
+    return rows.map((row) => this.toDomain(row));
   }
 
   async findById(id: number): Promise<Plant | null> {
-    return this.repository.findOneBy({ id });
+    const row = await this.repository.findOneBy({ id });
+    return row ? this.toDomain(row) : null;
   }
 
-  async findByState(state: PlantState, criteria: PlantSearchCriteriaDTO = {}): Promise<Plant[]> {
-    return this.repository.find({
+  async findByState(
+    state: PlantState,
+    criteria: PlantSearchCriteriaDTO = {}
+  ): Promise<Plant[]> {
+    const rows = await this.repository.find({
       where: { state },
       order: this.buildOrder(criteria.sortBy, criteria.sortDirection),
     });
+    return rows.map((row) => this.toDomain(row));
   }
 
-  async findByCommonName(commonName: string, criteria: PlantSearchCriteriaDTO = {}): Promise<Plant[]> {
-    return this.repository.find({
+  async findByCommonName(
+    commonName: string,
+    criteria: PlantSearchCriteriaDTO = {}
+  ): Promise<Plant[]> {
+    const rows = await this.repository.find({
       where: { commonName: Like(`%${commonName}%`) },
       order: this.buildOrder(criteria.sortBy, criteria.sortDirection),
     });
+    return rows.map((row) => this.toDomain(row));
   }
 
   async findByCriteria(criteria: PlantSearchCriteriaDTO): Promise<Plant[]> {
-    const where: FindOptionsWhere<Plant> = {};
+    const where: FindOptionsWhere<PlantEntity> = {};
 
     if (criteria.searchTerm) {
       const baseWhere = this.buildBaseWhere(criteria);
-      return this.repository.find({
+      const rows = await this.repository.find({
         where: [
           { ...baseWhere, commonName: Like(`%${criteria.searchTerm}%`) },
           { ...baseWhere, latinName: Like(`%${criteria.searchTerm}%`) },
         ],
         order: this.buildOrder(criteria.sortBy, criteria.sortDirection),
       });
+
+      return rows.map((row) => this.toDomain(row));
     }
 
     if (criteria.commonName) {
@@ -76,10 +100,12 @@ export class PlantRepository implements IPlantRepository {
       where.oilStrength = LessThanOrEqual(criteria.maxOilStrength);
     }
 
-    return this.repository.find({
+    const rows = await this.repository.find({
       where,
       order: this.buildOrder(criteria.sortBy, criteria.sortDirection),
     });
+
+    return rows.map((row) => this.toDomain(row));
   }
 
   async create(data: CreatePlantDTO): Promise<Plant> {
@@ -91,23 +117,25 @@ export class PlantRepository implements IPlantRepository {
       state: PlantState.PLANTED,
     });
 
-    return this.repository.save(plant);
+    const saved = await this.repository.save(plant);
+    return this.toDomain(saved);
   }
 
   async update(id: number, data: UpdatePlantDTO): Promise<Plant> {
-    const plant = await this.findById(id);
-    
-    if (!plant) {
+    const entity = await this.repository.findOneBy({ id });
+
+    if (!entity) {
       throw new Error(`Plant with ID ${id} not found`);
     }
 
-    Object.assign(plant, data);
-    return this.repository.save(plant);
+    Object.assign(entity, data);
+    const saved = await this.repository.save(entity);
+    return this.toDomain(saved);
   }
 
   async delete(id: number): Promise<void> {
     const result = await this.repository.delete(id);
-    
+
     if (result.affected === 0) {
       throw new Error(`Plant with ID ${id} not found`);
     }
@@ -122,6 +150,19 @@ export class PlantRepository implements IPlantRepository {
     });
   }
 
+  private toDomain(entity: PlantEntity): Plant {
+    const plant = new Plant();
+    plant.id = entity.id;
+    plant.commonName = entity.commonName;
+    plant.oilStrength = Number(entity.oilStrength);
+    plant.latinName = entity.latinName;
+    plant.countryOfOrigin = entity.countryOfOrigin;
+    plant.state = entity.state;
+    plant.createdAt = entity.createdAt;
+    plant.updatedAt = entity.updatedAt;
+    return plant;
+  }
+
   private generateRandomOilStrength(): number {
     const min = 1.0;
     const max = 5.0;
@@ -134,7 +175,7 @@ export class PlantRepository implements IPlantRepository {
     sortDirection: SortDirection | undefined
   ): Record<string, "ASC" | "DESC"> {
     const direction: SortDirection = sortDirection === "ASC" ? "ASC" : "DESC";
-    const allowedFields: Record<PlantSortField, keyof Plant> = {
+    const allowedFields: Record<PlantSortField, keyof PlantEntity> = {
       createdAt: "createdAt",
       commonName: "commonName",
       latinName: "latinName",
@@ -150,8 +191,8 @@ export class PlantRepository implements IPlantRepository {
     return { createdAt: "DESC" };
   }
 
-  private buildBaseWhere(criteria: PlantSearchCriteriaDTO): FindOptionsWhere<Plant> {
-    const where: FindOptionsWhere<Plant> = {};
+  private buildBaseWhere(criteria: PlantSearchCriteriaDTO): FindOptionsWhere<PlantEntity> {
+    const where: FindOptionsWhere<PlantEntity> = {};
 
     if (criteria.countryOfOrigin) {
       where.countryOfOrigin = Like(`%${criteria.countryOfOrigin}%`);

@@ -9,7 +9,7 @@ import { ProxyRequest } from "../Domain/clients/IMicroserviceClient";
 
 export class GatewayController {
   private readonly router: Router;
-  private readonly productionAuditScope = "proizvodnja";
+  private readonly operationalAuditScopes = new Set(["proizvodnja", "prerada"]);
 
   constructor(
     private readonly gatewayService: IGatewayService,
@@ -149,9 +149,12 @@ export class GatewayController {
     }
 
     const mikroservisQuery = req.query.mikroservis;
-    const mikroservis = Array.isArray(mikroservisQuery) ? mikroservisQuery[0] : mikroservisQuery;
+    const mikroservisCandidate = Array.isArray(mikroservisQuery)
+      ? mikroservisQuery[0]
+      : mikroservisQuery;
+    const mikroservis = typeof mikroservisCandidate === "string" ? mikroservisCandidate : undefined;
 
-    if (mikroservis !== this.productionAuditScope) {
+    if (!mikroservis || !this.operationalAuditScopes.has(mikroservis)) {
       res.status(403).json({
         success: false,
         message: "Nemate ovlascenja za pristup audit zapisima ovog mikroservisa!",

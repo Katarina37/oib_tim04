@@ -1,4 +1,5 @@
 export interface IStorageService {
+    packagePerfumes(quantity: number): Promise<number>;
     sendPackages(quantity: number): Promise<number>;
     reservePackages(quantity: number): Promise<number[]>;
     sendReservedPackages(packageIds: number[]): Promise<number>;

@@ -1,3 +1,4 @@
+import axios, { AxiosInstance } from "axios";
 import { DataSource } from "typeorm";
 import { PerfumeDTO } from "../../Domain/DTOs/PerfumeDTO";
 import { PerfumeType } from "../../Domain/enums/PerfumeType";
@@ -16,13 +17,41 @@ type PerfumeCatalogRow = {
     price: string | number | null;
 };
 
+type ProcessingPerfumeResponse = {
+    id: number;
+    name: string;
+    type: string;
+    netVolumeMl: number;
+    serialNumber: string;
+    plantId: number;
+    expiryDate: string;
+};
+
+type LatestPriceRow = {
+    perfumeId: number;
+    price: string | number;
+};
+
 const SALES_MANAGER_ROLE = "sales_manager";
 
 export class DatabasePerfumeCatalogClient implements IPerfumeCatalogClient {
+    private readonly processingHttp: AxiosInstance;
+
     constructor(
         private readonly dataSource: DataSource,
-        private readonly storageClient: IStorageClient
-    ) {}
+        private readonly storageClient: IStorageClient,
+        processingBaseUrl: string,
+        gatewayKey: string
+    ) {
+        this.processingHttp = axios.create({
+            baseURL: this.normalizeApiBaseUrl(processingBaseUrl),
+            headers: {
+                "Content-Type": "application/json",
+                "X-Gateway-Key": gatewayKey,
+            },
+            timeout: 5000,
+        });
+    }
 
     async getAvailablePerfumes(userContext?: UserContext): Promise<PerfumeDTO[]> {
         const [catalogRows, availablePackages] = await Promise.all([
@@ -34,36 +63,70 @@ export class DatabasePerfumeCatalogClient implements IPerfumeCatalogClient {
     }
 
     private async fetchCatalogRows(): Promise<PerfumeCatalogRow[]> {
+        const [processingRows, latestPrices] = await Promise.all([
+            this.fetchProcessingPerfumes(),
+            this.fetchLatestPrices(),
+        ]);
+
+        const priceByPerfumeId = new Map<number, string | number>(
+            latestPrices.map((row) => [Number(row.perfumeId), row.price])
+        );
+
+        return processingRows.map((row) => ({
+            id: Number(row.id),
+            name: row.name,
+            type: row.type,
+            volumeMl: Number(row.netVolumeMl),
+            serialNumber: row.serialNumber,
+            plantId: Number(row.plantId),
+            expiryDate: row.expiryDate,
+            price: priceByPerfumeId.get(Number(row.id)) ?? null,
+        }));
+    }
+
+    private async fetchProcessingPerfumes(): Promise<ProcessingPerfumeResponse[]> {
+        const response = await this.processingHttp.get<unknown>("/processing/perfumes", {
+            params: {
+                sortBy: "createdAt",
+                sortDirection: "DESC",
+            },
+        });
+
+        const payload = response.data as unknown;
+        if (Array.isArray(payload)) {
+            return payload as ProcessingPerfumeResponse[];
+        }
+
+        if (
+            payload &&
+            typeof payload === "object" &&
+            "data" in payload &&
+            Array.isArray((payload as { data?: unknown }).data)
+        ) {
+            return (payload as { data: ProcessingPerfumeResponse[] }).data;
+        }
+
+        throw new Error("Nevalidan odgovor prerade pri preuzimanju kataloga parfema.");
+    }
+
+    private async fetchLatestPrices(): Promise<LatestPriceRow[]> {
         const rows = await this.dataSource.query(
             `
             SELECT
-                p.id AS id,
-                p.naziv AS name,
-                p.tip AS type,
-                p.neto_kolicina AS volumeMl,
-                p.serijski_broj AS serialNumber,
-                p.biljka_id AS plantId,
-                p.rok_trajanja AS expiryDate,
-                lp.price AS price
-            FROM prerada.parfem p
-            LEFT JOIN (
+                si.parfem_id AS perfumeId,
+                si.cena_po_komadu AS price
+            FROM prodaja.stavka_racuna si
+            INNER JOIN (
                 SELECT
-                    si.parfem_id AS perfumeId,
-                    si.cena_po_komadu AS price
-                FROM prodaja.stavka_racuna si
-                INNER JOIN (
-                    SELECT
-                        parfem_id,
-                        MAX(id) AS latestItemId
-                    FROM prodaja.stavka_racuna
-                    GROUP BY parfem_id
-                ) last_ids ON last_ids.latestItemId = si.id
-            ) lp ON lp.perfumeId = p.id
-            ORDER BY p.id ASC
+                    parfem_id,
+                    MAX(id) AS latestItemId
+                FROM prodaja.stavka_racuna
+                GROUP BY parfem_id
+            ) last_ids ON last_ids.latestItemId = si.id
             `
         );
 
-        return rows as PerfumeCatalogRow[];
+        return rows as LatestPriceRow[];
     }
 
     private async getAvailablePackages(userContext?: UserContext): Promise<number> {
@@ -135,8 +198,8 @@ export class DatabasePerfumeCatalogClient implements IPerfumeCatalogClient {
             typeof rawPrice === "number"
                 ? rawPrice
                 : rawPrice !== null
-                  ? Number(rawPrice)
-                  : Number.NaN;
+                    ? Number(rawPrice)
+                    : Number.NaN;
 
         if (Number.isFinite(candidate) && candidate > 0) {
             return candidate;
@@ -147,5 +210,14 @@ export class DatabasePerfumeCatalogClient implements IPerfumeCatalogClient {
         }
 
         return volumeMl === 250 ? 9500 : 8900;
+    }
+
+    private normalizeApiBaseUrl(baseURL: string): string {
+        const trimmed = baseURL.trim().replace(/\/+$/, "");
+        if (!trimmed) {
+            return trimmed;
+        }
+
+        return trimmed.endsWith("/api/v1") ? trimmed : `${trimmed}/api/v1`;
     }
 }
