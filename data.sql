@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS ambalaza (
     naziv VARCHAR(100) NOT NULL,
     adresa_posiljaoca VARCHAR(200) NOT NULL,
     skladiste_id INT NULL,                                   -- Može biti NULL dok nije poslata
-    status ENUM('spakovana', 'poslata') NOT NULL DEFAULT 'spakovana',
+    status ENUM('spakovana', 'rezervisana', 'poslata', 'raspakovana') NOT NULL DEFAULT 'spakovana',
     datum_kreiranja DATETIME DEFAULT CURRENT_TIMESTAMP,
     datum_azuriranja DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
@@ -403,3 +403,4 @@ VALUES
   ('2026-01-03', 5.0, 45, 0.0, 'COLD', 'OK', 'NONE', 'Sunčano ali hladno'),
   ('2026-01-10', 8.0, 55, 2.0, 'MODERATE', 'OK', 'LIGHT', 'Blaga kiša'),
   ('2026-01-15', 12.0, 50, 0.0, 'MODERATE', 'OK', 'NONE', 'Idealni uslovi za biljke');
+

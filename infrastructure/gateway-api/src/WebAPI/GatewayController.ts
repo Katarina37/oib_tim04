@@ -11,7 +11,10 @@ export class GatewayController {
   private readonly router: Router;
   private readonly productionAuditScope = "proizvodnja";
 
-  constructor(private readonly gatewayService: IGatewayService) {
+  constructor(
+    private readonly gatewayService: IGatewayService,
+    private readonly gatewayApiKey: string
+  ) {
     this.router = Router();
     this.initializeRoutes();
   }
@@ -110,6 +113,18 @@ export class GatewayController {
       authorize(UserRole.ADMIN, UserRole.SELLER, UserRole.SALES_MANAGER),
       this.enforceAuditLogSearchScope.bind(this),
       this.proxyToAudit.bind(this)
+    );
+
+    // Internal audit route (service-to-service, gateway key only)
+    this.router.all(
+      "/internal/audit",
+      this.requireGatewayKey.bind(this),
+      this.proxyToAuditInternal.bind(this)
+    );
+    this.router.all(
+      "/internal/audit/*path",
+      this.requireGatewayKey.bind(this),
+      this.proxyToAuditInternal.bind(this)
     );
 
     // Audit microservice routes (Admin only)
@@ -257,6 +272,24 @@ export class GatewayController {
     const proxyRequest = this.buildProxyRequest(req, "audit");
     const response = await this.gatewayService.proxyToAudit(proxyRequest);
     res.status(response.status).json(response.success ? response.data : { error: response.error });
+  }
+
+  private async proxyToAuditInternal(req: Request, res: Response): Promise<void> {
+    const proxyRequest = this.buildProxyRequest(req, "internal/audit");
+    const response = await this.gatewayService.proxyToAudit(proxyRequest);
+    res.status(response.status).json(response.success ? response.data : { error: response.error });
+  }
+
+  private requireGatewayKey(req: Request, res: Response, next: () => void): void {
+    const headerValue = req.headers["x-gateway-key"];
+    const incomingKey = Array.isArray(headerValue) ? headerValue[0] : headerValue;
+
+    if (!incomingKey || incomingKey !== this.gatewayApiKey) {
+      res.status(403).json({ success: false, message: "Nevalidan X-Gateway-Key" });
+      return;
+    }
+
+    next();
   }
 
   public getRouter(): Router {

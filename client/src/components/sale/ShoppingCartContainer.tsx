@@ -1,11 +1,13 @@
-import React from 'react';
-import { ShoppingBag, Trash2 } from 'lucide-react';
-import { SaleItemDTO } from '../../models/sales/SaleItemDTO';
-import { PaymentMethod } from '../../enums/PaymentMethod';
+import React from "react";
+import { ShoppingBag, Trash2 } from "lucide-react";
+import { SaleItemDTO } from "../../models/sales/SaleItemDTO";
+import { PaymentMethod } from "../../enums/PaymentMethod";
 
 interface ShoppingCartContainerProps {
   items: SaleItemDTO[];
   total: number;
+  totalItems: number;
+  availablePackages: number;
   paymentMethod: PaymentMethod;
   isSubmitting: boolean;
   onRemove: (index: number) => void;
@@ -13,79 +15,100 @@ interface ShoppingCartContainerProps {
   onCheckout: () => void;
 }
 
+const paymentMethodLabels: Record<PaymentMethod, string> = {
+  [PaymentMethod.CASH]: "Gotovina",
+  [PaymentMethod.CARD]: "Kartično",
+  [PaymentMethod.TRANSFER]: "Uplata na račun",
+};
+
 const ShoppingCartContainer: React.FC<ShoppingCartContainerProps> = ({
   items,
   total,
+  totalItems,
+  availablePackages,
   paymentMethod,
   isSubmitting,
   onRemove,
   onPaymentMethodChange,
   onCheckout,
 }) => {
+  const remainingCapacity = Math.max(availablePackages - totalItems, 0);
+
   return (
     <div className="card">
       <div className="card__header">
         <h2 className="card__title">
-          <ShoppingBag size={20} className="card__title-icon" /> Korpa
+          <ShoppingBag size={20} className="card__title-icon" />
+          Korpa
         </h2>
       </div>
-      <div className="card__body" style={{ padding: 0 }}>
+
+      <div className="card__body sales-cart">
         {items.length === 0 ? (
-          <div className="empty-state" style={{ padding: 'var(--space-xl)' }}>
-            <ShoppingBag size={48} className="text-muted mb-md" />
-            <p>Korpa je prazna</p>
+          <div className="empty-state sales-cart-empty">
+            <ShoppingBag size={40} className="text-muted" />
+            <p className="text-muted">Korpa je prazna.</p>
           </div>
         ) : (
-          <div className="cart-items">
-            {items.map((item, idx) => (
-              <div key={idx} className="flex justify-between items-center p-sm border-b">
+          <div className="sales-cart__items">
+            {items.map((item, index) => (
+              <div key={`${item.perfumeId}-${index}`} className="sales-cart-item">
                 <div>
-                  <div className="font-bold">{item.name}</div>
-                  <div className="text-muted text-xs">
+                  <p className="font-medium">{item.name}</p>
+                  <p className="text-muted">
                     {item.quantity} x {item.price.toLocaleString()} RSD
-                  </div>
+                  </p>
                 </div>
                 <button
-                  className="text-error hover:opacity-80"
-                  onClick={() => onRemove(idx)}
+                  className="btn btn--ghost btn--icon btn--sm"
+                  onClick={() => onRemove(index)}
                   title="Ukloni stavku"
+                  aria-label={`Ukloni ${item.name}`}
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={14} />
                 </button>
               </div>
             ))}
-            <div className="p-md mt-md bg-subtle border-t">
-              <div className="flex justify-between font-bold text-lg mb-md">
-                <span>Ukupno:</span>
-                <span>{total.toLocaleString()} RSD</span>
-              </div>
-            </div>
           </div>
         )}
 
-        <div className="p-md border-t">
-          <div className="form-group mb-md">
-            <label className="input-group__label">Način plaćanja</label>
-            <select
-              className="input select"
-              value={paymentMethod}
-              onChange={(e) => onPaymentMethodChange(e.target.value as PaymentMethod)}
-            >
-              {Object.values(PaymentMethod).map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
+        <div className="sales-cart__summary">
+          <div className="sales-cart__summary-row">
+            <span>Ukupno stavki</span>
+            <strong>{totalItems}</strong>
           </div>
-          <button
-            className="btn btn--primary w-full"
-            disabled={items.length === 0 || isSubmitting}
-            onClick={onCheckout}
-          >
-            {isSubmitting ? 'Obrada...' : 'Završi prodaju'}
-          </button>
+          <div className="sales-cart__summary-row">
+            <span>Preostali paketi</span>
+            <strong>{remainingCapacity}</strong>
+          </div>
+          <div className="sales-cart__summary-row sales-cart__summary-row--total">
+            <span>Ukupan iznos</span>
+            <strong>{total.toLocaleString()} RSD</strong>
+          </div>
         </div>
+
+        <div className="input-group">
+          <label className="input-group__label">Način plaćanja</label>
+          <select
+            className="input select"
+            value={paymentMethod}
+            onChange={(event) => onPaymentMethodChange(event.target.value as PaymentMethod)}
+          >
+            {Object.values(PaymentMethod).map((method) => (
+              <option key={method} value={method}>
+                {paymentMethodLabels[method]}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <button
+          className="btn btn--primary sales-cart__checkout"
+          disabled={items.length === 0 || isSubmitting || totalItems > availablePackages}
+          onClick={onCheckout}
+        >
+          {isSubmitting ? "Obrada..." : "Završi prodaju"}
+        </button>
       </div>
     </div>
   );

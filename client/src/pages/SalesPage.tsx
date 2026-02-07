@@ -1,52 +1,157 @@
-// src/pages/SalesPage.tsx
-import React, { useState, useMemo, useEffect } from 'react';
-import { ShoppingCart as CartIcon, Wallet } from 'lucide-react';
-import { useAuth } from '../hooks/useAuthHook';
-import { useServices } from '../contexts/ServiceContext';
-import { SaleType } from '../enums/SaleType';
-import { PaymentMethod } from '../enums/PaymentMethod';
-import { CreateSaleDTO } from '../models/sales/CreateSaleDTO';
-import { SaleItemDTO } from '../models/sales/SaleItemDTO';
-import { PerfumeDTO } from '../models/sales/PerfumeDTO';
-import StatsCard from '../components/production/StatsCard';
-import PerfumeCatalogContainer from '../components/sale/PerfumeCatalogContainer';
-import ShoppingCartContainer from '../components/sale/ShoppingCartContainer';
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import { ShoppingCart as CartIcon, Wallet, PackageCheck, ReceiptText } from "lucide-react";
+import { useAuth } from "../hooks/useAuthHook";
+import { useServices } from "../contexts/ServiceContext";
+import { SaleType } from "../enums/SaleType";
+import { PaymentMethod } from "../enums/PaymentMethod";
+import { CreateSaleDTO } from "../models/sales/CreateSaleDTO";
+import { SaleItemDTO } from "../models/sales/SaleItemDTO";
+import { PerfumeDTO } from "../models/sales/PerfumeDTO";
+import { SaleResponseDTO } from "../models/sales/SaleResponseDTO";
+import StatsCard from "../components/production/StatsCard";
+import PerfumeCatalogContainer from "../components/sale/PerfumeCatalogContainer";
+import ShoppingCartContainer from "../components/sale/ShoppingCartContainer";
+
+const getErrorMessage = (error: unknown): string => {
+  if (axios.isAxiosError(error)) {
+    const responsePayload = error.response?.data as
+      | { message?: string; error?: string }
+      | undefined;
+    return (
+      responsePayload?.message ??
+      responsePayload?.error ??
+      error.message ??
+      "Greska pri obradi zahteva."
+    );
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Doslo je do neocekivane greske.";
+};
+
+const formatDateTime = (isoDate: string): string => {
+  const parsed = new Date(isoDate);
+  if (Number.isNaN(parsed.getTime())) {
+    return "-";
+  }
+
+  return parsed.toLocaleString("sr-RS", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 export const SalesPage: React.FC = () => {
   const { token, user } = useAuth();
   const { saleAPI } = useServices();
 
   const [perfumes, setPerfumes] = useState<PerfumeDTO[]>([]);
-  const [isLoadingPerfumes, setIsLoadingPerfumes] = useState(true);
+  const [salesHistory, setSalesHistory] = useState<SaleResponseDTO[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
   const [cart, setCart] = useState<SaleItemDTO[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Učitaj dostupne parfeme sa servera
+  const loadSalesData = useCallback(async () => {
+    if (!token) {
+      return;
+    }
+
+    setIsLoadingData(true);
+    setError(null);
+
+    try {
+      const [catalog, allSales] = await Promise.all([
+        saleAPI.getAvailablePerfumes(token),
+        saleAPI.getAllSales(token),
+      ]);
+
+      setPerfumes(catalog);
+      setSalesHistory(allSales);
+    } catch (requestError) {
+      setError(getErrorMessage(requestError));
+    } finally {
+      setIsLoadingData(false);
+    }
+  }, [saleAPI, token]);
+
   useEffect(() => {
-    const loadPerfumes = async () => {
-      if (!token) return;
-      try {
-        setIsLoadingPerfumes(true);
-        const data = await saleAPI.getAvailablePerfumes(token);
-        setPerfumes(data);
-      } catch (err) {
-        console.error('Greška pri učitavanju parfema:', err);
-      } finally {
-        setIsLoadingPerfumes(false);
-      }
-    };
+    void loadSalesData();
+  }, [loadSalesData]);
 
-    loadPerfumes();
-  }, [token, saleAPI]);
+  const availablePackages = useMemo(() => {
+    if (perfumes.length === 0) {
+      return 0;
+    }
 
-  const totalAmount = useMemo(() => 
-    cart.reduce((sum, item) => sum + (item.price * item.quantity), 0), 
-  [cart]);
+    return perfumes.reduce((minStock, perfume) => Math.min(minStock, perfume.stock), perfumes[0].stock);
+  }, [perfumes]);
+
+  const totalItems = useMemo(
+    () => cart.reduce((sum, item) => sum + item.quantity, 0),
+    [cart]
+  );
+
+  const totalAmount = useMemo(
+    () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [cart]
+  );
+
+  const remainingStockByPerfume = useMemo(() => {
+    const quantitiesInCart = new Map<number, number>();
+    for (const item of cart) {
+      quantitiesInCart.set(
+        item.perfumeId,
+        (quantitiesInCart.get(item.perfumeId) ?? 0) + item.quantity
+      );
+    }
+
+    return perfumes.reduce<Record<number, number>>((accumulator, perfume) => {
+      const quantityInCart = quantitiesInCart.get(perfume.id) ?? 0;
+      accumulator[perfume.id] = Math.max(perfume.stock - quantityInCart, 0);
+      return accumulator;
+    }, {});
+  }, [perfumes, cart]);
+
+  const recentSales = useMemo(() => {
+    return [...salesHistory]
+      .sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime())
+      .slice(0, 5);
+  }, [salesHistory]);
 
   const handleAddToCart = (perfume: PerfumeDTO) => {
-    setCart(prev => {
-      const existingIndex = prev.findIndex(item => item.perfumeId === perfume.id);
+    setError(null);
+    setSuccessMessage(null);
+
+    const remainingForPerfume = remainingStockByPerfume[perfume.id] ?? 0;
+    if (remainingForPerfume <= 0) {
+      setError(`Nema više dostupnih jedinica za "${perfume.name}".`);
+      return;
+    }
+
+    if (totalItems >= availablePackages) {
+      setError("Nema dovoljno dostupnih paketa za dodavanje novih stavki u korpu.");
+      return;
+    }
+
+    setCart((prev) => {
+      const currentTotalItems = prev.reduce((sum, item) => sum + item.quantity, 0);
+      if (currentTotalItems >= availablePackages) {
+        setError("Nema dovoljno dostupnih paketa za dodavanje novih stavki u korpu.");
+        return prev;
+      }
+
+      const existingIndex = prev.findIndex((item) => item.perfumeId === perfume.id);
+
       if (existingIndex === -1) {
         return [
           ...prev,
@@ -61,11 +166,12 @@ export const SalesPage: React.FC = () => {
 
       const existing = prev[existingIndex];
       if (existing.quantity >= perfume.stock) {
+        setError(`Nema više dostupnih jedinica za "${perfume.name}".`);
         return prev;
       }
 
-      return prev.map((item, idx) =>
-        idx === existingIndex
+      return prev.map((item, index) =>
+        index === existingIndex
           ? { ...item, quantity: item.quantity + 1 }
           : item
       );
@@ -73,26 +179,56 @@ export const SalesPage: React.FC = () => {
   };
 
   const handleExecuteSale = async () => {
-    if (!token || !user?.id || cart.length === 0) return;
+    if (!token || !user?.id || cart.length === 0) {
+      return;
+    }
+
+    if (totalItems > availablePackages) {
+      setError("Korpa sadrzi vise stavki od dostupnog broja paketa.");
+      return;
+    }
+
     setIsSubmitting(true);
+    setError(null);
+    setSuccessMessage(null);
+
     try {
       const dto: CreateSaleDTO = {
-    userId: user.id,
-    type: SaleType.RETAIL,
-    paymentMethod: paymentMethod, // Proveri da li se PaymentMethod enum poklapa sa bekom
-    items: cart.map(item => ({
-        perfumeId: item.perfumeId, // PAZI OVDE: mapiraj tvoj 'id' u 'perfumeId'
-        quantity: item.quantity || 1,
-        price: item.price,
-        name: item.name
-    }))
-};
+        userId: user.id,
+        type: SaleType.RETAIL,
+        paymentMethod,
+        items: cart.map((item) => ({
+          perfumeId: item.perfumeId,
+          quantity: item.quantity || 1,
+          price: item.price,
+          name: item.name,
+        })),
+      };
+
       const result = await saleAPI.executeSale(dto, token);
-      alert(`Uspešno! Račun: ${result.billNumber}`);
+      const soldQuantitiesByPerfume = cart.reduce<Record<number, number>>((accumulator, item) => {
+        accumulator[item.perfumeId] = (accumulator[item.perfumeId] ?? 0) + item.quantity;
+        return accumulator;
+      }, {});
+
+      setSuccessMessage(`Prodaja uspesno kreirana. Racun: ${result.billNumber}`);
+      setPerfumes((prev) =>
+        prev.map((perfume) => {
+          const soldQuantity = soldQuantitiesByPerfume[perfume.id] ?? 0;
+          if (soldQuantity <= 0) {
+            return perfume;
+          }
+
+          return {
+            ...perfume,
+            stock: Math.max(perfume.stock - soldQuantity, 0),
+          };
+        })
+      );
+      setSalesHistory((prev) => [result, ...prev]);
       setCart([]);
-    } catch (err) {
-      // console.error(err);
-      console.error("Detalji greške:", err instanceof Error ? err.stack : err);
+    } catch (requestError) {
+      setError(getErrorMessage(requestError));
     } finally {
       setIsSubmitting(false);
     }
@@ -102,38 +238,91 @@ export const SalesPage: React.FC = () => {
     <div className="production-page">
       <div className="page-header">
         <h1 className="page-header__title">Servis prodaje</h1>
-        <p className="page-header__subtitle">Maloprodaja i izdavanje računa</p>
+        <p className="page-header__subtitle">
+          Kreiranje fiskalnih računa i upravljanje trenutnom prodajom
+        </p>
       </div>
 
-      <div className="stats-grid" style={{ maxWidth: '800px', margin: '0 auto' }}>
-        <StatsCard icon={<CartIcon size={24} />} value={cart.length} label="Stavke u korpi" />
-        <StatsCard icon={<Wallet size={24} />} value={`${totalAmount.toLocaleString()} RSD`} label="Total" />
+      <div className="stats-grid">
+        <StatsCard
+          icon={<CartIcon size={24} />}
+          value={cart.length}
+          label="Različitih stavki u korpi"
+        />
+        <StatsCard
+          icon={<PackageCheck size={24} />}
+          value={availablePackages}
+          label="Dostupni paketi"
+        />
+        <StatsCard
+          icon={<Wallet size={24} />}
+          value={`${totalAmount.toLocaleString()} RSD`}
+          label="Vrednost korpe"
+        />
+        <StatsCard
+          icon={<ReceiptText size={24} />}
+          value={salesHistory.length}
+          label="Ukupno računa"
+        />
       </div>
 
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: '1.5fr 1fr', 
-        gap: 'var(--space-lg)', 
-        maxWidth: '1400px',
-        margin: '0 auto',
-        padding: '0 var(--space-md)'
-      }}>
+      <div className="grid grid--sales">
         <PerfumeCatalogContainer
           perfumes={perfumes}
-          isLoading={isLoadingPerfumes}
+          isLoading={isLoadingData}
+          availablePackages={availablePackages}
+          remainingStockByPerfume={remainingStockByPerfume}
           onAddToCart={handleAddToCart}
         />
 
-        <ShoppingCartContainer
-          items={cart}
-          total={totalAmount}
-          paymentMethod={paymentMethod}
-          isSubmitting={isSubmitting}
-          onRemove={(idx) => setCart(cart.filter((_, i) => i !== idx))}
-          onPaymentMethodChange={setPaymentMethod}
-          onCheckout={handleExecuteSale}
-        />
+        <div className="sales-sidebar">
+          {error && <div className="auth-form__error">{error}</div>}
+          {successMessage && <div className="auth-form__success">{successMessage}</div>}
+
+          <ShoppingCartContainer
+            items={cart}
+            total={totalAmount}
+            totalItems={totalItems}
+            availablePackages={availablePackages}
+            paymentMethod={paymentMethod}
+            isSubmitting={isSubmitting}
+            onRemove={(index) => {
+              setError(null);
+              setCart((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
+            }}
+            onPaymentMethodChange={setPaymentMethod}
+            onCheckout={handleExecuteSale}
+          />
+
+          <div className="card">
+            <div className="card__header">
+              <h2 className="card__title">
+                <ReceiptText size={20} className="card__title-icon" />
+                Poslednji računi
+              </h2>
+            </div>
+            <div className="card__body sales-history">
+              {recentSales.length === 0 ? (
+                <p className="text-muted">Nema evidentiranih prodaja.</p>
+              ) : (
+                <div className="sales-history__list">
+                  {recentSales.map((sale) => (
+                    <div key={sale.id} className="sales-history__item">
+                      <div>
+                        <p className="font-medium">{sale.billNumber}</p>
+                        <p className="text-muted">{formatDateTime(sale.createdAt)}</p>
+                      </div>
+                      <strong>{sale.totalAmount.toLocaleString()} RSD</strong>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
+
+export default SalesPage;

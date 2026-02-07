@@ -1,20 +1,26 @@
 export interface WarehouseSummaryDTO {
-    id: string;         
+    id: number;
     name: string;
     address: string;
     capacity: number;
-    usedCapacity: number;  
+    usedCapacity: number;
 }
+
+export type PackageStatus =
+    | "spakovana"
+    | "rezervisana"
+    | "poslata"
+    | "raspakovana";
 
 export interface PackageSummaryDTO {
     id: string;
     sender: string;
-    perfumeCount: number;  
-    warehouseName: string; 
-    status: "STORED" | "SENT";
+    perfumeCount: number;
+    warehouseName: string;
+    status: PackageStatus;
 }
 
 export interface AvailablePackagesDTO {
-    warehouses: WarehouseSummaryDTO[];
-    packages: PackageSummaryDTO[];
+    distributiveCenter: number;
+    warehouseCenter: number;
 }

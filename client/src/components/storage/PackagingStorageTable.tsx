@@ -1,78 +1,83 @@
 import React from "react";
-import { PackageSummaryDTO } from "../../models/storage/AvailablePackagesDTO";
+import { PackageSearch } from "lucide-react";
+import { PackageSummaryDTO, PackageStatus } from "../../models/storage/AvailablePackagesDTO";
 
 interface Props {
     packages: PackageSummaryDTO[];
 }
 
+const getStatusMeta = (status: PackageStatus): { label: string; className: string } => {
+    switch (status) {
+        case "spakovana":
+            return { label: "Spakovana", className: "badge--storage-packed" };
+        case "rezervisana":
+            return { label: "Rezervisana", className: "badge--storage-reserved" };
+        case "poslata":
+            return { label: "Poslata", className: "badge--storage-sent" };
+        case "raspakovana":
+            return { label: "Raspakovana", className: "badge--storage-unpacked" };
+        default:
+            return { label: status, className: "badge--info" };
+    }
+};
+
 const PackagingStorageTable: React.FC<Props> = ({ packages }) => {
     return (
-        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden shadow-sm mb-lg">
-            <div className="overflow-x-auto">
-                <table className="w-full table-fixed">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                        <tr>
-                            <th className="w-1/12 py-3 px-4 text-left text-sm font-semibold text-gray-900">
-                                ID
-                            </th>
-                            <th className="w-3/12 py-3 px-4 text-left text-sm font-semibold text-gray-900">
-                                Posiljalac
-                            </th>
-                            <th className="w-2/12 py-3 px-4 text-left text-sm font-semibold text-gray-900">
-                                Broj parfema
-                            </th>
-                            <th className="w-3/12 py-3 px-4 text-left text-sm font-semibold text-gray-900">
-                                Skladiste
-                            </th>
-                            <th className="w-3/12 py-3 px-4 text-left text-sm font-semibold text-gray-900">
-                                Status
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                        {packages.length > 0 ? (
-                            packages.map((r: PackageSummaryDTO) => (
-                                <tr
-                                    key={r.id}
-                                    className="hover:bg-gray-50 transition-colors"
-                                >
-                                    <td className="py-4 px-4 text-sm font-medium text-gray-900">
-                                        {r.id}
+        <div className="table-container">
+            <table className="table">
+                <thead>
+                    <tr>
+                        <th style={{ width: "70px" }}>ID</th>
+                        <th>Posiljalac</th>
+                        <th style={{ width: "130px" }}>Broj parfema</th>
+                        <th>Skladiste</th>
+                        <th style={{ width: "140px" }}>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {packages.length > 0 ? (
+                        packages.map((packaging: PackageSummaryDTO) => {
+                            const statusMeta = getStatusMeta(packaging.status);
+
+                            return (
+                                <tr key={packaging.id}>
+                                    <td>{packaging.id}</td>
+                                    <td>{packaging.sender}</td>
+                                    <td className="text-center">
+                                        <span className="font-medium">{packaging.perfumeCount}</span>
                                     </td>
-                                    <td className="py-4 px-4 text-sm text-gray-700">
-                                        {r.sender}
+                                    <td>
+                                        {packaging.warehouseName ? (
+                                            packaging.warehouseName
+                                        ) : (
+                                            <span className="text-muted">Nije dodeljeno</span>
+                                        )}
                                     </td>
-                                    <td className="py-4 px-4 text-sm text-gray-700 text-center">
-                                        {r.perfumeCount}
-                                    </td>
-                                    <td className="py-4 px-4 text-sm text-gray-700">
-                                        {r.warehouseName}
-                                    </td>
-                                    <td className="py-4 px-4 text-sm">
-                                        <span
-                                            className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${r.status === "STORED"
-                                                    ? "bg-green-50 text-green-700 border border-green-200"
-                                                    : "bg-blue-50 text-blue-700 border border-blue-200"
-                                                }`}
-                                        >
-                                            {r.status === "STORED" ? "Skladištena" : "Poslata"}
+                                    <td>
+                                        <span className={`badge ${statusMeta.className}`}>
+                                            {statusMeta.label}
                                         </span>
                                     </td>
                                 </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td
-                                    colSpan={5}
-                                    className="py-12 text-center text-gray-500"
-                                >
-                                    Nema ambalaža u skladistima
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                            );
+                        })
+                    ) : (
+                        <tr>
+                            <td colSpan={5}>
+                                <div className="empty-state">
+                                    <div className="empty-state__icon">
+                                        <PackageSearch size={56} />
+                                    </div>
+                                    <h3 className="empty-state__title">Nema ambalaza</h3>
+                                    <p className="empty-state__description">
+                                        Trenutno nema zapisa o ambalazama za prikaz.
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
         </div>
     );
 };

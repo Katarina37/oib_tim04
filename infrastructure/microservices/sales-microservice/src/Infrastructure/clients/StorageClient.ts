@@ -1,6 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import { IStorageClient } from "../../Domain/services/IStorageClient";
 import { UserContext } from "../../Domain/types/UserContext";
+import { StorageInventoryDTO } from "../../Domain/DTOs/StorageInventoryDTO";
 
 export class StorageClient implements IStorageClient {
     private readonly http: AxiosInstance;
@@ -27,35 +28,119 @@ export class StorageClient implements IStorageClient {
         };
     }
 
-    async sendPackages(quantity: number, userContext?: UserContext): Promise<number> {
-        const response = await this.http.post<{
-            success?: boolean;
-            data?: { sentPackages?: number };
-            sent?: number;
-            sentPackages?: number;
-        }>(
-            "/storage/send-package",
+    private async postQuantityAction(
+        path: string,
+        quantity: number,
+        userContext?: UserContext
+    ): Promise<any> {
+        const response = await this.http.post(
+            path,
             { quantity },
             { headers: this.buildUserHeaders(userContext) }
         );
 
+        return response.data;
+    }
+
+    private async postPackageIdsAction(
+        path: string,
+        packageIds: number[],
+        userContext?: UserContext
+    ): Promise<any> {
+        const response = await this.http.post(
+            path,
+            { packageIds },
+            { headers: this.buildUserHeaders(userContext) }
+        );
+
+        return response.data;
+    }
+
+    async reservePackages(quantity: number, userContext?: UserContext): Promise<number[]> {
+        const data = await this.postQuantityAction(
+            "/storage/reserve-package",
+            quantity,
+            userContext
+        );
+
+        const packageIds = data?.data?.packageIds ?? data?.packageIds;
+        if (!Array.isArray(packageIds)) {
+            throw new Error("Invalid reserve response from storage service");
+        }
+
+        if (packageIds.some((id) => !Number.isInteger(id) || id <= 0)) {
+            throw new Error("Invalid package IDs from storage service");
+        }
+
+        return packageIds;
+    }
+
+    async sendReservedPackages(packageIds: number[], userContext?: UserContext): Promise<number> {
+        const data = await this.postPackageIdsAction(
+            "/storage/send-reserved",
+            packageIds,
+            userContext
+        );
+
         const sentPackages =
-            response.data?.data?.sentPackages ??
-            response.data?.sentPackages ??
-            response.data?.sent;
+            data?.data?.sentPackages ??
+            data?.sentPackages;
 
         if (typeof sentPackages !== "number") {
-            throw new Error("Invalid response from storage service");
+            throw new Error("Invalid send response from storage service");
         }
 
         return sentPackages;
     }
 
-    async getInventory(userContext?: UserContext): Promise<any> {
-        // Gađamo tvoju novu rutu u Storage mikroservisu
+    async unpackPackages(packageIds: number[], userContext?: UserContext): Promise<number> {
+        const data = await this.postPackageIdsAction(
+            "/storage/unpack-package",
+            packageIds,
+            userContext
+        );
+
+        const unpackedPackages =
+            data?.data?.unpackedPackages ??
+            data?.unpackedPackages;
+
+        if (typeof unpackedPackages !== "number") {
+            throw new Error("Invalid unpack response from storage service");
+        }
+
+        return unpackedPackages;
+    }
+
+    async releasePackages(packageIds: number[], userContext?: UserContext): Promise<number> {
+        const data = await this.postPackageIdsAction(
+            "/storage/release-package",
+            packageIds,
+            userContext
+        );
+
+        const releasedPackages =
+            data?.data?.releasedPackages ??
+            data?.releasedPackages;
+
+        if (typeof releasedPackages !== "number") {
+            throw new Error("Invalid release response from storage service");
+        }
+
+        return releasedPackages;
+    }
+
+    async getInventory(userContext?: UserContext): Promise<StorageInventoryDTO> {
         const response = await this.http.get("/storage/available", {
             headers: this.buildUserHeaders(userContext),
         });
-        return response.data; // Vraća { distributiveCenter, warehouseCenter }
+
+        const distributiveCenter = Number(response.data?.distributiveCenter);
+        const warehouseCenter = Number(response.data?.warehouseCenter);
+
+        if (!Number.isFinite(distributiveCenter) || !Number.isFinite(warehouseCenter)) {
+            throw new Error("Invalid inventory response from storage service");
+        }
+
+        return { distributiveCenter, warehouseCenter };
     }
 }

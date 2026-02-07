@@ -2,8 +2,8 @@ import "reflect-metadata";
 import { DataSource } from "typeorm";
 
 import { requireEnv, requireIntEnv } from "../config/env";
-import { SaleItem } from "../Domain/models/SaleItem";
-import { Sale } from "../Domain/models/Sale";
+import { SaleItemEntity } from "../Infrastructure/entities/SaleItemEntity";
+import { SaleEntity } from "../Infrastructure/entities/SaleEntity";
 
 export const Db = new DataSource({
   type: "mysql",
@@ -15,7 +15,7 @@ export const Db = new DataSource({
   ssl: { rejectUnauthorized: false },
   synchronize: false, // automatsko kreiranje tabela u bazi
   logging: false, // debug sql gresaka
-  entities: [Sale, SaleItem],
+  entities: [SaleEntity, SaleItemEntity],
   connectorPackage: "mysql2",
   //proveri extra
   extra: {

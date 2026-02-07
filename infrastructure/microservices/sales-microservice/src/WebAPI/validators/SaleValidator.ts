@@ -31,15 +31,9 @@ export function validateCreateSale(data: CreateSaleDto): ValidationResult {
     for (const item of data.items) {
         if (!item.perfumeId || item.perfumeId <= 0) {
             return { success: false, message: "Invalid perfume ID in items" };
-        }   
-        if (!item.name || item.name.trim().length === 0) {
-            return { success: false, message: "Item name cannot be empty" };
         }
         if (!item.quantity || item.quantity <= 0) {
             return { success: false, message: "Item quantity must be greater than zero" };
-        }
-        if (!item.price || item.price < 0) {
-            return { success: false, message: "Item price must be non-negative" };
         }
     }
     return { success: true };

@@ -20,3 +20,19 @@ export function validateSendPackageData(data: SendPackageDTO): ValidationResult 
 
     return { success: true };
 }
+
+export function validatePackageIds(packageIds: unknown): ValidationResult {
+    if (!Array.isArray(packageIds) || packageIds.length === 0) {
+        return { success: false, message: "Lista ID ambalaza je obavezna" };
+    }
+
+    const hasInvalidId = packageIds.some(
+        (id) => !Number.isInteger(id) || Number(id) <= 0
+    );
+
+    if (hasInvalidId) {
+        return { success: false, message: "Svi ID-jevi ambalaza moraju biti pozitivni celi brojevi" };
+    }
+
+    return { success: true };
+}

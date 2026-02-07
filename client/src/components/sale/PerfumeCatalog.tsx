@@ -1,40 +1,75 @@
-import React from 'react';
-import { PerfumeDTO } from '../../models/sales/PerfumeDTO';
+import React from "react";
+import { Plus, PackageSearch } from "lucide-react";
+import { PerfumeDTO, PerfumeType } from "../../models/sales/PerfumeDTO";
 
 interface PerfumeCatalogProps {
   perfumes: PerfumeDTO[];
+  remainingStockByPerfume: Record<number, number>;
   onAddToCart: (perfume: PerfumeDTO) => void;
 }
 
-const PerfumeCatalog: React.FC<PerfumeCatalogProps> = ({ perfumes, onAddToCart }) => {
+const getTypeLabel = (type: PerfumeType): { label: string; className: string } => {
+  switch (type) {
+    case PerfumeType.COLOGNE:
+      return {
+        label: "Kolonjska voda",
+        className: "badge badge--sales-cologne",
+      };
+    case PerfumeType.PERFUME:
+    default:
+      return {
+        label: "Parfem",
+        className: "badge badge--sales-perfume",
+      };
+  }
+};
+
+const PerfumeCatalog: React.FC<PerfumeCatalogProps> = ({
+  perfumes,
+  remainingStockByPerfume,
+  onAddToCart,
+}) => {
   return (
-    <div className="perfume-grid" style={{ 
-      display: 'grid', 
-      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
-      gap: 'var(--space-md)' 
-    }}>
-      {perfumes.map(perfume => (
-        <div key={perfume.id} className="card card--subtle">
-          <div className="card__body">
-            <div className="flex justify-between items-start">
+    <div className="sales-catalog-grid">
+      {perfumes.map((perfume) => {
+        const remainingStock = remainingStockByPerfume[perfume.id] ?? perfume.stock;
+        const isOutOfStock = remainingStock <= 0;
+        const typeBadge = getTypeLabel(perfume.type);
+
+        return (
+          <article
+            key={perfume.id}
+            className={`sales-product-card ${isOutOfStock ? "sales-product-card--out" : ""}`}
+          >
+            <header className="sales-product-card__header">
               <div>
                 <h4 className="font-bold">{perfume.name}</h4>
-                <p className="text-muted text-xs mt-xs">{perfume.type}</p>
+                <span className={typeBadge.className}>
+                  {typeBadge.label}
+                </span>
               </div>
+              <PackageSearch size={18} className="text-muted" />
+            </header>
+
+            <div className="sales-product-card__details">
+              <p className="sales-product-card__price">{perfume.price.toLocaleString()} RSD</p>
+              <p className="text-muted">{perfume.volumeMl} ml</p>
+              <p className={isOutOfStock ? "text-error" : "text-success"}>
+                Na stanju: {remainingStock}
+              </p>
             </div>
-            <p className="text-primary font-bold mt-sm">{perfume.price.toLocaleString()} RSD</p>
-            <p className="text-muted text-xs">{perfume.volumeMl} ml</p>
-            <p className="text-muted text-xs">Na stanju: {perfume.stock}</p>
-            <button 
-              className="btn btn--secondary btn--sm w-full mt-md"
+
+            <button
+              className="btn btn--secondary btn--sm sales-product-card__action"
               onClick={() => onAddToCart(perfume)}
-              disabled={perfume.stock === 0}
+              disabled={isOutOfStock}
             >
+              <Plus size={14} />
               Dodaj u korpu
             </button>
-          </div>
-        </div>
-      ))}
+          </article>
+        );
+      })}
     </div>
   );
 };

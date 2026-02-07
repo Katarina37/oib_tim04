@@ -138,7 +138,7 @@ const gatewayService: IGatewayService = new GatewayService(
 );
 
 // Create controller and register routes
-const gatewayController = new GatewayController(gatewayService);
+const gatewayController = new GatewayController(gatewayService, gatewayApiKey);
 
 // Health check endpoint
 app.get("/health", (_req: Request, res: Response) => {

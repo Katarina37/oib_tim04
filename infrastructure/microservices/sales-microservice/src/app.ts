@@ -15,6 +15,7 @@ import { TypeORMSaleRepository } from "./Infrastructure/repositories/TypeORMSale
 import { AxiosAuditClient } from "./Infrastructure/clients/AxiosAuditClient";
 import { AnalysisClient } from "./Infrastructure/clients/AnalysisClient";
 import { StorageClient } from "./Infrastructure/clients/StorageClient";
+import { DatabasePerfumeCatalogClient } from "./Infrastructure/clients/DatabasePerfumeCatalogClient";
 import { StaticPerfumeCatalogClient } from "./Infrastructure/clients/StaticPerfumeCatalogClient";
 
 import { IAuditClient } from "./Domain/services/IAuditClient";
@@ -24,6 +25,7 @@ import { IPerfumeCatalogClient } from "./Domain/services/IPerfumeCatalogClient";
 import { ILoggerService } from "./Domain/services/ILoggerService";
 
 import { LoggerService } from "./Services/LoggerService";
+import { Db } from "./DataBase/DbConnectionPool";
 
 export async function createApp(): Promise<Application> {
   const app = express();
@@ -52,7 +54,6 @@ export async function createApp(): Promise<Application> {
   });
 
   const auditClient: IAuditClient = new AxiosAuditClient(auditHttpClient);
-  (auditClient as any).sendLog = (auditClient as any).sendLog;
   const loggerService: ILoggerService = new LoggerService(auditClient);
  
   const normalizeApiBaseUrl = (baseURL: string): string => {
@@ -86,7 +87,11 @@ export async function createApp(): Promise<Application> {
     gatewayApiKey
   );
 
-  const perfumeCatalogClient: IPerfumeCatalogClient = new StaticPerfumeCatalogClient();
+  const perfumeCatalogClient: IPerfumeCatalogClient = new DatabasePerfumeCatalogClient(
+    Db,
+    storageClient
+  );
+  const fallbackPerfumeCatalogClient: IPerfumeCatalogClient = new StaticPerfumeCatalogClient();
 
   // ===== DEPENDENCY INJECTION =====
   const saleRepository = new TypeORMSaleRepository();
@@ -95,7 +100,8 @@ export async function createApp(): Promise<Application> {
     auditClient,
     storageClient,
     analysisClient,
-    perfumeCatalogClient
+    perfumeCatalogClient,
+    fallbackPerfumeCatalogClient
   );
   
   const salesController = new SalesController(
@@ -114,10 +120,8 @@ export async function createApp(): Promise<Application> {
   const apiRouter = express.Router();
   apiRouter.use(gatewayAuthMiddleware.getHandler());
 
-  if (process.env.ENABLE_REQUEST_AUDIT_LOGS === "true") {
-    const requestAuditMiddleware = new RequestAuditMiddleware(loggerService);
-    apiRouter.use(requestAuditMiddleware.getHandler());
-  }
+  const requestAuditMiddleware = new RequestAuditMiddleware(loggerService);
+  apiRouter.use(requestAuditMiddleware.getHandler());
 
   apiRouter.use("/sales", salesController.getRouter());
   app.use("/api/v1", apiRouter);

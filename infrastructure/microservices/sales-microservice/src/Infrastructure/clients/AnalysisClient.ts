@@ -52,7 +52,16 @@ export class AnalysisClient implements IAnalysisClient {
             payload
         );
 
-        const billId = response.data?.data?.id ?? response.data?.billId ?? 0;
+        const billIdCandidate = response.data?.data?.id ?? response.data?.billId;
+        if (
+            typeof billIdCandidate !== "number" ||
+            !Number.isInteger(billIdCandidate) ||
+            billIdCandidate <= 0
+        ) {
+            throw new Error("Analysis service did not return a valid bill ID.");
+        }
+
+        const billId = billIdCandidate;
         return { billId };
     }
 }

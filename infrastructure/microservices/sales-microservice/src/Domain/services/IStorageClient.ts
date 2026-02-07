@@ -1,6 +1,10 @@
 import { UserContext } from "../types/UserContext";
+import { StorageInventoryDTO } from "../DTOs/StorageInventoryDTO";
 
 export interface IStorageClient {
-  sendPackages(quantity: number, userContext?: UserContext): Promise<number>;
-  getInventory(userContext?: UserContext): Promise<any>;
+  reservePackages(quantity: number, userContext?: UserContext): Promise<number[]>;
+  sendReservedPackages(packageIds: number[], userContext?: UserContext): Promise<number>;
+  unpackPackages(packageIds: number[], userContext?: UserContext): Promise<number>;
+  releasePackages(packageIds: number[], userContext?: UserContext): Promise<number>;
+  getInventory(userContext?: UserContext): Promise<StorageInventoryDTO>;
 }

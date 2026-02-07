@@ -8,8 +8,6 @@ export class StorageFacadeService {
     ) { }
 
     getStorageService(role: UserRole): IStorageService {
-        console.log("Request za role:", role);
-
         switch (role) {
             case UserRole.MANAGER:
                 return this.distributionCenter;

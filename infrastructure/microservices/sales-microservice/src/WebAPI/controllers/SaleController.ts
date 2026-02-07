@@ -103,15 +103,29 @@ export class SalesController {
   }
 
   private async getAllSales(req: Request, res: Response): Promise<void> {
+    const clientIp = this.getClientIp(req);
+    const userContext = this.getUserContext(req);
+
     try {
       const sales = await this.salesService.getAllSales();
+      await this.logger.log("Uspešno preuzimanje svih prodaja", LogType.INFO, {
+        ipAddress: clientIp,
+        userId: userContext?.id,
+        additionalData: { count: sales.length }
+      });
       res.status(200).json(sales);
     } catch (err) {
+      await this.logger.log(`Greška pri preuzimanju svih prodaja: ${(err as Error).message}`, LogType.ERROR, {
+        ipAddress: clientIp,
+        userId: userContext?.id
+      });
       res.status(500).json({ message: (err as Error).message });
     }
   }
 
   private async getSaleById(req: Request, res: Response): Promise<void> {
+    const clientIp = this.getClientIp(req);
+    const userContext = this.getUserContext(req);
     const idParam = req.params.id;
     if (typeof idParam !== 'string') {
         res.status(400).json({ error: "Invalid ID" });
@@ -121,13 +135,25 @@ export class SalesController {
     const id = parseInt(idParam, 10);
     try {
       const sale = await this.salesService.getSaleById(id);
+      await this.logger.log(`Uspešno preuzeta prodaja sa ID ${id}`, LogType.INFO, {
+        ipAddress: clientIp,
+        userId: userContext?.id,
+        additionalData: { saleId: id }
+      });
       res.status(200).json(sale);
     } catch (err) {
+      await this.logger.log(`Greška pri preuzimanju prodaje sa ID ${id}: ${(err as Error).message}`, LogType.WARNING, {
+        ipAddress: clientIp,
+        userId: userContext?.id,
+        additionalData: { saleId: id }
+      });
       res.status(404).json({ message: (err as Error).message });
     }
   }
 
   private async getSaleByBillNumber(req: Request, res: Response): Promise<void> {
+    const clientIp = this.getClientIp(req);
+    const userContext = this.getUserContext(req);
     const billNumber = req.params.billNumber;
     if (typeof billNumber !== 'string') {
         res.status(400).json({ error: "Invalid bill number" });
@@ -136,8 +162,18 @@ export class SalesController {
     
     try {
       const sale = await this.salesService.getSaleByBillNumber(billNumber);
+      await this.logger.log(`Uspešno preuzet račun ${billNumber}`, LogType.INFO, {
+        ipAddress: clientIp,
+        userId: userContext?.id,
+        additionalData: { billNumber }
+      });
       res.status(200).json(sale);
     } catch (err) {
+      await this.logger.log(`Greška pri preuzimanju računa ${billNumber}: ${(err as Error).message}`, LogType.WARNING, {
+        ipAddress: clientIp,
+        userId: userContext?.id,
+        additionalData: { billNumber }
+      });
       res.status(404).json({ message: (err as Error).message });
     }
 }
@@ -163,11 +199,20 @@ export class SalesController {
   }
 
   private async getAvailablePerfumes(req: Request, res: Response): Promise<void> {
+    const clientIp = this.getClientIp(req);
     try {
       const userContext = this.getUserContext(req) ?? undefined;
       const perfumes = await this.salesService.getAvailablePerfumes(userContext);
+      await this.logger.log("Uspešno preuzimanje dostupnih parfema", LogType.INFO, {
+        ipAddress: clientIp,
+        userId: userContext?.id,
+        additionalData: { count: perfumes.length }
+      });
       res.status(200).json(perfumes);
     } catch (err) {
+      await this.logger.log(`Greška pri preuzimanju dostupnih parfema: ${(err as Error).message}`, LogType.ERROR, {
+        ipAddress: clientIp
+      });
       res.status(500).json({ message: (err as Error).message });
     }
   }

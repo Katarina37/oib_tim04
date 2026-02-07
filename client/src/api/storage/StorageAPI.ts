@@ -34,7 +34,7 @@ export class StorageAPI implements IStorageAPI {
 
     async getAvailablePackages(token: string): Promise<AvailablePackagesDTO> {
         const response = await this.httpClient.get<any>(
-            `${this.basePath}/available`,
+            `${this.baseURL}${this.basePath}/available`,
             { headers: this.getAuthHeaders(token) }
         );
         return this.unwrapResponse<AvailablePackagesDTO>(response);

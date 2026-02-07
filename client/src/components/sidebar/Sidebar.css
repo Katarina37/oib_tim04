@@ -1,5 +1,24 @@
 /* Sidebar Component Additional Styles */
 
+.sidebar__nav {
+  gap: var(--space-sm);
+}
+
+.sidebar__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.sidebar__section-title {
+  padding: 0 var(--space-md);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
 .sidebar__nav-item--disabled {
   opacity: 0.5;
   cursor: not-allowed;
