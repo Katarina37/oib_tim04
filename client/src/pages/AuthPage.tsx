@@ -90,7 +90,7 @@ export const AuthPage: React.FC = () => {
           lastName: '',
           role: UserRole.SELLER,
         });
-        setSuccess(response.message || 'Registracija je uspesna. Prijavite se rucno.');
+        setSuccess(response.message || 'Registracija je uspešna. Prijavite se ručno.');
         return;
       }
 
@@ -118,7 +118,7 @@ export const AuthPage: React.FC = () => {
           profileImage: '',
         };
         const response = await authAPI.register(registerData);
-        handleRegisterResponse(response, 'Registracija nije uspela. Pokusajte ponovo.');
+        handleRegisterResponse(response, 'Registracija nije uspela. Pokušajte ponovo.');
       } else {
         setIsLoading(true);
         const loginData: LoginUserDTO = {
@@ -126,11 +126,11 @@ export const AuthPage: React.FC = () => {
           password: formData.password,
         };
         const response = await authAPI.login(loginData);
-        handleLoginResponse(response, 'Pogresno korisnicko ime ili lozinka.');
+        handleLoginResponse(response, 'Pogrešno korisničko ime ili lozinka.');
       }
     } catch (err) {
       const apiMessage = parseApiErrorMessage(err);
-      setError(apiMessage ?? 'Doslo je do greske. Pokusajte ponovo.');
+      setError(apiMessage ?? 'Došlo je do greške. Pokušajte ponovo.');
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -165,12 +165,12 @@ export const AuthPage: React.FC = () => {
 
           {/* Title */}
           <h1 className="auth-card__title">
-            {isRegister ? 'Kreirajte nalog' : 'Dobrodosli nazad'}
+            {isRegister ? 'Kreirajte nalog' : 'Dobrodošli nazad'}
           </h1>
           <p className="auth-card__subtitle">
             {isRegister
               ? 'Popunite formu da biste kreirali nalog'
-              : 'Prijavite se na vas nalog'}
+              : 'Prijavite se na svoj nalog'}
           </p>
 
           {/* Error Message */}
@@ -210,7 +210,7 @@ export const AuthPage: React.FC = () => {
                   id="username"
                   name="username"
                   className="input"
-                  placeholder="Unesite korisnicko ime"
+                  placeholder="Unesite korisničko ime"
                   value={formData.username}
                   onChange={handleChange}
                   required
@@ -391,7 +391,7 @@ export const AuthPage: React.FC = () => {
                     style={{ paddingLeft: '40px' }}
                   >
                     <option value={UserRole.SELLER}>Prodavac</option>
-                    <option value={UserRole.SALES_MANAGER}>Menadzer prodaje</option>
+                    <option value={UserRole.SALES_MANAGER}>Menadžer prodaje</option>
                     <option value={UserRole.ADMIN}>Administrator</option>
                   </select>
                 </div>
@@ -444,7 +444,7 @@ export const AuthPage: React.FC = () => {
 
       {/* Info Panel */}
       <div className="auth-info">
-        <span>Parfumerija O'Sinjel De Or Ac 2025</span>
+        <span>Parfimerija O'Sinjel De Or Ac 2025</span>
         <span>|</span>
         <span>Verzija sistema: 1.0.0</span>
       </div>

@@ -148,7 +148,7 @@ const parseFiltersToCriteria = (filters: AuditFiltersState): AuditLogSearchCrite
     criteria.datum_do instanceof Date &&
     criteria.datum_od.getTime() > criteria.datum_do.getTime()
   ) {
-    throw new Error("Datum 'od' ne moze biti veci od datuma 'do'.");
+    throw new Error("Datum 'od' ne može biti veći od datuma 'do'.");
   }
 
   return criteria;
@@ -260,7 +260,7 @@ const AuditLogsPage: React.FC = () => {
         setActiveCriteria(shouldUseSearch ? criteria : null);
       } catch (requestError) {
         console.error(requestError);
-        setError("Greska pri ucitavanju audit evidencije.");
+        setError("Greška pri učitavanju audit evidencije.");
       } finally {
         setIsLoading(false);
       }
@@ -414,11 +414,11 @@ const AuditLogsPage: React.FC = () => {
       if (formMode === "create") {
         const payload = parseFormToCreatePayload(formState);
         await auditAPI.createLog(payload, token);
-        setSuccess("Audit log je uspesno kreiran.");
+        setSuccess("Audit log je uspešno kreiran.");
       } else if (editingLog) {
         const payload = parseFormToUpdatePayload(formState);
         await auditAPI.updateLog(editingLog.id, payload, token);
-        setSuccess("Audit log je uspesno azuriran.");
+        setSuccess("Audit log je uspešno ažuriran.");
       }
 
       setIsFormOpen(false);
@@ -427,7 +427,7 @@ const AuditLogsPage: React.FC = () => {
       await loadLogs(activeCriteria);
     } catch (requestError) {
       console.error(requestError);
-      setError((requestError as Error).message || "Neuspesno cuvanje audit log zapisa.");
+      setError((requestError as Error).message || "Neuspešno čuvanje audit log zapisa.");
     } finally {
       setIsSaving(false);
     }
@@ -458,13 +458,13 @@ const AuditLogsPage: React.FC = () => {
 
     try {
       await auditAPI.deleteLog(logToDelete.id, token);
-      setSuccess("Audit log je uspesno obrisan.");
+      setSuccess("Audit log je uspešno obrisan.");
       setIsDeleteOpen(false);
       setLogToDelete(null);
       await loadLogs(activeCriteria);
     } catch (requestError) {
       console.error(requestError);
-      setError("Neuspesno brisanje audit log zapisa.");
+      setError("Neuspešno brisanje audit log zapisa.");
     } finally {
       setIsSaving(false);
     }
@@ -480,7 +480,7 @@ const AuditLogsPage: React.FC = () => {
         <div className="audit-header-actions">
           <button className="btn btn--outline" onClick={() => void handleRefresh()} disabled={isLoading}>
             <RefreshCw size={16} className={isLoading ? "icon-spin" : ""} />
-            Osvezi
+            Osveži
           </button>
           <button className="btn btn--primary" onClick={openCreateModal}>
             <Plus size={16} />
@@ -709,7 +709,7 @@ const AuditLogsPage: React.FC = () => {
                     <td colSpan={9}>
                       <div className="empty-state">
                         <div className="spinner" />
-                        <p className="mt-md text-muted">Ucitavanje zapisa...</p>
+                        <p className="mt-md text-muted">Učitavanje zapisa...</p>
                       </div>
                     </td>
                   </tr>
@@ -845,7 +845,7 @@ const AuditLogsPage: React.FC = () => {
                     className="input audit-textarea"
                     value={formState.opis}
                     onChange={(event) => updateFormField("opis", event.target.value)}
-                    placeholder="Unesite opis dogadjaja"
+                    placeholder="Unesite opis događaja"
                   />
                 </div>
 
@@ -866,7 +866,7 @@ const AuditLogsPage: React.FC = () => {
                 Otkazi
               </button>
               <button className="btn btn--primary" onClick={() => void handleSaveLog()} disabled={isSaving}>
-                {isSaving ? "Cuvanje..." : "Sacuvaj"}
+                {isSaving ? "Čuvanje..." : "Sačuvaj"}
               </button>
             </div>
           </div>
@@ -878,9 +878,9 @@ const AuditLogsPage: React.FC = () => {
         onClose={closeDeleteModal}
         onConfirm={() => void handleDeleteLog()}
         title="Brisanje audit zapisa"
-        message={`Da li ste sigurni da zelite da obrisete zapis #${logToDelete?.id ?? ""}?`}
-        confirmText="Obrisi"
-        cancelText="Otkazi"
+        message={`Da li ste sigurni da želite da obrišete zapis #${logToDelete?.id ?? ""}?`}
+        confirmText="Obriši"
+        cancelText="Otkaži"
         isLoading={isSaving}
         variant="danger"
       />

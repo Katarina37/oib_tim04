@@ -46,7 +46,7 @@ const PerformancePage: React.FC = () => {
       setSelectedReport((current) => current ?? data[0] ?? null);
     } catch (requestError) {
       console.error(requestError);
-      setError("Greska pri ucitavanju istorije performansi.");
+      setError("Greska pri učitavanju istorije performansi.");
     } finally {
       setIsLoadingReports(false);
     }
@@ -71,7 +71,7 @@ const PerformancePage: React.FC = () => {
       setActiveTab("compare");
     } catch (requestError) {
       console.error(requestError);
-      setError("Neuspesno pokretanje simulacije. Proverite unete parametre.");
+      setError("Neuspešno pokretanje simulacije. Proverite unete parametre.");
     } finally {
       setIsRunningSimulation(false);
     }
@@ -97,7 +97,7 @@ const PerformancePage: React.FC = () => {
       window.URL.revokeObjectURL(url);
     } catch (requestError) {
       console.error(requestError);
-      setError("Neuspesan PDF izvoz performansi.");
+      setError("Neuspešan PDF izvoz performansi.");
     }
   };
 
@@ -137,13 +137,13 @@ const PerformancePage: React.FC = () => {
         <div>
           <h1 className="page-header__title">Analiza performansi</h1>
           <p className="page-header__subtitle">
-            Simulacija logistickih algoritama i pregled efikasnosti rada.
+            Simulacija logističkih algoritama i pregled efikasnosti rada.
           </p>
         </div>
         <div className="performance-header-actions">
           <button className="btn btn--secondary" onClick={() => void loadReports()} disabled={isBusy}>
             <RefreshCw size={16} className={isLoadingReports ? "icon-spin" : ""} />
-            {isLoadingReports ? "Osvezavanje..." : "Osvezi"}
+            {isLoadingReports ? "Osvežavanje..." : "Osveži"}
           </button>
         </div>
       </div>
@@ -160,12 +160,12 @@ const PerformancePage: React.FC = () => {
         <StatsCard
           icon={<BarChart3 size={24} />}
           value={`${stats.averageEfficiency.toFixed(2)}%`}
-          label="Prosecna efikasnost"
+          label="Prosečna efikasnost"
         />
         <StatsCard
           icon={<Gauge size={24} />}
           value={`${stats.averageThroughput.toFixed(3)} amb/s`}
-          label="Prosecna brzina obrade"
+          label="Prosečna brzina obrade"
         />
         <StatsCard icon={<TrendingUp size={24} />} value={stats.bestAlgorithm} label="Najbolji algoritam" />
       </div>
@@ -184,14 +184,14 @@ const PerformancePage: React.FC = () => {
             onClick={() => setActiveTab("compare")}
           >
             <BarChart3 size={16} />
-            Poredjenje rezultata
+            Poređenje rezultata
           </button>
           <button
             className={`performance-tab ${activeTab === "history" ? "performance-tab--active" : ""}`}
             onClick={() => setActiveTab("history")}
           >
             <History size={16} />
-            Istorija izvestaja
+            Istorija izveštaja
           </button>
         </div>
       </div>
@@ -230,7 +230,7 @@ const PerformancePage: React.FC = () => {
             <div className="card">
               <div className="card__body performance-empty-state">
                 <Info size={42} />
-                <p>Nema podataka za poredjenje. Pokrenite novu simulaciju.</p>
+                <p>Nema podataka za poređenje. Pokrenite novu simulaciju.</p>
               </div>
             </div>
           )}
@@ -242,7 +242,7 @@ const PerformancePage: React.FC = () => {
           <div className="card__header">
             <h2 className="card__title">
               <History size={20} className="card__title-icon" />
-              Istorija performance izvestaja
+              Istorija performance izveštaja
             </h2>
             <span className="text-muted">Prikazano: {reports.length}</span>
           </div>

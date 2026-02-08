@@ -14,7 +14,7 @@ const getRoleLabel = (role?: string): string => {
     case "seller":
       return "Prodavac";
     case "sales_manager":
-      return "Menadzer prodaje";
+      return "Menadžer prodaje";
     default:
       return role ?? "";
   }
@@ -40,7 +40,7 @@ const readFileAsDataUrl = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
-    reader.onerror = () => reject(new Error("Neuspesno citanje slike."));
+    reader.onerror = () => reject(new Error("Neuspešno čitanje slike."));
     reader.readAsDataURL(file);
   });
 
@@ -99,7 +99,7 @@ export const EditUserPage: React.FC = () => {
       const encodedImage = await readFileAsDataUrl(selectedFile);
       updateField("profileImage", encodedImage);
     } catch {
-      setImageError("Neuspesno ucitavanje slike.");
+      setImageError("Neuspešno učitavanje slike.");
     } finally {
       event.target.value = "";
     }
@@ -115,7 +115,7 @@ export const EditUserPage: React.FC = () => {
       <div className="edit-user-page">
         <div className="empty-state">
           <div className="spinner" />
-          <p className="mt-md text-muted">Ucitavanje korisnickog profila...</p>
+          <p className="mt-md text-muted">čitavanje korisničkog profila...</p>
         </div>
       </div>
     );
@@ -125,7 +125,7 @@ export const EditUserPage: React.FC = () => {
     <div className="edit-user-page">
       <div className="page-header">
         <h1 className="page-header__title">Moj profil</h1>
-        <p className="page-header__subtitle">Uredjivanje podataka naloga i profilne slike</p>
+        <p className="page-header__subtitle">Uređivanje podataka naloga i profilne slike</p>
       </div>
 
       <div className="edit-user-grid">
@@ -182,7 +182,7 @@ export const EditUserPage: React.FC = () => {
             <div className="edit-user-form-grid">
               <div className="input-group">
                 <label className="input-group__label" htmlFor="profile-username">
-                  Korisnicko ime
+                  Korisničko ime
                 </label>
                 <input
                   id="profile-username"
@@ -295,7 +295,7 @@ export const EditUserPage: React.FC = () => {
 
               <button type="submit" className="btn btn--primary" disabled={isSaving}>
                 <Save size={16} />
-                {isSaving ? "Cuvanje..." : "Sacuvaj"}
+                {isSaving ? "Čuvanje..." : "Sačuvaj"}
               </button>
             </div>
           </div>
