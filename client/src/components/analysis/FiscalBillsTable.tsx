@@ -21,7 +21,7 @@ const FiscalBillsTable: React.FC<FiscalBillsTableProps> = ({
       case "card":
         return "Kartica";
       case "bank_transfer":
-        return "Uplata na racun";
+        return "Uplata na račun";
       default:
         return method;
     }
@@ -42,7 +42,7 @@ const FiscalBillsTable: React.FC<FiscalBillsTableProps> = ({
     return (
       <div className="empty-state">
         <div className="spinner" />
-        <p className="mt-md text-muted">Ucitavanje fiskalnih racuna...</p>
+        <p className="mt-md text-muted">Ucitavanje fiskalnih računa...</p>
       </div>
     );
   }
@@ -52,7 +52,7 @@ const FiscalBillsTable: React.FC<FiscalBillsTableProps> = ({
       <div className="empty-state">
         <FileText className="empty-state__icon" />
         <h3 className="empty-state__title">Nema fiskalnih racuna</h3>
-        <p className="empty-state__description">Za izabrani period nije pronadjen nijedan racun.</p>
+        <p className="empty-state__description">Za izabrani period nije pronađen nijedan račun.</p>
       </div>
     );
   }
@@ -62,9 +62,9 @@ const FiscalBillsTable: React.FC<FiscalBillsTableProps> = ({
       <table className="table">
         <thead>
           <tr>
-            <th>Broj racuna</th>
+            <th>Broj računa</th>
             <th>Tip prodaje</th>
-            <th>Nacin placanja</th>
+            <th>Nacin plaćanja</th>
             <th>Iznos</th>
             <th>Datum</th>
             <th className="text-right">Akcije</th>

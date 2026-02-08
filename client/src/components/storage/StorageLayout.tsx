@@ -20,7 +20,7 @@ const StorageLayout: React.FC<StorageLayoutProps> = ({
 
             <div className="card">
                 <div className="card__header">
-                    <h2 className="card__title">Skladiöta</h2>
+                    <h2 className="card__title">Skladi≈°ta</h2>
                 </div>
 
                 <div className="card__body">
@@ -30,7 +30,7 @@ const StorageLayout: React.FC<StorageLayoutProps> = ({
 
             <div className="card">
                 <div className="card__header">
-                    <h2 className="card__title">Ambalaûe</h2>
+                    <h2 className="card__title">Ambala≈æe</h2>
                 </div>
 
                 <div className="card__body">

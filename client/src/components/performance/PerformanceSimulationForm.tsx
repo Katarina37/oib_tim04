@@ -87,8 +87,8 @@ const PerformanceSimulationForm: React.FC<Props> = ({ onRunSimulation, isLoading
 
       <div className="performance-form__footer">
         <p className="text-muted">
-          Model koristi parametre: distributivni centar (3 ambalaze / 0.5s), magacinski centar
-          (1 ambalaza / 2.5s).
+          Model koristi parametre: distributivni centar (3 ambalaže / 0.5s), magacinski centar
+          (1 ambalaža / 2.5s).
         </p>
         <button className="btn btn--primary" type="submit" disabled={isLoading || naziv.trim().length < 3}>
           {isLoading ? "Pokretanje..." : "Pokreni simulaciju"}

@@ -68,9 +68,9 @@ const PackagingStorageTable: React.FC<Props> = ({ packages }) => {
                                     <div className="empty-state__icon">
                                         <PackageSearch size={56} />
                                     </div>
-                                    <h3 className="empty-state__title">Nema ambalaza</h3>
+                                    <h3 className="empty-state__title">Nema ambalaža</h3>
                                     <p className="empty-state__description">
-                                        Trenutno nema zapisa o ambalazama za prikaz.
+                                        Trenutno nema zapisa o ambalažama za prikaz.
                                     </p>
                                 </div>
                             </td>

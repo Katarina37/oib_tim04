@@ -150,8 +150,8 @@ const GenerateReportModel: React.FC<GenerateReportModelProps> = ({
                   >
                     <option value="daily">Dnevni</option>
                     <option value="weekly">Nedeljni</option>
-                    <option value="monthly">Mesecni</option>
-                    <option value="yearly">Godisnji</option>
+                    <option value="monthly">Mesečni</option>
+                    <option value="yearly">Godišnji</option>
                     <option value="total">Ukupno</option>
                   </select>
                 </div>
@@ -183,7 +183,7 @@ const GenerateReportModel: React.FC<GenerateReportModelProps> = ({
                     <option value="today">Danas</option>
                     <option value="this-week">Ova nedelja</option>
                     <option value="this-month">Ovaj mesec</option>
-                    <option value="last-month">Prosli mesec</option>
+                    <option value="last-month">Prošli mesec</option>
                     <option value="this-year">Ova godina</option>
                     <option value="all">Sve</option>
                   </select>
@@ -214,7 +214,7 @@ const GenerateReportModel: React.FC<GenerateReportModelProps> = ({
                       setTrendAnalysisType(event.target.value as typeof trendAnalysisType)
                     }
                   >
-                    <option value="monthly_trend">Mesecni trend</option>
+                    <option value="monthly_trend">Mesečni trend</option>
                     <option value="product_trend">Trend po proizvodu</option>
                     <option value="category_trend">Trend po kategoriji</option>
                   </select>
@@ -262,7 +262,7 @@ const GenerateReportModel: React.FC<GenerateReportModelProps> = ({
               Otkazi
             </button>
             <button type="submit" className="btn btn--primary" disabled={isLoading}>
-              {isLoading ? "Generisanje..." : "Generisi izvestaj"}
+              {isLoading ? "Generisanje..." : "Generiši izveštaj"}
             </button>
           </div>
         </form>

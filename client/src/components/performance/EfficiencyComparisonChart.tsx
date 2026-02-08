@@ -41,7 +41,7 @@ const EfficiencyComparisonChart: React.FC<EfficiencyComparisonChartProps> = ({ r
   if (chartData.length === 0) {
     return (
       <div className="performance-chart performance-chart--empty" style={{ height }}>
-        <p className="text-muted">Nema dostupnih podataka za poredjenje efikasnosti.</p>
+        <p className="text-muted">Nema dostupnih podataka za poređenje efikasnosti.</p>
       </div>
     );
   }

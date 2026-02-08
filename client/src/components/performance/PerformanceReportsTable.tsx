@@ -43,7 +43,7 @@ const PerformanceReportsTable: React.FC<PerformanceReportsTableProps> = ({
       <div className="performance-table__header">
         <h4 className="font-medium">
           <Activity size={18} />
-          Istorija performansi logistickih algoritama
+          Istorija performansi logističkih algoritama
         </h4>
         <span className="text-muted">Ukupno: {reports.length}</span>
       </div>
@@ -93,7 +93,7 @@ const PerformanceReportsTable: React.FC<PerformanceReportsTableProps> = ({
                         <button
                           className="btn btn--ghost btn--sm btn--icon"
                           onClick={() => onViewDetails(report)}
-                          title="Detalji izvestaja"
+                          title="Detalji izveštaja"
                           type="button"
                         >
                           <BarChart2 size={16} />

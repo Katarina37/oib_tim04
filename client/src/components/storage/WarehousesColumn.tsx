@@ -56,9 +56,9 @@ const WarehousesColumn: React.FC<Props> = ({ warehouses }) => {
                     <div className="empty-state__icon">
                         <Package size={56} />
                     </div>
-                    <h3 className="empty-state__title">Nema skladista</h3>
+                    <h3 className="empty-state__title">Nema skladišta</h3>
                     <p className="empty-state__description">
-                        Trenutno nema registrovanih skladisnih lokacija.
+                        Trenutno nema registrovanih skladišnih lokacija.
                     </p>
                 </div>
             )}
