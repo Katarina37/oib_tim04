@@ -14,6 +14,7 @@ import { getDefaultRouteForRole } from './helpers/roleAccess';
 import StoragePage from './pages/StoragePage';
 import { SalesPage } from './pages/SalesPage';
 import ProcessingPage from './pages/ProcessingPage';
+import EditUserPage from './pages/EditUserPage';
 
 const App: React.FC = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -106,6 +107,17 @@ const App: React.FC = () => {
           <ProtectedRoute requiredRole="seller">
             <AppLayout>
               <SettingsPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute requiredRole="admin,seller,sales_manager">
+            <AppLayout>
+              <EditUserPage />
             </AppLayout>
           </ProtectedRoute>
         }

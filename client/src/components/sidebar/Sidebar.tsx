@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Leaf,
   FlaskConical,
@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { normalizeRole, RoleKey } from '../../helpers/roleAccess';
 import { useAuth } from '../../hooks/useAuthHook';
+import { useServices } from '../../contexts/ServiceContext';
+import { UserDTO } from '../../models/users/UserDTO';
 import './Sidebar.css';
 
 interface NavItemProps {
@@ -53,7 +55,10 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, disabled = false }) 
 };
 
 export const Sidebar: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
+  const { userAPI } = useServices();
+  const navigate = useNavigate();
+  const [currentUserProfile, setCurrentUserProfile] = useState<UserDTO | null>(null);
 
   const navItems: NavConfigItem[] = [
     {
@@ -138,7 +143,42 @@ export const Sidebar: React.FC = () => {
   const sellerPrimaryItems = sellerItems.filter((item) => item.to !== "/settings");
   const settingsItem = sellerItems.find((item) => item.to === "/settings");
 
-  const getInitials = (username?: string): string => {
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCurrentUser = async () => {
+      if (!token) {
+        setCurrentUserProfile(null);
+        return;
+      }
+
+      try {
+        const profile = await userAPI.getCurrentUser(token);
+        if (isMounted) {
+          setCurrentUserProfile(profile);
+        }
+      } catch {
+        if (isMounted) {
+          setCurrentUserProfile(null);
+        }
+      }
+    };
+
+    void loadCurrentUser();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [token, userAPI]);
+
+  const getInitials = (username?: string, firstName?: string | null, lastName?: string | null): string => {
+    const safeFirstName = firstName?.trim() ?? '';
+    const safeLastName = lastName?.trim() ?? '';
+
+    if (safeFirstName && safeLastName) {
+      return `${safeFirstName[0]}${safeLastName[0]}`.toUpperCase();
+    }
+
     if (!username) return 'US';
     const trimmed = username.trim();
     if (!trimmed) return 'US';
@@ -162,8 +202,21 @@ export const Sidebar: React.FC = () => {
     logout();
   };
 
-  const userInitials = getInitials(user?.username);
-  const roleLabel = getRoleLabel(user?.role);
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+
+  const resolvedFirstName = user?.firstName ?? currentUserProfile?.firstName ?? '';
+  const resolvedLastName = user?.lastName ?? currentUserProfile?.lastName ?? '';
+  const resolvedUsername = user?.username ?? currentUserProfile?.username ?? '';
+  const fullName = `${resolvedFirstName} ${resolvedLastName}`.trim();
+
+  const userInitials = getInitials(resolvedUsername, resolvedFirstName, resolvedLastName);
+  const roleLabel = getRoleLabel(user?.role ?? currentUserProfile?.role);
+  const resolvedProfileImage = user?.profileImage !== undefined
+    ? user.profileImage ?? ''
+    : currentUserProfile?.profileImage ?? '';
+  const profileImage = resolvedProfileImage.trim();
 
   return (
     <aside className="sidebar">
@@ -208,11 +261,20 @@ export const Sidebar: React.FC = () => {
 
       <div className="sidebar__footer">
         <div className="sidebar__profile">
-          <div className="sidebar__avatar">{userInitials}</div>
-          <div className="sidebar__user-info">
-            <div className="sidebar__user-name">{user?.username}</div>
-            <div className="sidebar__user-role">{roleLabel}</div>
-          </div>
+          <button
+            type="button"
+            className="sidebar__profile-button"
+            onClick={handleProfileClick}
+            title="Uredi profil"
+          >
+            <div className="sidebar__avatar">
+              {profileImage ? <img src={profileImage} alt="Profilna slika" /> : userInitials}
+            </div>
+            <div className="sidebar__user-info">
+              <div className="sidebar__user-name">{fullName || resolvedUsername}</div>
+              <div className="sidebar__user-role">{roleLabel}</div>
+            </div>
+          </button>
           <button
             type="button"
             className="sidebar__logout-button"

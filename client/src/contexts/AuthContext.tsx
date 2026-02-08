@@ -54,6 +54,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     removeValueByKey("authToken");
   };
 
+  const updateUserClaims = (updates: Partial<AuthTokenClaimsType>) => {
+    setUser((currentUser) => {
+      if (!currentUser) {
+        return currentUser;
+      }
+
+      return {
+        ...currentUser,
+        ...updates,
+      };
+    });
+  };
+
   const isAuthenticated = !!user && !!token;
 
   const value: AuthContextType = {
@@ -61,6 +74,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     token,
     login,
     logout,
+    updateUserClaims,
     isAuthenticated,
     isLoading,
   };

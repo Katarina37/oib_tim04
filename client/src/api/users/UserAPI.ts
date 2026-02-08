@@ -1,5 +1,10 @@
 import { IUserAPI } from "./IUserAPI";
-import { CreateUserPayload, UpdateUserPayload, UserSearchPayload } from "./IUserAPI";
+import {
+  CreateUserPayload,
+  UpdateCurrentUserPayload,
+  UpdateUserPayload,
+  UserSearchPayload,
+} from "./IUserAPI";
 import { UserDTO } from "../../models/users/UserDTO";
 import { IHttpClient } from "../http/IHttpClient";
 
@@ -26,6 +31,12 @@ export class UserAPI implements IUserAPI {
     });
   }
 
+  async getCurrentUser(token: string): Promise<UserDTO> {
+    return this.httpClient.get<UserDTO>("/users/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  }
+
   async createUser(token: string, data: CreateUserPayload): Promise<UserDTO> {
     const response = await this.httpClient.post<unknown>("/users", data, {
       headers: { Authorization: `Bearer ${token}` },
@@ -36,6 +47,14 @@ export class UserAPI implements IUserAPI {
 
   async updateUser(token: string, id: number, data: UpdateUserPayload): Promise<UserDTO> {
     const response = await this.httpClient.put<unknown>(`/users/${id}`, data, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    return this.unwrapResponse<UserDTO>(response);
+  }
+
+  async updateCurrentUser(token: string, data: UpdateCurrentUserPayload): Promise<UserDTO> {
+    const response = await this.httpClient.put<unknown>("/users/me", data, {
       headers: { Authorization: `Bearer ${token}` },
     });
 

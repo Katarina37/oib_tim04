@@ -10,6 +10,9 @@ export const decodeJWT = (token: string): AuthTokenClaimsType | null => {
         id: decoded.id,
         username: decoded.username,
         role: decoded.role,
+        firstName: decoded.firstName,
+        lastName: decoded.lastName,
+        profileImage: decoded.profileImage,
       };
     }
 

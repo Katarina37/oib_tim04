@@ -11,6 +11,7 @@ export interface CreateUserPayload {
 }
 
 export type UpdateUserPayload = Partial<CreateUserPayload>;
+export type UpdateCurrentUserPayload = Omit<UpdateUserPayload, "role">;
 
 export interface UserSearchPayload {
   [key: string]: unknown;
@@ -24,8 +25,10 @@ export interface UserSearchPayload {
 export interface IUserAPI {
   getAllUsers(token: string): Promise<UserDTO[]>;
   getUserById(token: string, id: number): Promise<UserDTO>;
+  getCurrentUser(token: string): Promise<UserDTO>;
   createUser(token: string, data: CreateUserPayload): Promise<UserDTO>;
   updateUser(token: string, id: number, data: UpdateUserPayload): Promise<UserDTO>;
+  updateCurrentUser(token: string, data: UpdateCurrentUserPayload): Promise<UserDTO>;
   deleteUser(token: string, id: number): Promise<void>;
   searchUsers(token: string, criteria: UserSearchPayload): Promise<UserDTO[]>;
 }

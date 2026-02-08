@@ -1,0 +1,138 @@
+.edit-user-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.edit-user-grid {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+.edit-user-avatar-card {
+  height: fit-content;
+}
+
+.edit-user-avatar-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.edit-user-avatar-preview {
+  width: 144px;
+  height: 144px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  background: var(--color-primary-subtle);
+  color: var(--color-primary-dark);
+  font-size: 2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.edit-user-avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.edit-user-role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  background: var(--color-background);
+}
+
+.edit-user-upload-button {
+  width: 100%;
+}
+
+.edit-user-remove-button {
+  width: 100%;
+}
+
+.edit-user-file-input {
+  display: none;
+}
+
+.edit-user-avatar-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.edit-user-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.edit-user-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+.edit-user-feedback {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.edit-user-feedback--error {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #dc2626;
+}
+
+.edit-user-feedback--success {
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.35);
+  color: #15803d;
+}
+
+.edit-user-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+@media (max-width: 1100px) {
+  .edit-user-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-user-avatar-card {
+    order: 2;
+  }
+}
+
+@media (max-width: 720px) {
+  .edit-user-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-user-actions {
+    flex-direction: column-reverse;
+  }
+
+  .edit-user-actions .btn {
+    width: 100%;
+  }
+}

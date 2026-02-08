@@ -279,7 +279,7 @@ export const ProductionPage: React.FC = () => {
       {/* Main Content Grid */}
       <div className="grid grid--production">
         {/* Plants Table Section */}
-        <div className="card">
+        <div className="card production-plants-card">
           <div className="card__header">
             <h2 className="card__title">
               <Leaf size={20} className="card__title-icon" />
@@ -311,25 +311,29 @@ export const ProductionPage: React.FC = () => {
             />
             
             {error ? (
-              <div className="empty-state">
-                <p className="text-error">{error}</p>
-                <button className="btn btn--primary mt-md" onClick={fetchPlants}>
-                  Pokusaj ponovo
-                </button>
+              <div className="production-plants-list">
+                <div className="empty-state">
+                  <p className="text-error">{error}</p>
+                  <button className="btn btn--primary mt-md" onClick={fetchPlants}>
+                    Pokusaj ponovo
+                  </button>
+                </div>
               </div>
             ) : (
-              <PlantTable
-                plants={filteredPlants}
-                onEdit={handleEditClick}
-                onDelete={handleDeleteClick}
-                isLoading={isLoading}
-                sortBy={sortBy}
-                sortDirection={sortDirection}
-                onSortChange={(column, direction) => {
-                  setSortBy(column);
-                  setSortDirection(direction);
-                }}
-              />
+              <div className="production-plants-list">
+                <PlantTable
+                  plants={filteredPlants}
+                  onEdit={handleEditClick}
+                  onDelete={handleDeleteClick}
+                  isLoading={isLoading}
+                  sortBy={sortBy}
+                  sortDirection={sortDirection}
+                  onSortChange={(column, direction) => {
+                    setSortBy(column);
+                    setSortDirection(direction);
+                  }}
+                />
+              </div>
             )}
           </div>
           <div className="card__footer">
@@ -340,24 +344,31 @@ export const ProductionPage: React.FC = () => {
         </div>
 
         {/* Production Log Section */}
-        <div className="card">
+        <div className="card production-log-card">
           <div className="card__header">
             <h2 className="card__title">
               <ScrollText size={20} className="card__title-icon" />
               Dnevnik proizvodnje
             </h2>
           </div>
-          <div className="card__body" style={{ padding: 0 }}>
-            {logsError ? (
-              <div className="empty-state" style={{ padding: 'var(--space-xl)' }}>
-                <p className="text-error">{logsError}</p>
-                <button className="btn btn--secondary mt-md" onClick={fetchProductionLogs}>
-                  Osvezi dnevnik
-                </button>
-              </div>
-            ) : (
-              <ProductionLog logs={logs} isLoading={logsLoading} />
-            )}
+          <div className="card__body production-log-card__body" style={{ padding: 0 }}>
+            <div className="production-log-list">
+              {logsError ? (
+                <div className="empty-state" style={{ padding: 'var(--space-xl)' }}>
+                  <p className="text-error">{logsError}</p>
+                  <button className="btn btn--secondary mt-md" onClick={fetchProductionLogs}>
+                    Osvezi dnevnik
+                  </button>
+                </div>
+              ) : (
+                <ProductionLog logs={logs} isLoading={logsLoading} />
+              )}
+            </div>
+          </div>
+          <div className="card__footer production-log-card__footer">
+            <span className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>
+              Prikazano {logs.length} dogadjaja
+            </span>
           </div>
         </div>
       </div>

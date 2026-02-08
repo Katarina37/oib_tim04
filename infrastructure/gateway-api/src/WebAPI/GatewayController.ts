@@ -2,17 +2,21 @@ import { Request, Response, Router } from "express";
 import { IGatewayService } from "../Domain/services/IGatewayService";
 import { LoginUserDTO } from "../Domain/DTOs/LoginUserDTO";
 import { RegistrationUserDTO } from "../Domain/DTOs/RegistrationUserDTO";
+import { UpdateOwnProfileDTO } from "../Domain/DTOs/UpdateOwnProfileDTO";
 import { authenticate } from "../Middlewares/authentification/AuthMiddleware";
 import { authorize } from "../Middlewares/authorization/AuthorizeMiddleware";
 import { UserRole } from "../Domain/enums/UserRole";
 import { ProxyRequest } from "../Domain/clients/IMicroserviceClient";
+import { IUserAccessPolicy } from "../Domain/services/IUserAccessPolicy";
+import { AccessDeniedError } from "../Domain/errors/AccessDeniedError";
 
 export class GatewayController {
   private readonly router: Router;
 
   constructor(
     private readonly gatewayService: IGatewayService,
-    private readonly gatewayApiKey: string
+    private readonly gatewayApiKey: string,
+    private readonly userAccessPolicy: IUserAccessPolicy
   ) {
     this.router = Router();
     this.initializeRoutes();
@@ -35,6 +39,16 @@ export class GatewayController {
       authenticate,
       authorize(UserRole.ADMIN),
       this.searchUsers.bind(this)
+    );
+    this.router.get(
+      "/users/me",
+      authenticate,
+      this.getCurrentUser.bind(this)
+    );
+    this.router.put(
+      "/users/me",
+      authenticate,
+      this.updateCurrentUser.bind(this)
     );
     this.router.get(
       "/users/:id",
@@ -209,6 +223,68 @@ export class GatewayController {
       res.status(200).json(users);
     } catch (error) {
       res.status(500).json({ message: (error as Error).message });
+    }
+  }
+
+  private async getCurrentUser(req: Request, res: Response): Promise<void> {
+    const currentUserId = req.user?.id;
+
+    if (!currentUserId) {
+      res.status(401).json({ success: false, message: "Korisnik nije autentifikovan!" });
+      return;
+    }
+
+    try {
+      this.userAccessPolicy.ensureCanAccess(req.user?.id, currentUserId);
+      const user = await this.gatewayService.getUserById(currentUserId);
+      res.status(200).json(user);
+    } catch (error) {
+      if (error instanceof AccessDeniedError) {
+        res.status(403).json({ success: false, message: error.message });
+        return;
+      }
+
+      res.status(404).json({ message: (error as Error).message });
+    }
+  }
+
+  private async updateCurrentUser(req: Request, res: Response): Promise<void> {
+    const currentUserId = req.user?.id;
+
+    if (!currentUserId) {
+      res.status(401).json({ success: false, message: "Korisnik nije autentifikovan!" });
+      return;
+    }
+
+    const payload = req.body as Record<string, unknown>;
+    if (payload.role !== undefined) {
+      res.status(400).json({
+        success: false,
+        message: "Promena uloge nije dozvoljena preko edit profila.",
+      });
+      return;
+    }
+
+    const data: UpdateOwnProfileDTO = {
+      username: typeof payload.username === "string" ? payload.username : undefined,
+      password: typeof payload.password === "string" ? payload.password : undefined,
+      email: typeof payload.email === "string" ? payload.email : undefined,
+      firstName: typeof payload.firstName === "string" ? payload.firstName : undefined,
+      lastName: typeof payload.lastName === "string" ? payload.lastName : undefined,
+      profileImage: typeof payload.profileImage === "string" ? payload.profileImage : undefined,
+    };
+
+    try {
+      this.userAccessPolicy.ensureCanAccess(req.user?.id, currentUserId);
+      const user = await this.gatewayService.updateUser(currentUserId, data);
+      res.status(200).json({ success: true, data: user });
+    } catch (error) {
+      if (error instanceof AccessDeniedError) {
+        res.status(403).json({ success: false, message: error.message });
+        return;
+      }
+
+      res.status(400).json({ success: false, message: (error as Error).message });
     }
   }
 

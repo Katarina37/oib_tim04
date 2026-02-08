@@ -346,16 +346,34 @@ body {
 .sidebar__profile {
   display: flex;
   align-items: center;
+  gap: var(--space-sm);
+  min-height: 44px;
+}
+
+.sidebar__profile-button {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
   gap: var(--space-md);
   min-height: 44px;
   padding: calc(var(--space-sm) + 2px);
   border-radius: var(--radius-md);
-  cursor: default;
+  border: none;
+  background: transparent;
+  cursor: pointer;
   transition: all var(--transition-fast);
+  text-align: left;
+  color: inherit;
 }
 
-.sidebar__profile:hover {
+.sidebar__profile-button:hover {
   background: var(--color-primary-subtle);
+}
+
+.sidebar__profile-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .sidebar__avatar {
@@ -1469,6 +1487,55 @@ body {
 
 .grid--production {
   grid-template-columns: 1fr 350px;
+  align-items: start;
+}
+
+.production-log-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.production-log-card__body {
+  display: block;
+  width: 100%;
+}
+
+.production-log-card__footer {
+  background: var(--color-white);
+  padding: var(--space-md) var(--space-lg);
+}
+
+.production-plants-list,
+.production-log-list {
+  width: 100%;
+  height: 520px;
+  min-height: 520px;
+  max-height: 520px;
+  overflow: hidden;
+}
+
+.production-plants-list {
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+}
+
+.production-plants-list .table-container {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.production-plants-list .empty-state,
+.production-log-list .empty-state {
+  min-height: 100%;
+}
+
+.production-log-card .log-panel {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  overflow-y: auto;
 }
 
 .grid--sales {

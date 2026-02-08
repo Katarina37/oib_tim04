@@ -10,10 +10,12 @@ import { IUserClient } from "./Domain/clients/IUserClient";
 import { IMicroserviceClient } from "./Domain/clients/IMicroserviceClient";
 
 import { GatewayService } from "./Services/GatewayService";
+import { UserAccessPolicy } from "./Services/UserAccessPolicy";
 import { GatewayController } from "./WebAPI/GatewayController";
 import { AxiosAuthClient } from "./Infrastructure/clients/AxiosAuthClient";
 import { AxiosUserClient } from "./Infrastructure/clients/AxiosUserClient";
 import { AxiosMicroserviceClient } from "./Infrastructure/clients/AxiosMicroserviceClient";
+import { IUserAccessPolicy } from "./Domain/services/IUserAccessPolicy";
 
 const app: Application = express();
 
@@ -145,8 +147,14 @@ const gatewayService: IGatewayService = new GatewayService(
   weatherClient
 );
 
+const userAccessPolicy: IUserAccessPolicy = new UserAccessPolicy();
+
 // Create controller and register routes
-const gatewayController = new GatewayController(gatewayService, gatewayApiKey);
+const gatewayController = new GatewayController(
+  gatewayService,
+  gatewayApiKey,
+  userAccessPolicy
+);
 
 // Health check endpoint
 app.get("/health", (_req: Request, res: Response) => {
