@@ -14,7 +14,6 @@ type PerfumeCatalogRow = {
     serialNumber: string;
     plantId: number;
     expiryDate: string | Date;
-    price: string | number | null;
 };
 
 type ProcessingPerfumeResponse = {
@@ -25,11 +24,6 @@ type ProcessingPerfumeResponse = {
     serialNumber: string;
     plantId: number;
     expiryDate: string;
-};
-
-type LatestPriceRow = {
-    perfumeId: number;
-    price: string | number;
 };
 
 type PerfumeStockRow = {
@@ -77,14 +71,7 @@ export class DatabasePerfumeCatalogClient implements IPerfumeCatalogClient {
     }
 
     private async fetchCatalogRows(): Promise<PerfumeCatalogRow[]> {
-        const [processingRows, latestPrices] = await Promise.all([
-            this.fetchProcessingPerfumes(),
-            this.fetchLatestPrices(),
-        ]);
-
-        const priceByPerfumeId = new Map<number, string | number>(
-            latestPrices.map((row) => [Number(row.perfumeId), row.price])
-        );
+        const processingRows = await this.fetchProcessingPerfumes();
 
         return processingRows.map((row) => ({
             id: Number(row.id),
@@ -94,7 +81,6 @@ export class DatabasePerfumeCatalogClient implements IPerfumeCatalogClient {
             serialNumber: row.serialNumber,
             plantId: Number(row.plantId),
             expiryDate: row.expiryDate,
-            price: priceByPerfumeId.get(Number(row.id)) ?? null,
         }));
     }
 
@@ -121,26 +107,6 @@ export class DatabasePerfumeCatalogClient implements IPerfumeCatalogClient {
         }
 
         throw new Error("Nevalidan odgovor prerade pri preuzimanju kataloga parfema.");
-    }
-
-    private async fetchLatestPrices(): Promise<LatestPriceRow[]> {
-        const rows = await this.dataSource.query(
-            `
-            SELECT
-                si.parfem_id AS perfumeId,
-                si.cena_po_komadu AS price
-            FROM prodaja.stavka_racuna si
-            INNER JOIN (
-                SELECT
-                    parfem_id,
-                    MAX(id) AS latestItemId
-                FROM prodaja.stavka_racuna
-                GROUP BY parfem_id
-            ) last_ids ON last_ids.latestItemId = si.id
-            `
-        );
-
-        return rows as LatestPriceRow[];
     }
 
     private async fetchAvailablePerfumeStocks(): Promise<Map<number, number>> {
@@ -194,7 +160,7 @@ export class DatabasePerfumeCatalogClient implements IPerfumeCatalogClient {
             serialNumber: row.serialNumber,
             plantId: Number(row.plantId),
             expiryDate: this.normalizeDate(row.expiryDate),
-            price: this.normalizePrice(row.price, type, volumeMl),
+            price: this.resolveCatalogPrice(type, volumeMl),
             stock: Math.max(0, Math.floor(stock)),
         };
     }
@@ -222,22 +188,8 @@ export class DatabasePerfumeCatalogClient implements IPerfumeCatalogClient {
         return rawDate.slice(0, 10);
     }
 
-    private normalizePrice(
-        rawPrice: string | number | null,
-        type: PerfumeType,
-        volumeMl: 150 | 250
-    ): number {
-        const candidate =
-            typeof rawPrice === "number"
-                ? rawPrice
-                : rawPrice !== null
-                    ? Number(rawPrice)
-                    : Number.NaN;
-
-        if (Number.isFinite(candidate) && candidate > 0) {
-            return candidate;
-        }
-
+    // Cenovnik je deterministicki po tipu i zapremini; nije vezan za istoriju prodaje.
+    private resolveCatalogPrice(type: PerfumeType, volumeMl: 150 | 250): number {
         if (type === PerfumeType.PERFUME) {
             return volumeMl === 250 ? 12500 : 9900;
         }
