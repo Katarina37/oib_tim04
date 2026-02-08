@@ -19,6 +19,8 @@ export interface IAnalysisRepository{
     // izvjestaji
 
     findSalesReportByPeriod(periodType: SalesAnalysisDTO["periodType"], periodValue: string): Promise<SalesReport | null>;
+
+    findSalesReportById(id: number): Promise<SalesReport | null>;
     
     createSalesReport(data: Partial<SalesReport>): Promise<SalesReport>;
 
@@ -28,6 +30,8 @@ export interface IAnalysisRepository{
 
     findTopProductReportByPeriod(period: string): Promise<TopProductReport | null>;
 
+    findTopProductReportById(id: number): Promise<TopProductReport | null>;
+
     createTopProductReport(data: Partial<TopProductReport>): Promise<TopProductReport>;
 
     findAllTopProductsReports(): Promise<TopProductReport[]>;
@@ -36,16 +40,20 @@ export interface IAnalysisRepository{
 
     createTrendAnalysis(data: Partial<TrendAnalysis>): Promise<TrendAnalysis>;
 
+    findTrendAnalysisById(id: number): Promise<TrendAnalysis | null>;
+
     findTrendAnalysisByType(analysisType: TrendAnalysisDTO["analysisType"]): Promise<TrendAnalysis[]>;
+
+    findAllTrendAnalyses(): Promise<TrendAnalysis[]>;
 
     //agregacije za analizu
 
-    getTotalSales(period: string): Promise<{
+    getTotalSalesByDateRange(startDate: Date, endDate: Date): Promise<{
         totalSales: number;
         totalRevenue: number;
     }>;
 
-    getTopProducts(period: string, limit: number): Promise<Array<{
+    getTopProductsByDateRange(startDate: Date, endDate: Date, limit: number): Promise<Array<{
         productId: number;
         productName: string;
         unitsSold: number;

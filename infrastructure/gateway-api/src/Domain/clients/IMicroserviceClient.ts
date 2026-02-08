@@ -13,6 +13,7 @@ export interface ProxyResponse<T = unknown> {
   data?: T;
   error?: string;
   status: number;
+  headers?: Record<string, string>;
 }
 
 export interface IMicroserviceClient {

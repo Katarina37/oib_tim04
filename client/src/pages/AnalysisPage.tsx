@@ -1,582 +1,534 @@
-import React, {useState, useEffect} from "react";
-import { BarChart3, FileText, TrendingUp, Package, Download, Calendar, Filter, RefreshCw, DollarSign, ShoppingBag, TrendingDown, PieChart } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  BarChart3,
+  Calendar,
+  DollarSign,
+  FileText,
+  Package,
+  RefreshCw,
+  ShoppingBag,
+  TrendingUp,
+} from "lucide-react";
 import { useAuth } from "../hooks/useAuthHook";
 import { useServices } from "../contexts/ServiceContext";
 import { FiscalBillDTO } from "../models/analysis/FiscalBillDTO";
 import { SalesReportDTO } from "../models/analysis/SalesReportDTO";
 import { TopProductReportDTO } from "../models/analysis/TopProductReportDTO";
 import { TrendAnalysisDTO } from "../models/analysis/TrendAnalysisDTO";
-import FiscalBillsTable from '../components/analysis/FiscalBillsTable'
+import { formatCurrency, formatDate } from "../helpers/formatters";
+import StatsCard from "../components/production/StatsCard";
+import FiscalBillsTable from "../components/analysis/FiscalBillsTable";
+import GenerateReportModel from "../components/analysis/GenerateReportModel";
 import SalesAnalysisChart from "../components/analysis/SalesAnalysisChart";
 import TopProductsTable from "../components/analysis/TopProductsTable";
 import TrendAnalysisCard from "../components/analysis/TrendAnalysisCard";
-import GenerateReportModel from "../components/analysis/GenerateReportModel";
-import { formatCurrency, formatDate } from "../helpers/formatters";
 
-export const AnalysisPage: React.FC = () => {
-    const {token} = useAuth();
-    const {analysisAPI} = useServices();
+type AnalysisTab = "overview" | "fiscal" | "sales" | "products" | "trends";
+type ReportType = "sales" | "products" | "trends";
+type SalesPeriodFilter = "all" | "daily" | "weekly" | "monthly" | "yearly" | "total";
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'fiscal' | 'sales' | 'products' | 'trends'>('overview');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+const AnalysisPage: React.FC = () => {
+  const { token } = useAuth();
+  const { analysisAPI } = useServices();
 
-    //podaci
-    const [fiscalBills, setFiscalBills] = useState<FiscalBillDTO[]>([]);
-    const [salesReports, setSalesReports] = useState<SalesReportDTO[]>([]);
-    const [topProductsReports, setTopProductsReports] = useState<TopProductReportDTO[]>([]);
-    const [trendAnalyses, setTrendAnalyses] = useState<TrendAnalysisDTO[]>([]);
+  const [activeTab, setActiveTab] = useState<AnalysisTab>("overview");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    //filteri
-    const [period, setPeriod] = useState<string>('this-month');
+  const [fiscalBills, setFiscalBills] = useState<FiscalBillDTO[]>([]);
+  const [salesReports, setSalesReports] = useState<SalesReportDTO[]>([]);
+  const [topProductsReports, setTopProductsReports] = useState<TopProductReportDTO[]>([]);
+  const [trendAnalyses, setTrendAnalyses] = useState<TrendAnalysisDTO[]>([]);
 
-    //modeli
-    const [isGenerateReportModelOpen, setIsGenerateReportModelOpen] = useState(false);
-    const [reportType, setReportType] = useState<'sales' | 'products' | 'trends'>('sales');
+  const [period, setPeriod] = useState("this-month");
+  const [salesPeriodFilter, setSalesPeriodFilter] = useState<SalesPeriodFilter>("all");
 
-    //ucitavanje podataka
-    const loadData = async () => {
-        if(!token) return;
+  const [isGenerateReportModelOpen, setIsGenerateReportModelOpen] = useState(false);
+  const [reportType, setReportType] = useState<ReportType>("sales");
 
-        setIsLoading(true);
-        setError(null);
+  const loadData = useCallback(async () => {
+    if (!token) {
+      return;
+    }
 
-        try{
-            const [bills, sales, topProducts, trends] = await Promise.all([
-                analysisAPI.getFiscalBills(token, period),
-                analysisAPI.getSalesReports(token),
-                analysisAPI.getTopProductsReports(token),
-                analysisAPI.getTrendAnalyses(token)
-            ]);
+    setIsLoading(true);
+    setError(null);
 
-            setFiscalBills(bills);
-            setSalesReports(sales);
-            setTopProductsReports(topProducts);
-            setTrendAnalyses(trends);
-        }catch(err){
-            setError('Greška pri učitavanju podataka za analizu');
-            console.error(err);
-        }finally{
-            setIsLoading(false);
-        }
+    try {
+      const [bills, sales, topProducts, trends] = await Promise.all([
+        analysisAPI.getFiscalBills(token, period),
+        analysisAPI.getSalesReports(token, salesPeriodFilter === "all" ? undefined : salesPeriodFilter),
+        analysisAPI.getTopProductsReports(token),
+        analysisAPI.getTrendAnalyses(token),
+      ]);
+
+      setFiscalBills(bills);
+      setSalesReports(sales);
+      setTopProductsReports(topProducts);
+      setTrendAnalyses(trends);
+    } catch (requestError) {
+      setError("Greska pri ucitavanju podataka analitike.");
+      console.error(requestError);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [analysisAPI, token, period, salesPeriodFilter]);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
+
+  const overviewStats = useMemo(() => {
+    const toLocalDateKey = (iso: string): string => {
+      const parsed = new Date(iso);
+      if (Number.isNaN(parsed.getTime())) {
+        return iso.slice(0, 10);
+      }
+      const year = parsed.getFullYear();
+      const month = String(parsed.getMonth() + 1).padStart(2, "0");
+      const day = String(parsed.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
     };
 
-    useEffect(() => {
-        loadData();
-    }, [token, period]);
+    const totalRevenue = fiscalBills.reduce((sum, bill) => sum + bill.totalAmount, 0);
+    const totalUnits = fiscalBills.reduce(
+      (sum, bill) => sum + bill.soldItems.reduce((itemSum, item) => itemSum + item.quantity, 0),
+      0
+    );
+    const averageBillValue = fiscalBills.length > 0 ? totalRevenue / fiscalBills.length : 0;
 
-    //racunanje statistika za pregled
-    const calculateOverviewStats = () => {
-        const totalRevenue = fiscalBills.reduce((sum, bill) => sum + bill.totalAmount, 0);
-        const totalProductsSold = fiscalBills.reduce((sum, bill) => sum + bill.soldItems.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
-        const averageBillValue = fiscalBills.length > 0 ? totalRevenue / fiscalBills.length : 0;
+    const now = new Date();
+    const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(
+      now.getDate()
+    ).padStart(2, "0")}`;
+    const yesterdayDate = new Date(now);
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayKey = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}-${String(yesterdayDate.getDate()).padStart(2, "0")}`;
 
-        //racunanje dnevnog trenda
-        const today = new Date().toISOString().split('T')[0];
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const todayRevenue = fiscalBills
+      .filter((bill) => toLocalDateKey(bill.createdAt) === todayKey)
+      .reduce((sum, bill) => sum + bill.totalAmount, 0);
+    const yesterdayRevenue = fiscalBills
+      .filter((bill) => toLocalDateKey(bill.createdAt) === yesterdayKey)
+      .reduce((sum, bill) => sum + bill.totalAmount, 0);
 
-        const todayRevenue = fiscalBills.filter(bill => bill.createdAt.split('T')[0] === today).reduce((sum, bill) => sum + bill.totalAmount, 0);
+    const revenueChange =
+      yesterdayRevenue > 0 ? ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100 : 0;
 
-        const yesterdayRevenue = fiscalBills.filter(bill => bill.createdAt.split('T')[0] === yesterdayStr).reduce((sum, bill) => sum + bill.totalAmount, 0);
-
-        const revenueChange = yesterdayRevenue > 0 ? ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100 : 0;
-        
-        return {
-            totalRevenue,
-            totalProductsSold,
-            averageBillValue,
-            todayRevenue,
-            revenueChange,
-            totalBills: fiscalBills.length
-        };
+    return {
+      totalRevenue,
+      totalUnits,
+      averageBillValue,
+      totalBills: fiscalBills.length,
+      todayRevenue,
+      revenueChange,
     };
+  }, [fiscalBills]);
 
-    const stats = calculateOverviewStats();
+  const latestTopProductsReport = topProductsReports[0];
+  const latestTrends = trendAnalyses.slice(0, 3);
+  const recentSalesReports = salesReports.slice(0, 5);
 
-    //f-ja za eksport PDF-a
-    const handleExportPDF = async (id: number, type: 'sales' | 'products' | 'trends' | 'fiscal') => {
-        if(!token) return;
+  const handleExportPDF = async (
+    id: number,
+    type: "sales" | "products" | "trends" | "fiscal"
+  ): Promise<void> => {
+    if (!token) {
+      return;
+    }
 
-        try{
-            let blob: Blob;
-            switch(type){
-                case 'fiscal':
-                    blob = await analysisAPI.exportFiscalBillPDF(id, token);
-                    break;
-                case 'sales':
-                    blob = await analysisAPI.exportSalesReportPDF(id, token);
-                    break;
-                case 'products':
-                    blob = await analysisAPI.exportTopProductsPDF(id, token);
-                    break;
-                case 'trends':
-                    blob = await analysisAPI.exportTrendAnalysisPDF(id, token);
-                    break;
-                default:
-                    return;
-            }
-            //kreiranje linka za download
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${type}-report-${id}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        }catch(err){
-            console.error('Greška pri eksportu PDF-a:', err);
-        }
-    };
+    try {
+      let blob: Blob;
+      switch (type) {
+        case "fiscal":
+          blob = await analysisAPI.exportFiscalBillPDF(id, token);
+          break;
+        case "sales":
+          blob = await analysisAPI.exportSalesReportPDF(id, token);
+          break;
+        case "products":
+          blob = await analysisAPI.exportTopProductsPDF(id, token);
+          break;
+        case "trends":
+          blob = await analysisAPI.exportTrendAnalysisPDF(id, token);
+          break;
+      }
 
-    //generisanje izvjestaja
-    const handleGenerateReport = async (params: any) => {
-        if(!token) return;
-        try{
-            setIsLoading(true);
-            switch(reportType){
-                case 'sales':
-                    await analysisAPI.generateSalesAnalysis(params, token);
-                    break;
-                case 'products':
-                    await analysisAPI.generateTopProductsAnalysis(params, token);
-                    break;
-                case 'trends':
-                    await analysisAPI.generateTrendAnalysis(params, token);
-                    break;
-            }
-            await loadData();
-            setIsGenerateReportModelOpen(false);
-        }catch(err){
-            setError('Greška pri generisanju izveštaja.');
-            console.error(err);
-        }finally{
-            setIsLoading(false);
-        }
-    };
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${type}-report-${id}.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(anchor);
+    } catch (requestError) {
+      setError("Neuspesan PDF izvoz.");
+      console.error(requestError);
+    }
+  };
 
-    return(
-        <div className="analysis-page">
-            <div className="page-header">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="page-header__title">Analiza prodaje</h1>
-                        <p className="page-header__subtitle">Pregled performansi prodaje i finansijskih izveštaja</p>
-                    </div>
-                    <div className="flex items-center gap-md">
-                        <div className="relative">
-                            <Calendar size={16}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-primary"/>
-                            <select className="appearance-none pl-9 pr-10 py-2
-                            rounded-lg border border-border
-                            bg-white text-sm font-medium
-                            shadow-sm
-                            hover:bg-surface
-                            focus:outline-none focus:ring-2 focus:ring-primary/30
-                            transition"value={period} onChange={(e) => setPeriod(e.target.value)}>
-                                <option value="today">Danas</option>
-                                <option value="yesterday">Juče</option>
-                                <option value="this-week">Ova nedelja</option>
-                                <option value="this-month">Ovaj mesec</option>
-                                <option value="last-month">Prošli mesec</option>
-                                <option value="this-year">Ova godina</option>
-                                <option value="all">Sve</option>
-                            </select>
-                        </div>
-                        <button className="btn btn--outline"
-                        onClick={() => setIsGenerateReportModelOpen(true)}>
-                            <FileText size={16}/>
-                            Generiši izveštaj
-                        </button>
-                        <button className="btn btn--secondary"
-                        onClick={loadData}
-                        disabled={isLoading}>
-                            <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''}/>
-                            Osveži
-                        </button>
-                    </div>
-                </div>
+  const handleGenerateReport = async (params: any): Promise<void> => {
+    if (!token) {
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      if (reportType === "sales") {
+        await analysisAPI.generateSalesAnalysis(params, token);
+      } else if (reportType === "products") {
+        await analysisAPI.generateTopProductsAnalysis(params, token);
+      } else {
+        await analysisAPI.generateTrendAnalysis(params, token);
+      }
+
+      await loadData();
+      setIsGenerateReportModelOpen(false);
+    } catch (requestError) {
+      setError("Greska pri generisanju izvestaja.");
+      console.error(requestError);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const renderSalesReportList = (reports: SalesReportDTO[]) => {
+    if (reports.length === 0) {
+      return (
+        <div className="empty-state">
+          <p className="text-muted">Nema generisanih izvestaja prodaje.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="analysis-sales-report-list">
+        {reports.map((report) => (
+          <div key={report.id} className="analysis-sales-report-item">
+            <div className="analysis-sales-report-item__header">
+              <div>
+                <h4 className="font-medium">
+                  {report.periodType === "daily" && "Dnevni izvestaj"}
+                  {report.periodType === "weekly" && "Nedeljni izvestaj"}
+                  {report.periodType === "monthly" && "Mesecni izvestaj"}
+                  {report.periodType === "yearly" && "Godisnji izvestaj"}
+                  {report.periodType === "total" && "Ukupni izvestaj"}
+                </h4>
+                <p className="text-muted">
+                  Period: {report.periodValue} | Generisano: {formatDate(report.generatedAt)}
+                </p>
+              </div>
+              <button className="btn btn--outline btn--sm btn--pdf" onClick={() => void handleExportPDF(report.id, "sales")}>
+                PDF
+              </button>
             </div>
-            {error && (
-                <div className="card mb-lg border-error bg-red-50">
-                    <div className="card__body">
-                        <div className="flex items-center gap-md">
-                            <div className="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center">
-                                <TrendingDown className="text-error" size={20}/>
-                            </div>
-                            <div>
-                                <p className="text-error font-medium">
-                                    {error}
-                                </p>
-                                <button className="btn btn--ghost btn--sm mt-2"
-                                onClick={loadData}>
-                                    Pokušaj ponovo
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <div className="analysis-sales-report-item__stats">
+              <div>
+                <p className="text-muted">Ukupna zarada</p>
+                <p className="font-medium">{formatCurrency(report.revenue)}</p>
+              </div>
+              <div>
+                <p className="text-muted">Prodate jedinice</p>
+                <p className="font-medium">{report.totalUnitsSold.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-muted">Prosek po jedinici</p>
+                <p className="font-medium">
+                  {formatCurrency(
+                    report.totalUnitsSold > 0 ? report.revenue / report.totalUnitsSold : 0
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
-            <div className="card mb-lg">
-                <div className="card__body p-2">
-                    <div className="flex gap-sm bg-surface p-1 rounded-lg">
-                        <button className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition
-                        ${activeTab === 'overview'
-                        ? 'bg-white shadow-sm text-primary'
-                        : 'text-text-secondary hover:bg-white/60'}`}
-                        onClick={() => setActiveTab('overview')}>
-                            <BarChart3 size={16} className="inline mr-2"/>
-                            Pregled
-                        </button>
-                        <button className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition
-                        ${activeTab === 'fiscal'
-                        ? 'bg-white shadow-sm text-primary'
-                        : 'text-text-secondary hover:bg-white/60'}`}
-                        onClick={() => setActiveTab('fiscal')}>
-                            <FileText size={16} className="inline mr-2"/>
-                            Fiskalni računi 
-                        </button>
-                        <button className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition
-                        ${activeTab === 'sales'
-                        ? 'bg-white shadow-sm text-primary'
-                        : 'text-text-secondary hover:bg-white/60'}`}
-                        onClick={() => setActiveTab('sales')}>
-                            <DollarSign size={16} className="inline mr-2"/>
-                            Prodaja 
-                        </button>
-                        <button className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition
-                        ${activeTab === 'products'
-                        ? 'bg-white shadow-sm text-primary'
-                        : 'text-text-secondary hover:bg-white/60'}`}
-                        onClick={() => setActiveTab('products')}>
-                            <Package size={16} className="inline mr-2"/>
-                            Top proizvodi 
-                        </button>
-                        <button className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition
-                        ${activeTab === 'trends'
-                        ? 'bg-white shadow-sm text-primary'
-                        : 'text-text-secondary hover:bg-white/60'}`}
-                        onClick={() => setActiveTab('trends')}>
-                            <TrendingUp size={16} className="inline mr-2"/>
-                            Trendovi 
-                        </button>
-                    </div>
+  return (
+    <div className="analysis-page">
+      <div className="page-header page-header--with-action">
+        <div>
+          <h1 className="page-header__title">Analiza prodaje</h1>
+          <p className="page-header__subtitle">
+            Pregled performansi prodaje, trenda i izvestaja za PDF izvoz
+          </p>
+        </div>
+        <div className="analysis-header-actions">
+          <div className="input-group analysis-period-group">
+            <label className="input-group__label">Period fiskalnih racuna</label>
+            <div className="analysis-period-input">
+              <Calendar size={16} />
+              <select className="input select" value={period} onChange={(event) => setPeriod(event.target.value)}>
+                <option value="today">Danas</option>
+                <option value="yesterday">Juce</option>
+                <option value="this-week">Ova nedelja</option>
+                <option value="this-month">Ovaj mesec</option>
+                <option value="last-month">Prosli mesec</option>
+                <option value="this-year">Ova godina</option>
+                <option value="all">Sve</option>
+              </select>
+            </div>
+          </div>
+
+          <button className="btn btn--outline" onClick={() => setIsGenerateReportModelOpen(true)}>
+            <FileText size={16} />
+            Generisi izvestaj
+          </button>
+          <button className="btn btn--secondary" onClick={() => void loadData()} disabled={isLoading}>
+            <RefreshCw size={16} className={isLoading ? "icon-spin" : ""} />
+            {isLoading ? "Osvezavanje..." : "Osvezi"}
+          </button>
+        </div>
+      </div>
+
+      {error && <div className="storage-alert storage-alert--error">{error}</div>}
+
+      <div className="card">
+        <div className="card__body analysis-tabs">
+          <button
+            className={`analysis-tab ${activeTab === "overview" ? "analysis-tab--active" : ""}`}
+            onClick={() => setActiveTab("overview")}
+          >
+            <BarChart3 size={16} />
+            Pregled
+          </button>
+          <button
+            className={`analysis-tab ${activeTab === "fiscal" ? "analysis-tab--active" : ""}`}
+            onClick={() => setActiveTab("fiscal")}
+          >
+            <FileText size={16} />
+            Fiskalni racuni
+          </button>
+          <button
+            className={`analysis-tab ${activeTab === "sales" ? "analysis-tab--active" : ""}`}
+            onClick={() => setActiveTab("sales")}
+          >
+            <DollarSign size={16} />
+            Prodaja
+          </button>
+          <button
+            className={`analysis-tab ${activeTab === "products" ? "analysis-tab--active" : ""}`}
+            onClick={() => setActiveTab("products")}
+          >
+            <Package size={16} />
+            Top proizvodi
+          </button>
+          <button
+            className={`analysis-tab ${activeTab === "trends" ? "analysis-tab--active" : ""}`}
+            onClick={() => setActiveTab("trends")}
+          >
+            <TrendingUp size={16} />
+            Trendovi
+          </button>
+        </div>
+      </div>
+
+      {activeTab === "overview" && (
+        <>
+          <div className="stats-grid">
+            <StatsCard icon={<DollarSign size={24} />} value={formatCurrency(overviewStats.totalRevenue)} label="Ukupna zarada" />
+            <StatsCard icon={<ShoppingBag size={24} />} value={overviewStats.totalUnits.toLocaleString()} label="Prodate jedinice" />
+            <StatsCard icon={<FileText size={24} />} value={overviewStats.totalBills} label="Broj fiskalnih racuna" />
+            <StatsCard icon={<BarChart3 size={24} />} value={formatCurrency(overviewStats.averageBillValue)} label="Prosecna vrednost racuna" />
+          </div>
+
+          <div className="grid analysis-overview-grid">
+            <div className="analysis-main-column">
+              <div className="card">
+                <div className="card__header">
+                  <h2 className="card__title">
+                    <BarChart3 size={20} className="card__title-icon" />
+                    Grafikon prodaje
+                  </h2>
                 </div>
+                <div className="card__body">
+                  <SalesAnalysisChart salesReports={salesReports} height={320} />
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="card__header">
+                  <h2 className="card__title">
+                    <FileText size={20} className="card__title-icon" />
+                    Poslednji izvestaji prodaje
+                  </h2>
+                </div>
+                <div className="card__body">{renderSalesReportList(recentSalesReports)}</div>
+              </div>
             </div>
 
-            {activeTab === 'overview' && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-lg">
-                    <div className="lg:col-span-2">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md mb-lg">
-                            <div className="card">
-                                <div className="card__body">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm text-text-muted">
-                                                Ukupna zarada
-                                            </p>
-                                            <p className="text-2x1 font-bold mt-1">
-                                                {formatCurrency(stats.totalRevenue)}
-                                            </p>
-                                        </div>
-                                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                            <DollarSign className="text-primary" size={24}/>
-                                        </div>
-                                    </div>
-                                    <div className="mt-3 flex items-center">
-                                        <span className={`text-sm font-medium ${stats.revenueChange >= 0 ? 'text-success' : 'text-error'}`}>
-                                            {stats.revenueChange >= 0 ? '+' : ''}{stats.revenueChange.toFixed(1)}%
-                                        </span>
-                                        <span className="text-sm text-text-muted ml-2">
-                                            Od juče
-                                        </span>
-                                    </div>  
-                                </div>
-                            </div>
+            <div className="analysis-side-column">
+              <div className="card">
+                <div className="card__header">
+                  <h2 className="card__title">
+                    <Package size={20} className="card__title-icon" />
+                    Top proizvodi
+                  </h2>
+                </div>
+                <div className="card__body">
+                  <TopProductsTable
+                    products={latestTopProductsReport?.topProducts.slice(0, 5) ?? []}
+                    compact
+                  />
+                </div>
+              </div>
 
-                            <div className="card">
-                                <div className="card__body">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm text-text-muted">
-                                                Prodatih parfema
-                                            </p>
-                                            <p className="text-2x1 font-bold mt-1">
-                                                {stats.totalProductsSold.toLocaleString()}
-                                            </p>
-                                        </div>
-                                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                            <ShoppingBag className="text-primary" size={24}/>
-                                        </div>
-                                    </div>
-                                    <div className="mt-3">
-                                        <p className="text-sm text-text-muted">
-                                            {stats.totalBills} fiskalnih računa
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="card">
-                                <div className="card__body">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm text-text-muted">
-                                                Prosečni računi
-                                            </p>
-                                            <p className="text-2x1 font-bold mt-1">
-                                                {formatCurrency(stats.averageBillValue)}
-                                            </p>
-                                        </div>
-                                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                            <PieChart className="text-primary" size={24}/>
-                                        </div>
-                                    </div>
-                                    <div className="mt-3">
-                                        <p className="text-sm text-text-muted">
-                                            Dnevno: {formatCurrency(stats.todayRevenue)}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {/*Grafikoni */}
-                        <div className="card">
-                            <div className="card__header">
-                                <h3 className="card__title">
-                                    Dnevna prodaja
-                                </h3>
-                            </div>
-                            <div className="card__body">
-                                <SalesAnalysisChart salesReports={salesReports}
-                                height={300}/>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="space-y-lg">
-                        <div className="card">
-                            <div className="card__header">
-                                <h3 className="card__title">
-                                    Top proizvodi
-                                </h3>
-                            </div>
-                            <div className="card__body p-0">
-                                {topProductsReports.length > 0 ? (
-                                    <TopProductsTable 
-                                        products={topProductsReports[0]?.topProducts.slice(0, 5) || []}
-                                        compact={true}
-                                    />
-                                    ) : (
-                                    <div className="p-6 text-center">
-                                        <p className="text-text-muted">Nema podataka o top proizvodima</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="card">
-                            <div className="card__header">
-                                <h3 className="card__title">
-                                    Najnoviji trendovi
-                                </h3>
-                            </div>
-                            <div className="card__body space-y-md">
-                                {trendAnalyses.slice(0, 2).map((trend) => (
-                                    <TrendAnalysisCard key={trend.id}
-                                    analysis={trend}
-                                    onExport={() => handleExportPDF(trend.id, 'trends')}
-                                    compact={true}/>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
+              <div className="card">
+                <div className="card__header">
+                  <h2 className="card__title">
+                    <TrendingUp size={20} className="card__title-icon" />
+                    Najnoviji trendovi
+                  </h2>
                 </div>
-            )}
-            {activeTab === 'fiscal' && (
-                <div className="card">
-                    <div className="card__header">
-                        <h3 className="card__title">
-                            Fiskalni računi
-                        </h3>
-                        <div className="flex items-center gap-sm">
-                            <span className="text-sm text-text-muted">
-                                Prikazano {fiscalBills.length} računa
-                            </span>
-                            <button className="btn btn--outline btn--sm"
-                            onClick={() => {/*kreiranje novog racuna */}}>
-                                + Novi račun
-                            </button>
-                        </div>
-                    </div>
-                    <div className="card__body">
-                        <FiscalBillsTable
-                        bills={fiscalBills}
-                        onExport={handleExportPDF}
-                        isLoading={isLoading}/>
-                    </div>
-                </div>
-            )}
-            {activeTab === 'sales' && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-1g">
-                    <div className="lg:col-span-2">
-                        <div className="card">
-                            <div className="card__header">
-                                <h3 className="card__title">
-                                    Izveštaji prodaje
-                                </h3>
-                            </div>
-                            <div className="card__body">
-                                {salesReports.length > 0 ? (
-                                    <div className="space-y-md">
-                                        {salesReports.map((report) => (
-                                            <div key={report.id} className="border border-border rounden-lg p-4">
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <div>
-                                                        <h4 className="font-medium">
-                                                            {report.periodType === 'daily' && 'Dnevni izveštaj'}
-                                                            {report.periodType === 'weekly' && 'Nedeljni izveštaj'}
-                                                            {report.periodType === 'monthly' && 'Mesečni izveštaj'}
-                                                            {report.periodType === 'yearly' && 'Godišnji izveštaj'}
-                                                            {report.periodType === 'total' && 'Ukupni izveštaj'}
-                                                        </h4>
-                                                        <p className="text-sm text-text-muted">
-                                                            Period: {report.periodValue} | Generisano: {formatDate(report.generatedAt)}
-                                                        </p>
-                                                    </div>
-                                                    <button className="btn btn--outline btn--sm"
-                                                    onClick={() => handleExportPDF(report.id, 'sales')}>
-                                                        <Download size={14}/>
-                                                        PDF
-                                                    </button>
-                                                </div>
-                                                <div className="grid grid-cols-3 gap-4">
-                                                    <div>
-                                                        <p className="text-sm text-text-muted">
-                                                            Ukupna zarada
-                                                        </p>
-                                                        <p className="text-lg font-bold"> 
-                                                            {formatCurrency(report.revenue)}
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-text-muted">
-                                                            Prodatih jedinica
-                                                        </p>
-                                                        <p className="text-lg font-bold">
-                                                            {report.totalUnitsSold.toLocaleString()}
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-text-muted">
-                                                            Prosečna vrednost
-                                                        </p>
-                                                        <p className="text-lg font-bold">
-                                                            {report.totalUnitsSold > 0 ? formatCurrency(report.revenue / report.totalUnitsSold) : formatCurrency(0)}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-8">
-                                        <p className="text-text-muted">
-                                            Nema generisanih izveštaja prodaje
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div className="card">
-                            <div className="card__header">
-                                <h3 className="card__title">
-                                    Filteri
-                                </h3>
-                            </div>
-                            <div className="card__body">
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-text-muted mb-2">
-                                            Tip perioda
-                                        </label>
-                                        <select className="w-full input">
-                                            <option value="daily">Dnevni</option>
-                                            <option value="weekly">Nedeljni</option>
-                                            <option value="monthly">Mesečni</option>
-                                            <option value="yearly">Godišnji</option>
-                                            <option value="total">Ukupno</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-text-muted mb-2"> 
-                                            Datum od
-                                        </label>
-                                        <input type="date" className="w-full input"/>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-text-muted mb-2">
-                                            Datum do
-                                        </label>
-                                        <input type="date" className="w-full input" />
-                                    </div>
-                                    <button className="w-full btn btn--primary">
-                                        <Filter size={16} className="mr-2" />
-                                        Primeri filter
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-            {activeTab === 'products' && (
-                <div className="card">
-                    <div className="card__header">
-                        <h3 className="card__title">Top proizvodi</h3>
-                    </div>
-                    <div className="card__body">
-                        {topProductsReports.length > 0 ? (
-                            <TopProductsTable
-                            products={topProductsReports[0]?.topProducts || []}
-                            onExport={() => topProductsReports[0] && handleExportPDF(topProductsReports[0].id, 'products')}/>
-                        ) : (
-                            <div className="text-center py-8">
-                                <p className="text-text-muted">Nema podataka o top proizvodima</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-            {activeTab === 'trends' && (
-                <div className="grid grid-cols-1 1g:grid-cols-2 gap-1g">
-                    {trendAnalyses.map((analysis) => (
-                        <TrendAnalysisCard
+                <div className="card__body analysis-trend-preview-list">
+                  {latestTrends.length === 0 ? (
+                    <p className="text-muted">Nema generisanih trend analiza.</p>
+                  ) : (
+                    latestTrends.map((analysis) => (
+                      <TrendAnalysisCard
                         key={analysis.id}
                         analysis={analysis}
-                        onExport={() => handleExportPDF(analysis.id, 'trends')}/>
-                    ))}
-                    {trendAnalyses.length === 0 && (
-                        <div className="col-span-2 text-center py-12">
-                            <p className="text-text-muted">Nema generisanih analiza trendova</p>
-                        </div>
-                    )}
+                        compact
+                        onExport={() => void handleExportPDF(analysis.id, "trends")}
+                      />
+                    ))
+                  )}
                 </div>
-            )}
-            {/*model za generisanje izvjestaja */}
-            <GenerateReportModel
-            isOpen={isGenerateReportModelOpen}
-            onClose={() => setIsGenerateReportModelOpen(false)}
-            onGenerate={handleGenerateReport}
-            reportType={reportType}
-            setReportType={setReportType}
-            isLoading={isLoading}/>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {activeTab === "fiscal" && (
+        <div className="card">
+          <div className="card__header">
+            <h2 className="card__title">
+              <FileText size={20} className="card__title-icon" />
+              Fiskalni racuni
+            </h2>
+            <span className="text-muted">Prikazano: {fiscalBills.length}</span>
+          </div>
+          <div className="card__body">
+            <FiscalBillsTable bills={fiscalBills} onExport={handleExportPDF} isLoading={isLoading} />
+          </div>
         </div>
-    );
+      )}
+
+      {activeTab === "sales" && (
+        <div className="grid analysis-sales-grid">
+          <div className="card">
+            <div className="card__header">
+              <h2 className="card__title">
+                <DollarSign size={20} className="card__title-icon" />
+                Izvestaji prodaje
+              </h2>
+            </div>
+            <div className="card__body">{renderSalesReportList(salesReports)}</div>
+          </div>
+
+          <div className="card">
+            <div className="card__header">
+              <h2 className="card__title">
+                <Calendar size={20} className="card__title-icon" />
+                Filteri
+              </h2>
+            </div>
+            <div className="card__body analysis-filter-panel">
+              <div className="input-group">
+                <label className="input-group__label">Tip perioda izvestaja</label>
+                <select
+                  className="input select"
+                  value={salesPeriodFilter}
+                  onChange={(event) => setSalesPeriodFilter(event.target.value as SalesPeriodFilter)}
+                >
+                  <option value="all">Svi</option>
+                  <option value="daily">Dnevni</option>
+                  <option value="weekly">Nedeljni</option>
+                  <option value="monthly">Mesecni</option>
+                  <option value="yearly">Godisnji</option>
+                  <option value="total">Ukupni</option>
+                </select>
+              </div>
+
+              <button className="btn btn--secondary" onClick={() => void loadData()} disabled={isLoading}>
+                <RefreshCw size={16} className={isLoading ? "icon-spin" : ""} />
+                Primeni
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "products" && (
+        <div className="card">
+          <div className="card__header">
+            <h2 className="card__title">
+              <Package size={20} className="card__title-icon" />
+              Top proizvodi
+            </h2>
+            {latestTopProductsReport && (
+              <button
+                className="btn btn--outline btn--sm btn--pdf"
+                onClick={() => void handleExportPDF(latestTopProductsReport.id, "products")}
+              >
+                PDF
+              </button>
+            )}
+          </div>
+          <div className="card__body">
+            {latestTopProductsReport ? (
+              <>
+                <p className="text-muted mb-md">Period: {latestTopProductsReport.period}</p>
+                <TopProductsTable products={latestTopProductsReport.topProducts} />
+              </>
+            ) : (
+              <div className="empty-state">
+                <p className="text-muted">Nema generisanih top-products izvestaja.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === "trends" && (
+        <div className="analysis-trends-grid">
+          {trendAnalyses.length === 0 ? (
+            <div className="card">
+              <div className="card__body empty-state">
+                <p className="text-muted">Nema generisanih analiza trenda.</p>
+              </div>
+            </div>
+          ) : (
+            trendAnalyses.map((analysis) => (
+              <TrendAnalysisCard
+                key={analysis.id}
+                analysis={analysis}
+                onExport={() => void handleExportPDF(analysis.id, "trends")}
+              />
+            ))
+          )}
+        </div>
+      )}
+
+      <GenerateReportModel
+        isOpen={isGenerateReportModelOpen}
+        onClose={() => setIsGenerateReportModelOpen(false)}
+        onGenerate={handleGenerateReport}
+        reportType={reportType}
+        setReportType={setReportType}
+        isLoading={isLoading}
+      />
+    </div>
+  );
 };
 
 export default AnalysisPage;

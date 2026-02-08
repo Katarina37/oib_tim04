@@ -6,7 +6,7 @@ import { UpdateOwnProfileDTO } from "../Domain/DTOs/UpdateOwnProfileDTO";
 import { authenticate } from "../Middlewares/authentification/AuthMiddleware";
 import { authorize } from "../Middlewares/authorization/AuthorizeMiddleware";
 import { UserRole } from "../Domain/enums/UserRole";
-import { ProxyRequest } from "../Domain/clients/IMicroserviceClient";
+import { ProxyRequest, ProxyResponse } from "../Domain/clients/IMicroserviceClient";
 import { IUserAccessPolicy } from "../Domain/services/IUserAccessPolicy";
 import { AccessDeniedError } from "../Domain/errors/AccessDeniedError";
 
@@ -334,6 +334,22 @@ export class GatewayController {
       ? req.path.replace(new RegExp(`^/${stripPrefix}`), "")
       : req.path;
     const path = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
+    const acceptHeader = req.headers.accept as unknown;
+    const contentTypeHeader = req.headers["content-type"] as unknown;
+
+    const accept =
+      typeof acceptHeader === "string"
+        ? acceptHeader
+        : Array.isArray(acceptHeader)
+          ? acceptHeader.join(", ")
+          : "";
+    const contentType =
+      typeof contentTypeHeader === "string"
+        ? contentTypeHeader
+        : Array.isArray(contentTypeHeader)
+          ? contentTypeHeader[0]
+          : "";
+
     return {
       method: req.method as ProxyRequest["method"],
       path,
@@ -341,6 +357,8 @@ export class GatewayController {
       params: req.query as Record<string, string>,
       headers: {
           Authorization: req.headers.authorization || "",
+          Accept: accept || "application/json",
+          ...(contentType ? { "Content-Type": contentType } : {}),
           "X-User-Id": String(req.user?.id ?? ""),
           "X-User-Role": req.user?.role ?? "",
           "X-Demo-Date": (req.headers["x-demo-date"] as string) || "",
@@ -348,64 +366,113 @@ export class GatewayController {
     };
   }
 
+  private sendProxyResponse(res: Response, response: ProxyResponse): void {
+    if (!response.success) {
+      res.status(response.status).json({ error: response.error });
+      return;
+    }
+
+    const contentType = response.headers?.["content-type"]?.toLowerCase();
+    const contentDisposition = response.headers?.["content-disposition"];
+
+    if (contentType?.includes("application/pdf")) {
+      if (contentType) {
+        res.setHeader("Content-Type", contentType);
+      }
+
+      if (contentDisposition) {
+        res.setHeader("Content-Disposition", contentDisposition);
+      }
+
+      const payload = response.data;
+
+      if (Buffer.isBuffer(payload)) {
+        res.status(response.status).send(payload);
+        return;
+      }
+
+      if (payload instanceof ArrayBuffer) {
+        res.status(response.status).send(Buffer.from(payload));
+        return;
+      }
+
+      if (ArrayBuffer.isView(payload)) {
+        res
+          .status(response.status)
+          .send(Buffer.from(payload.buffer, payload.byteOffset, payload.byteLength));
+        return;
+      }
+
+      if (typeof payload === "string") {
+        res.status(response.status).send(Buffer.from(payload, "binary"));
+        return;
+      }
+
+      res.status(500).json({ error: "Neispravan PDF odgovor mikroservisa." });
+      return;
+    }
+
+    res.status(response.status).json(response.data);
+  }
+
   private async proxyToProduction(req: Request, res: Response): Promise<void> {
     const proxyRequest = this.buildProxyRequest(req);
     const response = await this.gatewayService.proxyToProduction(proxyRequest);
-    res.status(response.status).json(response.success ? response.data : { error: response.error });
+    this.sendProxyResponse(res, response);
   }
 
   private async proxyToProcessing(req: Request, res: Response): Promise<void> {
     const proxyRequest = this.buildProxyRequest(req);
     const response = await this.gatewayService.proxyToProcessing(proxyRequest);
-    res.status(response.status).json(response.success ? response.data : { error: response.error });
+    this.sendProxyResponse(res, response);
   }
 
   private async proxyToStorage(req: Request, res: Response): Promise<void> {
     const proxyRequest = this.buildProxyRequest(req);
     const response = await this.gatewayService.proxyToStorage(proxyRequest);
-    res.status(response.status).json(response.success ? response.data : { error: response.error });
+    this.sendProxyResponse(res, response);
   }
 
   private async proxyToPackaging(req: Request, res: Response): Promise<void> {
     const proxyRequest = this.buildProxyRequest(req);
     const response = await this.gatewayService.proxyToPackaging(proxyRequest);
-    res.status(response.status).json(response.success ? response.data : { error: response.error });
+    this.sendProxyResponse(res, response);
   }
 
   private async proxyToSales(req: Request, res: Response): Promise<void> {
     const proxyRequest = this.buildProxyRequest(req);
     const response = await this.gatewayService.proxyToSales(proxyRequest);
-    res.status(response.status).json(response.success ? response.data : { error: response.error });
+    this.sendProxyResponse(res, response);
   }
 
   private async proxyToWeather(req: Request, res: Response): Promise<void> {
     const proxyRequest = this.buildProxyRequest(req);
     const response = await this.gatewayService.proxyToWeather(proxyRequest);
-    res.status(response.status).json(response.success ? response.data : { error: response.error });
+    this.sendProxyResponse(res, response);
   }
 
   private async proxyToDataAnalysis(req: Request, res: Response): Promise<void> {
     const proxyRequest = this.buildProxyRequest(req);
     const response = await this.gatewayService.proxyToDataAnalysis(proxyRequest);
-    res.status(response.status).json(response.success ? response.data : { error: response.error });
+    this.sendProxyResponse(res, response);
   }
 
   private async proxyToPerformanceAnalysis(req: Request, res: Response): Promise<void> {
     const proxyRequest = this.buildProxyRequest(req);
     const response = await this.gatewayService.proxyToPerformanceAnalysis(proxyRequest);
-    res.status(response.status).json(response.success ? response.data : { error: response.error });
+    this.sendProxyResponse(res, response);
   }
 
   private async proxyToAudit(req: Request, res: Response): Promise<void> {
     const proxyRequest = this.buildProxyRequest(req, "audit");
     const response = await this.gatewayService.proxyToAudit(proxyRequest);
-    res.status(response.status).json(response.success ? response.data : { error: response.error });
+    this.sendProxyResponse(res, response);
   }
 
   private async proxyToAuditInternal(req: Request, res: Response): Promise<void> {
     const proxyRequest = this.buildProxyRequest(req, "internal/audit");
     const response = await this.gatewayService.proxyToAudit(proxyRequest);
-    res.status(response.status).json(response.success ? response.data : { error: response.error });
+    this.sendProxyResponse(res, response);
   }
 
   private requireGatewayKey(req: Request, res: Response, next: () => void): void {

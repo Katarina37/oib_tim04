@@ -21,6 +21,68 @@ export class AxiosMicroserviceClient implements IMicroserviceClient {
     this.authToken = token;
   }
 
+  private normalizeHeaders(headers: unknown): Record<string, string> {
+    if (!headers || typeof headers !== "object") {
+      return {};
+    }
+
+    const normalized: Record<string, string> = {};
+    const rawHeaders = headers as Record<string, unknown>;
+
+    for (const [key, value] of Object.entries(rawHeaders)) {
+      if (typeof value === "string") {
+        normalized[key.toLowerCase()] = value;
+        continue;
+      }
+
+      if (Array.isArray(value)) {
+        normalized[key.toLowerCase()] = value.join(", ");
+      }
+    }
+
+    return normalized;
+  }
+
+  private toBuffer(data: unknown): Buffer {
+    if (Buffer.isBuffer(data)) {
+      return data;
+    }
+
+    if (data instanceof ArrayBuffer) {
+      return Buffer.from(data);
+    }
+
+    if (ArrayBuffer.isView(data)) {
+      return Buffer.from(data.buffer, data.byteOffset, data.byteLength);
+    }
+
+    if (typeof data === "string") {
+      return Buffer.from(data, "binary");
+    }
+
+    return Buffer.from([]);
+  }
+
+  private resolveErrorMessage(error: AxiosError<{ message?: string }>): string {
+    const payload: unknown = error.response?.data;
+
+    if (
+      payload &&
+      typeof payload === "object" &&
+      !Array.isArray(payload) &&
+      "message" in payload &&
+      typeof (payload as { message?: unknown }).message === "string"
+    ) {
+      return (payload as { message: string }).message;
+    }
+
+    if (typeof payload === "string" && payload.trim().length > 0) {
+      return payload;
+    }
+
+    return error.message;
+  }
+
   async proxy<T = unknown>(request: ProxyRequest): Promise<ProxyResponse<T>> {
     try {
       const headers: Record<string, string> = {
@@ -32,25 +94,33 @@ export class AxiosMicroserviceClient implements IMicroserviceClient {
         headers["Authorization"] = `Bearer ${this.authToken}`;
       }
 
-      const response = await this.httpClient.request<T>({
+      const acceptHeader = (request.headers?.Accept ?? request.headers?.accept ?? "").toLowerCase();
+      const expectsPdf = acceptHeader.includes("application/pdf") || request.path.toLowerCase().endsWith("/pdf");
+
+      const response = await this.httpClient.request<T | ArrayBuffer>({
         method: request.method,
         url: request.path,
         data: request.data,
         params: request.params,
         headers,
+        responseType: expectsPdf ? "arraybuffer" : "json",
       });
+
+      const responseData = expectsPdf ? this.toBuffer(response.data) : response.data;
 
       return {
         success: true,
-        data: response.data,
+        data: responseData as T,
         status: response.status,
+        headers: this.normalizeHeaders(response.headers),
       };
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string }>;
       return {
         success: false,
-        error: axiosError.response?.data?.message || axiosError.message,
+        error: this.resolveErrorMessage(axiosError),
         status: axiosError.response?.status || 500,
+        headers: this.normalizeHeaders(axiosError.response?.headers),
       };
     }
   }

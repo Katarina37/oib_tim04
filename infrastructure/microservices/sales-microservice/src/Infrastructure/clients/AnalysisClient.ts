@@ -40,6 +40,7 @@ export class AnalysisClient implements IAnalysisClient {
         const payload = {
             saleType: this.mapSaleType(data.saleType),
             paymentMethod: this.mapPaymentMethod(data.paymentMethod),
+            userId: data.userId,
             soldItems: data.soldItems.map(item => ({
                 productId: (item as any).perfumeId || (item as any).productId, 
                 productName: (item as any).name || (item as any).productName, 

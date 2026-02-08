@@ -4,7 +4,12 @@ import { ILoggerService } from "../../Domain/services/ILoggerService";
 import { LogLevel } from "../../Domain/enums/LogLevel";
 import { SalesAnalysisDTO } from "../../Domain/DTOs/SalesAnalysisDTO";
 import { TrendAnalysisDTO } from "../../Domain/DTOs/TrendAnalysisDTO";
-import { validateFiscalBill } from "../validators/AnalysisValidator";
+import {
+    validateFiscalBill,
+    validateSalesAnalysis,
+    validateTopProductsAnalysis,
+    validateTrendAnalysis
+} from "../validators/AnalysisValidator";
 
 export class AnalysisController{
     private readonly router: Router;
@@ -115,6 +120,14 @@ export class AnalysisController{
 
     private async generateSalesAnalysis(req: Request, res: Response): Promise<void>{
         try{
+            const validation = validateSalesAnalysis(req.body);
+            if(!validation.success){
+                res.status(400).json({
+                    success: false,
+                    message: validation.message
+                });
+                return;
+            }
             const report = await this.analysisService.generateSalesAnalysis(req.body);
             res.status(201).json({success: true, data: report});
         }catch(error){
@@ -124,7 +137,15 @@ export class AnalysisController{
 
     private async generateTopProducts(req: Request, res: Response): Promise<void>{
         try{
-            const { period } = req.body;
+            const validation = validateTopProductsAnalysis(req.body);
+            if(!validation.success){
+                res.status(400).json({
+                    success: false,
+                    message: validation.message
+                });
+                return;
+            }
+            const { period } = req.body as { period: string };
             const report = await this.analysisService.generateTopProductsAnalysis(period);
             res.status(201).json({success: true, data: report});
         }catch(error){
@@ -134,6 +155,14 @@ export class AnalysisController{
 
     private async generateTrendAnalysis(req: Request, res: Response): Promise<void>{
         try{
+            const validation = validateTrendAnalysis(req.body);
+            if(!validation.success){
+                res.status(400).json({
+                    success: false,
+                    message: validation.message
+                });
+                return;
+            }
             const report = await this.analysisService.generateTrendAnalysis(req.body);
             res.status(201).json({success: true, data: report});
         }catch(error){

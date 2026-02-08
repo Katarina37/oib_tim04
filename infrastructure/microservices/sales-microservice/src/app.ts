@@ -16,7 +16,6 @@ import { AxiosAuditClient } from "./Infrastructure/clients/AxiosAuditClient";
 import { AnalysisClient } from "./Infrastructure/clients/AnalysisClient";
 import { StorageClient } from "./Infrastructure/clients/StorageClient";
 import { DatabasePerfumeCatalogClient } from "./Infrastructure/clients/DatabasePerfumeCatalogClient";
-import { StaticPerfumeCatalogClient } from "./Infrastructure/clients/StaticPerfumeCatalogClient";
 
 import { IAuditClient } from "./Domain/services/IAuditClient";
 import { IAnalysisClient } from "./Domain/services/IAnalysisClient";
@@ -117,7 +116,6 @@ export async function createApp(): Promise<Application> {
     processingServiceUrl,
     gatewayApiKey
   );
-  const fallbackPerfumeCatalogClient: IPerfumeCatalogClient = new StaticPerfumeCatalogClient();
 
   // ===== DEPENDENCY INJECTION =====
   const saleRepository = new TypeORMSaleRepository();
@@ -126,8 +124,7 @@ export async function createApp(): Promise<Application> {
     auditClient,
     storageClient,
     analysisClient,
-    perfumeCatalogClient,
-    fallbackPerfumeCatalogClient
+    perfumeCatalogClient
   );
   
   const salesController = new SalesController(

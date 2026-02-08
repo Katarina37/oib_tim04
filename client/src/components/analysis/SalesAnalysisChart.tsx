@@ -1,76 +1,80 @@
 import React from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { SalesReportDTO } from "../../models/analysis/SalesReportDTO";
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { formatCurrency } from "../../helpers/formatters";
 
-interface SalesAnalysisChartProps{
-    salesReports: SalesReportDTO[];
-    height?: number;
+interface SalesAnalysisChartProps {
+  salesReports: SalesReportDTO[];
+  height?: number;
 }
 
-const SalesAnalysisChart: React.FC<SalesAnalysisChartProps> = ({salesReports, height = 300}) => {
-    const prepareChartData = () => {
-        const dailyReports = salesReports.filter(report => report.periodType === 'daily');
+const SalesAnalysisChart: React.FC<SalesAnalysisChartProps> = ({ salesReports, height = 300 }) => {
+  const resolveChartSource = (): SalesReportDTO[] => {
+    const priority: Array<SalesReportDTO["periodType"]> = ["daily", "weekly", "monthly", "yearly"];
+    for (const periodType of priority) {
+      const matches = salesReports.filter((report) => report.periodType === periodType);
+      if (matches.length > 0) {
+        return matches;
+      }
+    }
+    return [];
+  };
 
-        if(dailyReports.length === 0){
-            return [];
-        }
+  const chartSource = resolveChartSource();
+  const chartData = [...chartSource]
+    .sort((first, second) => first.periodValue.localeCompare(second.periodValue))
+    .slice(-8)
+    .map((report) => ({
+      label: report.periodValue,
+      revenue: report.revenue,
+      units: report.totalUnitsSold,
+    }));
 
-        return dailyReports.slice(-7).map(report => ({
-            date: report.periodValue,
-            revenue: report.revenue,
-            units: report.totalUnitsSold
-        }));
-    };
+  if (chartData.length === 0) {
+    return (
+      <div className="empty-state" style={{ minHeight: `${height}px` }}>
+        <p className="text-muted">Nema podataka za prikaz grafikona.</p>
+      </div>
+    );
+  }
 
-    const charData = prepareChartData();
-
-    if(charData.length === 0){
-        return(
-            <div className="flex items-center justify-center" style={{height}}>
-                <p className="text-text-muted">Nema podataka za prikaz grafika</p>
-            </div>
-        );
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload || payload.length === 0) {
+      return null;
     }
 
-    const CustomToolTip = ({active, payload, label}: any) => {
-        if(active && payload && payload.length){
-            return(
-                <div className="bg-white p-3 border border-border rounded-lg shadow-lg">
-                    <p className="font-medium">{label}</p>
-                    <p className="text-sm text-primary">
-                        Zarada: {formatCurrency(payload[0].value)}
-                    </p>
-                    <p className="text-sm text-text-muted">
-                        Proizvoda: {payload[0].payload.units}
-                    </p>
-                </div>
-            );
-        }
-        return null;
-    };
-
-    return(
-        <ResponsiveContainer width="100%" height={height}>
-            <BarChart data={charData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e9ec"/>
-                <XAxis
-                dataKey="date"
-                stroke="#8a9bac"
-                fontSize={12}/>
-                <YAxis
-                stroke="#8a9bac"
-                fontSize={12}
-                tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}/>
-                <Tooltip content={<CustomToolTip/>}/>
-                <Bar
-                dataKey="revenue"
-                fill="#66cdaa"
-                radius={[4, 4, 0, 0]}
-                name="Zarada"/>
-            </BarChart>
-        </ResponsiveContainer>
+    return (
+      <div className="analysis-chart-tooltip">
+        <p className="font-medium">{label}</p>
+        <p className="text-success">Zarada: {formatCurrency(payload[0].value)}</p>
+        <p className="text-muted">Prodate jedinice: {payload[0].payload.units}</p>
+      </div>
     );
+  };
+
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#e5e9ec" />
+        <XAxis dataKey="label" stroke="#8a9bac" fontSize={12} />
+        <YAxis
+          stroke="#8a9bac"
+          fontSize={12}
+          tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k`}
+        />
+        <Tooltip content={<CustomTooltip />} />
+        <Bar dataKey="revenue" fill="#66cdaa" radius={[6, 6, 0, 0]} name="Zarada" />
+      </BarChart>
+    </ResponsiveContainer>
+  );
 };
 
 export default SalesAnalysisChart;

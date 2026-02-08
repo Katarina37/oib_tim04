@@ -694,3 +694,404 @@ USE vremenski_uslovi;
 TRUNCATE TABLE vremenski_dan;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+
+-- #############################################################
+-- PART 4: ANALYSIS-MICROSERVICE RESET + EDGE-CASE SEED
+-- #############################################################
+-- Ovaj deo je namenjen iskljucivo za testiranje analysis-microservice-a.
+-- Resetuje podatke u bazi izvestaji_analize i ubacuje raznovrsne test primere.
+
+USE izvestaji_analize;
+
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE trend_analyses;
+TRUNCATE TABLE top_product_reports;
+TRUNCATE TABLE sales_reports;
+TRUNCATE TABLE fiscal_bills;
+TRUNCATE TABLE izvestaj_analize;
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- -------------------------------------------------------------
+-- fiscal_bills (edge-case primeri)
+-- -------------------------------------------------------------
+-- Pokriveno:
+-- - granice dana: 00:00:00 i 23:59:59
+-- - granice nedelje/meseca/godine
+-- - prestupna godina
+-- - mixed single/multi item racuni
+-- - dupli productId unutar istog racuna
+-- - null korisnik_id
+-- - vrlo mali i veliki iznosi
+
+INSERT INTO fiscal_bills (
+    tip_prodaje,
+    nacin_placanja,
+    prodati_proizvodi,
+    ukupan_iznos,
+    datum_kreiranja,
+    korisnik_id
+) VALUES
+(
+    'retail',
+    'cash',
+    '[{"productId":101,"productName":"Edge Bloom 15ml","quantity":1,"price":999.99}]',
+    999.99,
+    '2024-02-29 12:00:00',
+    3
+),
+(
+    'wholesale',
+    'bank_transfer',
+    '[{"productId":102,"productName":"Noir Base 100ml","quantity":10,"price":4500.00},{"productId":103,"productName":"Amber Resin 100ml","quantity":5,"price":12000.00}]',
+    105000.00,
+    '2025-12-31 23:59:59',
+    2
+),
+(
+    'retail',
+    'card',
+    '[{"productId":101,"productName":"Edge Bloom 15ml","quantity":2,"price":999.99}]',
+    1999.98,
+    '2026-01-01 00:00:00',
+    3
+),
+(
+    'retail',
+    'cash',
+    '[{"productId":104,"productName":"Vanilla Dry","quantity":1,"price":15000.00}]',
+    15000.00,
+    '2026-01-15 11:22:00',
+    4
+),
+(
+    'wholesale',
+    'bank_transfer',
+    '[{"productId":105,"productName":"Citrus Peel","quantity":20,"price":2100.00}]',
+    42000.00,
+    '2026-01-26 08:00:00',
+    2
+),
+(
+    'retail',
+    'card',
+    '[{"productId":106,"productName":"Tonka Line","quantity":1,"price":8700.00},{"productId":107,"productName":"Tonka Line Refill","quantity":2,"price":4350.00}]',
+    17400.00,
+    '2026-01-31 23:59:59',
+    5
+),
+(
+    'retail',
+    'cash',
+    '[{"productId":108,"productName":"Marine Drop","quantity":3,"price":3200.00}]',
+    9600.00,
+    '2026-02-01 10:10:00',
+    3
+),
+(
+    'retail',
+    'card',
+    '[{"productId":109,"productName":"Blue Iris","quantity":1,"price":5600.00},{"productId":110,"productName":"Blue Iris Reserve","quantity":1,"price":5600.00}]',
+    11200.00,
+    '2026-02-02 00:00:00',
+    4
+),
+(
+    'retail',
+    'cash',
+    '[{"productId":109,"productName":"Blue Iris","quantity":1,"price":5600.00}]',
+    5600.00,
+    '2026-02-02 23:59:59',
+    4
+),
+(
+    'wholesale',
+    'bank_transfer',
+    '[{"productId":111,"productName":"Warehouse Mist","quantity":50,"price":790.00}]',
+    39500.00,
+    '2026-02-03 14:05:00',
+    2
+),
+(
+    'retail',
+    'card',
+    '[{"productId":112,"productName":"Gold Thread","quantity":1,"price":19990.00}]',
+    19990.00,
+    '2026-02-04 09:30:00',
+    3
+),
+(
+    'retail',
+    'cash',
+    '[{"productId":113,"productName":"Mini Sampler","quantity":4,"price":2500.00}]',
+    10000.00,
+    '2026-02-05 16:45:00',
+    NULL
+),
+(
+    'wholesale',
+    'card',
+    '[{"productId":114,"productName":"Spice Core","quantity":7,"price":3100.00},{"productId":115,"productName":"Spice Core Premium","quantity":3,"price":7000.00}]',
+    42700.00,
+    '2026-02-06 13:15:00',
+    2
+),
+(
+    'retail',
+    'bank_transfer',
+    '[{"productId":116,"productName":"Silk Air","quantity":2,"price":4300.00}]',
+    8600.00,
+    '2026-02-07 20:20:00',
+    5
+),
+(
+    'retail',
+    'cash',
+    '[{"productId":117,"productName":"Sunday Prime","quantity":1,"price":12900.00}]',
+    12900.00,
+    '2026-02-08 00:00:00',
+    3
+),
+(
+    'wholesale',
+    'bank_transfer',
+    '[{"productId":118,"productName":"Bulk Cedar","quantity":12,"price":1800.00},{"productId":118,"productName":"Bulk Cedar","quantity":8,"price":1800.00}]',
+    36000.00,
+    '2026-02-08 23:59:59',
+    5
+),
+(
+    'retail',
+    'card',
+    '[{"productId":119,"productName":"Test Unit","quantity":1,"price":1.00}]',
+    1.00,
+    '2026-02-08 12:00:00',
+    4
+),
+(
+    'wholesale',
+    'cash',
+    '[{"productId":120,"productName":"Load Test Barrel","quantity":1000,"price":99.99}]',
+    99990.00,
+    '2026-02-08 18:00:00',
+    2
+);
+
+-- -------------------------------------------------------------
+-- sales_reports (vec postojeci i edge reporti)
+-- -------------------------------------------------------------
+INSERT INTO sales_reports (
+    tip_perioda,
+    vrednost_perioda,
+    ukupna_prodaja,
+    broj_prodatih_jedinica,
+    zarada,
+    detalji,
+    generisan_datum
+) VALUES
+(
+    'daily',
+    '2026-02-01',
+    3.00,
+    3,
+    9600.00,
+    '{"topProducts":[{"productId":108,"productName":"Marine Drop","unitsSold":3,"revenue":9600.00}],"averageSaleValue":3200.00}',
+    '2026-02-01 23:59:59'
+),
+(
+    'daily',
+    '2026-02-02',
+    3.00,
+    3,
+    16800.00,
+    '{"topProducts":[{"productId":109,"productName":"Blue Iris","unitsSold":2,"revenue":11200.00},{"productId":110,"productName":"Blue Iris Reserve","unitsSold":1,"revenue":5600.00}],"averageSaleValue":5600.00}',
+    '2026-02-02 23:59:59'
+),
+(
+    'daily',
+    '2026-02-03',
+    50.00,
+    50,
+    39500.00,
+    '{"topProducts":[{"productId":111,"productName":"Warehouse Mist","unitsSold":50,"revenue":39500.00}],"averageSaleValue":790.00}',
+    '2026-02-03 23:59:59'
+),
+(
+    'daily',
+    '2026-02-04',
+    1.00,
+    1,
+    19990.00,
+    '{"topProducts":[{"productId":112,"productName":"Gold Thread","unitsSold":1,"revenue":19990.00}],"averageSaleValue":19990.00}',
+    '2026-02-04 23:59:59'
+),
+(
+    'daily',
+    '2026-02-05',
+    4.00,
+    4,
+    10000.00,
+    '{"topProducts":[{"productId":113,"productName":"Mini Sampler","unitsSold":4,"revenue":10000.00}],"averageSaleValue":2500.00}',
+    '2026-02-05 23:59:59'
+),
+(
+    'daily',
+    '2026-02-06',
+    10.00,
+    10,
+    42700.00,
+    '{"topProducts":[{"productId":114,"productName":"Spice Core","unitsSold":7,"revenue":21700.00},{"productId":115,"productName":"Spice Core Premium","unitsSold":3,"revenue":21000.00}],"averageSaleValue":4270.00}',
+    '2026-02-06 23:59:59'
+),
+(
+    'daily',
+    '2026-02-07',
+    2.00,
+    2,
+    8600.00,
+    '{"topProducts":[{"productId":116,"productName":"Silk Air","unitsSold":2,"revenue":8600.00}],"averageSaleValue":4300.00}',
+    '2026-02-07 23:59:59'
+),
+(
+    'daily',
+    '2026-02-08',
+    1022.00,
+    1022,
+    148891.00,
+    '{"topProducts":[{"productId":120,"productName":"Load Test Barrel","unitsSold":1000,"revenue":99990.00}],"averageSaleValue":145.69}',
+    '2026-02-08 23:59:59'
+),
+(
+    'weekly',
+    '2026-W06',
+    1092.00,
+    1092,
+    286481.00,
+    '{"topProducts":[{"productId":120,"productName":"Load Test Barrel","unitsSold":1000,"revenue":99990.00},{"productId":111,"productName":"Warehouse Mist","unitsSold":50,"revenue":39500.00}],"averageSaleValue":262.35}',
+    '2026-02-09 00:05:00'
+),
+(
+    'monthly',
+    '2026-02',
+    1095.00,
+    1095,
+    296081.00,
+    '{"topProducts":[{"productId":120,"productName":"Load Test Barrel","unitsSold":1000,"revenue":99990.00},{"productId":118,"productName":"Bulk Cedar","unitsSold":20,"revenue":36000.00}],"averageSaleValue":270.39}',
+    '2026-03-01 09:00:00'
+),
+(
+    'yearly',
+    '2026',
+    1121.00,
+    1121,
+    372480.98,
+    '{"note":"Ukljucuje racune od 2026-01-01 do 2026-12-31.","averageSaleValue":332.28}',
+    '2026-12-31 23:59:59'
+),
+(
+    'total',
+    'all',
+    1137.00,
+    1137,
+    478480.97,
+    '{"note":"Kumulativni izvestaj ukljucuje i istorijske racune iz 2024 i 2025.","averageSaleValue":420.83}',
+    '2027-01-01 00:00:10'
+);
+
+-- -------------------------------------------------------------
+-- top_product_reports (ukljucujuci prazan rezultat)
+-- -------------------------------------------------------------
+INSERT INTO top_product_reports (
+    period,
+    top_proizvodi,
+    ukupna_zarada_od_top,
+    generisan_datum
+) VALUES
+(
+    '2026-02',
+    '[{"productId":120,"productName":"Load Test Barrel","unitsSold":1000,"revenue":99990.00,"percentage":47.98},{"productId":111,"productName":"Warehouse Mist","unitsSold":50,"revenue":39500.00,"percentage":18.96},{"productId":118,"productName":"Bulk Cedar","unitsSold":20,"revenue":36000.00,"percentage":17.28},{"productId":112,"productName":"Gold Thread","unitsSold":1,"revenue":19990.00,"percentage":9.59},{"productId":117,"productName":"Sunday Prime","unitsSold":1,"revenue":12900.00,"percentage":6.19}]',
+    208380.00,
+    '2026-03-01 10:00:00'
+),
+(
+    '2026-W06',
+    '[{"productId":120,"productName":"Load Test Barrel","unitsSold":1000,"revenue":99990.00,"percentage":51.54},{"productId":111,"productName":"Warehouse Mist","unitsSold":50,"revenue":39500.00,"percentage":20.36},{"productId":118,"productName":"Bulk Cedar","unitsSold":20,"revenue":36000.00,"percentage":18.55}]',
+    175490.00,
+    '2026-02-09 10:00:00'
+),
+(
+    '2099-01',
+    '[]',
+    0.00,
+    '2099-02-01 08:00:00'
+);
+
+-- -------------------------------------------------------------
+-- trend_analyses (razlicite vrste + prazan trend)
+-- -------------------------------------------------------------
+INSERT INTO trend_analyses (
+    tip_analize,
+    podaci,
+    zakljucak,
+    generisan_datum
+) VALUES
+(
+    'monthly_trend',
+    '[{"label":"2025-12","value":15},{"label":"2026-01","value":32},{"label":"2026-02","value":1095}]',
+    'Rastuci trend prodaje uz nagli skok u februaru.',
+    '2026-03-01 11:00:00'
+),
+(
+    'product_trend',
+    '[{"label":"Blue Iris","value":2,"productId":109},{"label":"Bulk Cedar","value":20,"productId":118},{"label":"Load Test Barrel","value":1000,"productId":120}]',
+    'Dominacija jednog proizvoda ukazuje na neravnomernu traznju.',
+    '2026-03-01 11:05:00'
+),
+(
+    'category_trend',
+    '[{"label":"retail","value":18},{"label":"wholesale","value":4}]',
+    'Retail ima vise racuna, ali wholesale nosi veci prihod.',
+    '2026-03-01 11:10:00'
+),
+(
+    'monthly_trend',
+    '[]',
+    'Nema dovoljno podataka za analizu',
+    '2026-03-01 11:15:00'
+);
+
+-- -------------------------------------------------------------
+-- legacy izvestaj_analize (kompatibilnost)
+-- -------------------------------------------------------------
+INSERT INTO izvestaj_analize (
+    naziv,
+    tip_izvestaja,
+    period_od,
+    period_do,
+    podaci,
+    datum_kreiranja
+) VALUES
+(
+    'Nedeljni edge-case pregled',
+    'nedeljni',
+    '2026-02-02',
+    '2026-02-08',
+    '{"ukupna_prodaja":1092,"ukupna_zarada":286481.00,"napomena":"Ukljuceni granicni timestamp-i."}',
+    '2026-02-09 12:00:00'
+),
+(
+    'Mesecni edge-case pregled',
+    'mesecni',
+    '2026-02-01',
+    '2026-02-28',
+    '{"ukupna_prodaja":1095,"ukupna_zarada":296081.00,"top":{"productId":120,"unitsSold":1000}}',
+    '2026-03-01 12:00:00'
+),
+(
+    'Trend anomalije i outlier-i',
+    'trend',
+    '2025-12-01',
+    '2026-02-28',
+    '{"zakljucak":"Detektovan outlier zbog proizvoda sa 1000 jedinica u jednom racunu."}',
+    '2026-03-01 12:05:00'
+);

@@ -28,8 +28,7 @@ export class SaleService implements ISaleService {
         private readonly auditClient: IAuditClient,
         private readonly storageClient: IStorageClient,
         private readonly analysisClient: IAnalysisClient,
-        private readonly perfumeCatalogClient: IPerfumeCatalogClient,
-        private readonly fallbackPerfumeCatalogClient: IPerfumeCatalogClient
+        private readonly perfumeCatalogClient: IPerfumeCatalogClient
     ) {}
 
     async executeSale(data: CreateSaleDto, userContext: UserContext): Promise<SaleResponseDTO> {
@@ -173,20 +172,7 @@ export class SaleService implements ISaleService {
                 mikroservis: SaleService.MICROSERVICE_NAME,
                 dodatni_podaci: { source: "perfume-catalog" },
             });
-
-            const fallbackCatalog = await this.fallbackPerfumeCatalogClient.getAvailablePerfumes(userContext);
-            const fallbackStock = await this.resolveSharedInventoryStock(userContext);
-            const distributedStocks = this.distributeSharedStock(
-                fallbackStock,
-                fallbackCatalog.length
-            );
-
-            return fallbackCatalog
-                .map((perfume, index) => ({
-                    ...perfume,
-                    stock: distributedStocks[index] ?? 0,
-                }))
-                .filter((perfume) => perfume.stock > 0);
+            throw new Error("Katalog parfema trenutno nije dostupan.");
         }
     }
 
@@ -225,26 +211,6 @@ export class SaleService implements ISaleService {
                 dodatni_podaci: { source: "perfume-catalog" },
             });
             throw new Error("Katalog parfema trenutno nije dostupan.");
-        }
-    }
-
-    private async resolveSharedInventoryStock(userContext?: UserContext): Promise<number> {
-        try {
-            const inventory = await this.storageClient.getInventory(userContext);
-            const normalizedRole = userContext?.role?.toLowerCase();
-
-            const stockCandidate =
-                normalizedRole === "sales_manager"
-                    ? inventory.distributiveCenter
-                    : inventory.warehouseCenter;
-
-            if (!Number.isFinite(stockCandidate) || stockCandidate < 0) {
-                return 0;
-            }
-
-            return Math.floor(stockCandidate);
-        } catch {
-            return 0;
         }
     }
 
@@ -289,23 +255,6 @@ export class SaleService implements ISaleService {
             }
         }
         return perfumeIds;
-    }
-
-    private distributeSharedStock(totalStock: number, bucketCount: number): number[] {
-        if (bucketCount <= 0) {
-            return [];
-        }
-
-        const normalizedTotal = Number.isFinite(totalStock) && totalStock > 0
-            ? Math.floor(totalStock)
-            : 0;
-
-        const base = Math.floor(normalizedTotal / bucketCount);
-        const remainder = normalizedTotal % bucketCount;
-
-        return Array.from({ length: bucketCount }, (_unused, index) =>
-            base + (index < remainder ? 1 : 0)
-        );
     }
 
     private deduplicatePositiveIds(ids: number[]): number[] {
