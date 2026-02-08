@@ -128,7 +128,9 @@ const AnalysisPage: React.FC = () => {
     };
   }, [fiscalBills]);
 
-  const latestTopProductsReport = topProductsReports[0];
+  const latestTopProductsReport = useMemo(() => {
+    return topProductsReports.find((report) => report.topProducts.length > 0) ?? topProductsReports[0];
+  }, [topProductsReports]);
   const latestTrends = trendAnalyses.slice(0, 3);
   const recentSalesReports = salesReports.slice(0, 5);
 
