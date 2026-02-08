@@ -110,7 +110,7 @@ const ProcessingPage: React.FC = () => {
       } catch (requestError) {
         const message =
           parseApiErrorMessage(requestError) ??
-          "Greska prilikom ucitavanja podataka prerade.";
+          "Greška prilikom učitavanja podataka prerade.";
         setError(message);
       } finally {
         setIsLoading(false);
@@ -138,13 +138,13 @@ const ProcessingPage: React.FC = () => {
       setLastProcessingResult(result);
       setActionMessage({
         type: "success",
-        text: `Prerada uspesna: kreirano ${result.createdPerfumes.length} parfema, utroseno ${result.requiredPlants} biljaka.`,
+        text: `Prerada uspešna: kreirano ${result.createdPerfumes.length} parfema, utrošeno ${result.requiredPlants} biljaka.`,
       });
 
       await loadData(activeFilters);
     } catch (requestError) {
       const message =
-        parseApiErrorMessage(requestError) ?? "Neuspesno pokretanje prerade.";
+        parseApiErrorMessage(requestError) ?? "Neuspešno pokretanje prerade.";
       setActionMessage({ type: "error", text: message });
     } finally {
       setIsProcessing(false);
@@ -176,7 +176,7 @@ const ProcessingPage: React.FC = () => {
           disabled={isLoading || isProcessing}
         >
           <RefreshCw size={16} className={isLoading ? "icon-spin" : ""} />
-          {isLoading ? "Osvezavanje..." : "Osvezi"}
+          {isLoading ? "Osvežavanje..." : "Osveži"}
         </button>
       </div>
 
@@ -304,7 +304,7 @@ const ProcessingPage: React.FC = () => {
             {isLoading ? (
               <div className="empty-state">
                 <div className="spinner" />
-                <p className="mt-md text-muted">Ucitavanje parfema...</p>
+                <p className="mt-md text-muted">Učitavanje parfema...</p>
               </div>
             ) : perfumes.length === 0 ? (
               <div className="empty-state">
@@ -454,11 +454,11 @@ const ProcessingPage: React.FC = () => {
             </div>
             <div className="card__body">
               <p className="text-muted">
-                Preuzimanje parfema za ambalazu vodi se iskljucivo kroz mikroservis pakovanja.
+                Preuzimanje parfema za ambalažu vodi se isključivo kroz mikroservis pakovanja.
               </p>
               <p className="text-muted mt-sm">
-                Za sledeci korak koristi stranu <strong>Skladistenje</strong> i akcije{" "}
-                <strong>Spakuj artikle</strong> i <strong>Posalji prvu dostupnu u skladiste</strong>.
+                Za sledeći korak koristi stranu <strong>Skladištenje</strong> i akcije{" "}
+                <strong>Spakuj artikle</strong> i <strong>Pošalji prvu dostupnu u skladište</strong>.
               </p>
             </div>
           </div>

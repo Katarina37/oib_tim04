@@ -192,7 +192,7 @@ export const Sidebar: React.FC = () => {
       case 'seller':
         return 'Prodavac';
       case 'sales_manager':
-        return 'Menadzer prodaje';
+        return 'Menadžer prodaje';
       default:
         return role ?? '';
     }

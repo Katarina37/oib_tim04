@@ -37,7 +37,7 @@ const TopProductsTable: React.FC<TopProductsTableProps> = ({
           {onExport && (
             <button className="btn btn--outline btn--sm" onClick={onExport}>
               <Download size={14} />
-              Preuzmi izvestaj
+              Preuzmi izveštaj
             </button>
           )}
         </div>

@@ -28,7 +28,7 @@ const AlgorithmAnalysisConclusions: React.FC<AlgorithmAnalysisConclusionsProps> 
     return (
       <div className="performance-conclusion performance-conclusion--empty">
         <Info size={38} />
-        <p>Izaberite izvestaj iz istorije kako bi se prikazali detaljni zakljucci.</p>
+        <p>Izaberite izveštaj iz istorije kako bi se prikazali detaljni zaključci.</p>
       </div>
     );
   }
@@ -39,7 +39,7 @@ const AlgorithmAnalysisConclusions: React.FC<AlgorithmAnalysisConclusionsProps> 
     <div className="performance-conclusion">
       <div className="performance-conclusion__header">
         <Lightbulb size={18} />
-        <h4>Zakljucak analize: {selectedReport.naziv}</h4>
+        <h4>Zaključak analize: {selectedReport.naziv}</h4>
       </div>
 
       <div className="performance-conclusion__body">

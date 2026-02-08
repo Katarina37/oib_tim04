@@ -18,7 +18,7 @@ const TrendAnalysisCard: React.FC<TrendAnalysisCardProps> = ({
   const getAnalysisTypeLabel = (type: string) => {
     switch (type) {
       case "monthly_trend":
-        return "Mesecni trend";
+        return "Mesečni trend";
       case "product_trend":
         return "Trend po proizvodu";
       case "category_trend":

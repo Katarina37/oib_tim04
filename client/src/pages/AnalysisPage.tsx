@@ -67,7 +67,7 @@ const AnalysisPage: React.FC = () => {
       setTopProductsReports(topProducts);
       setTrendAnalyses(trends);
     } catch (requestError) {
-      setError("Greska pri ucitavanju podataka analitike.");
+      setError("Greška pri učitavanju podataka analitike.");
       console.error(requestError);
     } finally {
       setIsLoading(false);
@@ -168,7 +168,7 @@ const AnalysisPage: React.FC = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(anchor);
     } catch (requestError) {
-      setError("Neuspesan PDF izvoz.");
+      setError("Neuspešan PDF izvoz.");
       console.error(requestError);
     }
   };
@@ -193,7 +193,7 @@ const AnalysisPage: React.FC = () => {
       await loadData();
       setIsGenerateReportModelOpen(false);
     } catch (requestError) {
-      setError("Greska pri generisanju izvestaja.");
+      setError("Greška pri generisanju izveštaja.");
       console.error(requestError);
     } finally {
       setIsLoading(false);
@@ -204,7 +204,7 @@ const AnalysisPage: React.FC = () => {
     if (reports.length === 0) {
       return (
         <div className="empty-state">
-          <p className="text-muted">Nema generisanih izvestaja prodaje.</p>
+          <p className="text-muted">Nema generisanih izveštaja prodaje.</p>
         </div>
       );
     }
@@ -216,11 +216,11 @@ const AnalysisPage: React.FC = () => {
             <div className="analysis-sales-report-item__header">
               <div>
                 <h4 className="font-medium">
-                  {report.periodType === "daily" && "Dnevni izvestaj"}
-                  {report.periodType === "weekly" && "Nedeljni izvestaj"}
-                  {report.periodType === "monthly" && "Mesecni izvestaj"}
-                  {report.periodType === "yearly" && "Godisnji izvestaj"}
-                  {report.periodType === "total" && "Ukupni izvestaj"}
+                  {report.periodType === "daily" && "Dnevni izveštaj"}
+                  {report.periodType === "weekly" && "Nedeljni izveštaj"}
+                  {report.periodType === "monthly" && "Mesečni izveštaj"}
+                  {report.periodType === "yearly" && "Godišnji izveštaj"}
+                  {report.periodType === "total" && "Ukupni izveštaj"}
                 </h4>
                 <p className="text-muted">
                   Period: {report.periodValue} | Generisano: {formatDate(report.generatedAt)}
@@ -260,7 +260,7 @@ const AnalysisPage: React.FC = () => {
         <div>
           <h1 className="page-header__title">Analiza prodaje</h1>
           <p className="page-header__subtitle">
-            Pregled performansi prodaje, trenda i izvestaja za PDF izvoz
+            Pregled performansi prodaje, trenda i izveštaja za PDF izvoz
           </p>
         </div>
         <div className="analysis-header-actions">
@@ -282,11 +282,11 @@ const AnalysisPage: React.FC = () => {
 
           <button className="btn btn--outline" onClick={() => setIsGenerateReportModelOpen(true)}>
             <FileText size={16} />
-            Generisi izvestaj
+            Generisi izveštaj
           </button>
           <button className="btn btn--secondary" onClick={() => void loadData()} disabled={isLoading}>
             <RefreshCw size={16} className={isLoading ? "icon-spin" : ""} />
-            {isLoading ? "Osvezavanje..." : "Osvezi"}
+            {isLoading ? "Osvežavanje..." : "Osveži"}
           </button>
         </div>
       </div>
@@ -307,7 +307,7 @@ const AnalysisPage: React.FC = () => {
             onClick={() => setActiveTab("fiscal")}
           >
             <FileText size={16} />
-            Fiskalni racuni
+            Fiskalni računi
           </button>
           <button
             className={`analysis-tab ${activeTab === "sales" ? "analysis-tab--active" : ""}`}
@@ -338,8 +338,8 @@ const AnalysisPage: React.FC = () => {
           <div className="stats-grid">
             <StatsCard icon={<DollarSign size={24} />} value={formatCurrency(overviewStats.totalRevenue)} label="Ukupna zarada" />
             <StatsCard icon={<ShoppingBag size={24} />} value={overviewStats.totalUnits.toLocaleString()} label="Prodate jedinice" />
-            <StatsCard icon={<FileText size={24} />} value={overviewStats.totalBills} label="Broj fiskalnih racuna" />
-            <StatsCard icon={<BarChart3 size={24} />} value={formatCurrency(overviewStats.averageBillValue)} label="Prosecna vrednost racuna" />
+            <StatsCard icon={<FileText size={24} />} value={overviewStats.totalBills} label="Broj fiskalnih računa" />
+            <StatsCard icon={<BarChart3 size={24} />} value={formatCurrency(overviewStats.averageBillValue)} label="Prosečna vrednost računa" />
           </div>
 
           <div className="grid analysis-overview-grid">
@@ -360,7 +360,7 @@ const AnalysisPage: React.FC = () => {
                 <div className="card__header">
                   <h2 className="card__title">
                     <FileText size={20} className="card__title-icon" />
-                    Poslednji izvestaji prodaje
+                    Poslednji izveštaji prodaje
                   </h2>
                 </div>
                 <div className="card__body">{renderSalesReportList(recentSalesReports)}</div>
@@ -431,7 +431,7 @@ const AnalysisPage: React.FC = () => {
             <div className="card__header">
               <h2 className="card__title">
                 <DollarSign size={20} className="card__title-icon" />
-                Izvestaji prodaje
+                Izveštaji prodaje
               </h2>
             </div>
             <div className="card__body">{renderSalesReportList(salesReports)}</div>
@@ -446,7 +446,7 @@ const AnalysisPage: React.FC = () => {
             </div>
             <div className="card__body analysis-filter-panel">
               <div className="input-group">
-                <label className="input-group__label">Tip perioda izvestaja</label>
+                <label className="input-group__label">Tip perioda izveštaja</label>
                 <select
                   className="input select"
                   value={salesPeriodFilter}
@@ -455,8 +455,8 @@ const AnalysisPage: React.FC = () => {
                   <option value="all">Svi</option>
                   <option value="daily">Dnevni</option>
                   <option value="weekly">Nedeljni</option>
-                  <option value="monthly">Mesecni</option>
-                  <option value="yearly">Godisnji</option>
+                  <option value="monthly">Mesečni</option>
+                  <option value="yearly">Godišnji</option>
                   <option value="total">Ukupni</option>
                 </select>
               </div>
@@ -494,7 +494,7 @@ const AnalysisPage: React.FC = () => {
               </>
             ) : (
               <div className="empty-state">
-                <p className="text-muted">Nema generisanih top-products izvestaja.</p>
+                <p className="text-muted">Nema generisanih top-products izveštaja.</p>
               </div>
             )}
           </div>

@@ -96,7 +96,7 @@ export const ProductionPage: React.FC = () => {
       const data = await plantAPI.searchPlants(criteria, token);
       setPlants(data);
     } catch (err) {
-      setError('Greska pri ucitavanju biljaka');
+      setError('Greška pri učitavanju biljaka');
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -128,7 +128,7 @@ export const ProductionPage: React.FC = () => {
         return;
       }
 
-      setLogsError('Greska pri ucitavanju dnevnika');
+      setLogsError('Greška pri učitavanju dnevnika');
       console.error(err);
     } finally {
       setLogsLoading(false);
@@ -167,7 +167,7 @@ export const ProductionPage: React.FC = () => {
       setIsPlantModalOpen(false);
       setSelectedPlant(null);
     } catch (err) {
-      setError('Greska pri cuvanju biljke');
+      setError('Greška pri čuvanju biljke');
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -185,7 +185,7 @@ export const ProductionPage: React.FC = () => {
       setIsDeleteModalOpen(false);
       setSelectedPlant(null);
     } catch (err) {
-      setError('Greska pri brisanju biljke');
+      setError('Greška pri brisanju biljke');
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -202,7 +202,7 @@ export const ProductionPage: React.FC = () => {
       await fetchProductionLogs();
       setIsHarvestModalOpen(false);
     } catch (err) {
-      setError('Greska pri berbi biljaka');
+      setError('Greška pri berbi biljaka');
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -219,7 +219,7 @@ export const ProductionPage: React.FC = () => {
       await fetchProductionLogs();
       setIsOilStrengthModalOpen(false);
     } catch (err) {
-      setError('Greska pri promeni jacine ulja');
+      setError('Greška pri promeni jačine ulja');
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -357,7 +357,7 @@ export const ProductionPage: React.FC = () => {
                 <div className="empty-state" style={{ padding: 'var(--space-xl)' }}>
                   <p className="text-error">{logsError}</p>
                   <button className="btn btn--secondary mt-md" onClick={fetchProductionLogs}>
-                    Osvezi dnevnik
+                    Osveži dnevnik
                   </button>
                 </div>
               ) : (
@@ -367,7 +367,7 @@ export const ProductionPage: React.FC = () => {
           </div>
           <div className="card__footer production-log-card__footer">
             <span className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>
-              Prikazano {logs.length} dogadjaja
+              Prikazano {logs.length} događaja
             </span>
           </div>
         </div>
@@ -408,10 +408,10 @@ export const ProductionPage: React.FC = () => {
           setSelectedPlant(null);
         }}
         onConfirm={handleDeletePlant}
-        title="Obrisi biljku"
-        message={`Da li ste sigurni da zelite da obrisete biljku "${selectedPlant?.commonName}"? Ova akcija se ne moze ponistiti.`}
-        confirmText="Obrisi"
-        cancelText="Otkazi"
+        title="Obriši biljku"
+        message={`Da li ste sigurni da želite da obrišete biljku "${selectedPlant?.commonName}"? Ova akcija se ne može poništiti.`}
+        confirmText="Obriši"
+        cancelText="Otkaži"
         isLoading={isSubmitting}
         variant="danger"
       />

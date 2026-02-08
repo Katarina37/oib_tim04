@@ -32,7 +32,7 @@ const getErrorMessage = (error: unknown): string => {
       nestedError ??
       flatError ??
       error.message ??
-      "Greska pri obradi zahteva."
+      "Greška pri obradi zahteva."
     );
   }
 
@@ -40,7 +40,7 @@ const getErrorMessage = (error: unknown): string => {
     return error.message;
   }
 
-  return "Doslo je do neocekivane greske.";
+  return "Došlo je do neočekivane greške.";
 };
 
 const formatDateTime = (isoDate: string): string => {
@@ -224,7 +224,7 @@ export const SalesPage: React.FC = () => {
     }
 
     if (totalItems > availablePackages) {
-      setError("Korpa sadrzi vise stavki od dostupnog broja paketa.");
+      setError("Korpa sadrži više stavki od dostupnog broja paketa.");
       return;
     }
 
@@ -247,7 +247,7 @@ export const SalesPage: React.FC = () => {
         );
 
       if (normalizedItems.length === 0) {
-        setError("Korpa sadrzi neispravne stavke. Osvezite stranicu i pokusajte ponovo.");
+        setError("Korpa sadrži neispravne stavke. Osvežite stranicu i pokušajte ponovo.");
         return;
       }
 
@@ -264,7 +264,7 @@ export const SalesPage: React.FC = () => {
         return accumulator;
       }, {});
 
-      setSuccessMessage(`Prodaja uspesno kreirana. Racun: ${result.billNumber}`);
+      setSuccessMessage(`Prodaja uspešno kreirana. Račun: ${result.billNumber}`);
       setPerfumes((prev) =>
         prev.map((perfume) => {
           const soldQuantity = soldQuantitiesByPerfume[perfume.id] ?? 0;
