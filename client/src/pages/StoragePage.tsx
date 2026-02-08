@@ -38,7 +38,7 @@ const StoragePage: React.FC = () => {
             <div className="storage-page">
                 <div className="empty-state">
                     <div className="spinner" />
-                    <p className="mt-md text-muted">Ucitavanje podataka o skladistu...</p>
+                    <p className="mt-md text-muted">Učitavanje podataka o skladištu...</p>
                 </div>
             </div>
         );
@@ -48,12 +48,12 @@ const StoragePage: React.FC = () => {
         return (
             <div className="storage-page">
                 <div className="empty-state">
-                    <h3 className="empty-state__title">Nije moguce ucitati skladiste</h3>
+                    <h3 className="empty-state__title">Nije moguće učitati skladište</h3>
                     <p className="empty-state__description">
                         {error ?? "Podaci nisu dostupni."}
                     </p>
                     <button className="btn btn--primary mt-md" onClick={() => void loadData()}>
-                        Pokusaj ponovo
+                        Pokušaj ponovo
                     </button>
                 </div>
             </div>
@@ -66,7 +66,7 @@ const StoragePage: React.FC = () => {
     return (
         <div className="storage-page">
             <div className="page-header">
-                <h1 className="page-header__title">Skladistenje</h1>
+                <h1 className="page-header__title">Skladištenje</h1>
                 <p className="page-header__subtitle">
                     Pakovanje, prijem i distribucija ambalaze
                 </p>
@@ -94,7 +94,7 @@ const StoragePage: React.FC = () => {
                             <p className="storage-toolbar__title">Spakuj artikle</p>
                             <div className="storage-toolbar__row storage-toolbar__row--pack">
                                 <div className="input-group storage-toolbar__quantity">
-                                    <label className="input-group__label">Kolicina za pakovanje</label>
+                                    <label className="input-group__label">Količina za pakovanje</label>
                                     <input
                                         className="input"
                                         type="number"
@@ -106,7 +106,7 @@ const StoragePage: React.FC = () => {
                                 </div>
 
                                 <div className="input-group">
-                                    <label className="input-group__label">Ciljno skladiste</label>
+                                    <label className="input-group__label">Ciljno skladište</label>
                                     <select
                                         className="input select"
                                         value={targetWarehouseId}
@@ -119,7 +119,7 @@ const StoragePage: React.FC = () => {
                                                 </option>
                                             ))
                                         ) : (
-                                            <option value="">Nema dostupnih skladista</option>
+                                            <option value="">Nema dostupnih skladišta</option>
                                         )}
                                     </select>
                                 </div>
@@ -173,10 +173,10 @@ const StoragePage: React.FC = () => {
                         </div>
 
                         <div className="storage-toolbar__section">
-                            <p className="storage-toolbar__title">Posalji iz skladista</p>
+                            <p className="storage-toolbar__title">Pošalji iz skladišta</p>
                             <div className="storage-toolbar__row storage-toolbar__row--send">
                                 <div className="input-group storage-toolbar__quantity">
-                                    <label className="input-group__label">Kolicina za slanje</label>
+                                    <label className="input-group__label">Količina za slanje</label>
                                     <input
                                         className="input"
                                         type="number"
@@ -193,13 +193,13 @@ const StoragePage: React.FC = () => {
                                     disabled={hasPendingActions}
                                 >
                                     <Send size={16} />
-                                    {isSending ? "Slanje..." : "Posalji iz skladista"}
+                                    {isSending ? "Slanje..." : "Pošalji iz skladišta"}
                                 </button>
                             </div>
                         </div>
 
                         <div className="storage-toolbar__section">
-                            <p className="storage-toolbar__title">Posalji u skladiste</p>
+                            <p className="storage-toolbar__title">Pošalji u skladište</p>
                             <div className="storage-toolbar__row storage-toolbar__row--warehouse">
                                 <button
                                     className="btn btn--secondary storage-toolbar__action"
@@ -207,7 +207,7 @@ const StoragePage: React.FC = () => {
                                     disabled={hasPendingActions || !hasWarehouses}
                                 >
                                     <Warehouse size={16} />
-                                    {isMovingToWarehouse ? "Slanje..." : "Posalji prvu dostupnu u skladiste"}
+                                    {isMovingToWarehouse ? "Slanje..." : "Pošalji prvu dostupnu u skladište"}
                                 </button>
                             </div>
                         </div>
