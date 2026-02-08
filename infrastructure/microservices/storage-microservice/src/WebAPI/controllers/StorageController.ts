@@ -5,7 +5,11 @@ import { ILoggerService } from "../../Domain/services/ILoggerService";
 import { SendPackageDTO } from "../../Domain/DTOs/SendPackageDTO";
 import { LogLevel } from "../../Domain/enums/LogLevel";
 import { UserRole } from "../../Domain/enums/UserRole";
-import { validatePackageIds, validateSendPackageData } from "../validators/PackageValidator";
+import {
+    validatePackageIds,
+    validatePerfumeIds,
+    validateSendPackageData,
+} from "../validators/PackageValidator";
 
 interface ResolvedUserContext {
     role: UserRole;
@@ -27,6 +31,7 @@ export class StorageController {
     private initializeRoutes(): void {
         this.router.post("/storage/send-package", this.sendPackage.bind(this));
         this.router.post("/storage/reserve-package", this.reservePackage.bind(this));
+        this.router.post("/storage/reserve-package-by-perfumes", this.reservePackageByPerfumes.bind(this));
         this.router.post("/storage/send-reserved", this.sendReservedPackages.bind(this));
         this.router.post("/storage/unpack-package", this.unpackPackage.bind(this));
         this.router.post("/storage/release-package", this.releasePackage.bind(this));
@@ -131,6 +136,58 @@ export class StorageController {
         } catch (error) {
             await this.logger.log(
                 `Greska pri rezervaciji ambalaze: ${(error as Error).message}`,
+                LogLevel.ERROR,
+                { ipAddress: clientIp }
+            );
+            res.status(500).json({ success: false, message: (error as Error).message });
+        }
+    }
+
+    private async reservePackageByPerfumes(req: Request, res: Response): Promise<void> {
+        const clientIp = this.getClientIp(req);
+
+        try {
+            const context = await this.resolveUserContext(req, res, clientIp);
+            if (!context) {
+                return;
+            }
+            const { role, userId, storageService } = context;
+
+            const perfumeIds = req.body?.perfumeIds;
+            const validation = validatePerfumeIds(perfumeIds);
+            if (!validation.success) {
+                await this.logger.log(
+                    `Validacija nije uspela: ${validation.message}`,
+                    LogLevel.WARNING,
+                    {
+                        ipAddress: clientIp,
+                        additionalData: { perfumeIds, userId, role },
+                    }
+                );
+                res.status(400).json({ success: false, message: validation.message });
+                return;
+            }
+
+            const packageIds = await storageService.reservePackagesByPerfumeIds(perfumeIds as number[]);
+            await this.logger.log(
+                `Rezervisano ${packageIds.length} ambalaza po parfemima (${role}, userId: ${userId})`,
+                LogLevel.INFO,
+                {
+                    ipAddress: clientIp,
+                    additionalData: {
+                        requestedPerfumeCount: (perfumeIds as number[]).length,
+                        reservedPackages: packageIds.length,
+                        perfumeIds,
+                        packageIds,
+                        userId,
+                    },
+                }
+            );
+
+            res.status(200).json({ success: true, data: { packageIds } });
+        } catch (error) {
+            await this.logger.log(
+                `Greska pri rezervaciji ambalaze po parfemima: ${(error as Error).message}`,
                 LogLevel.ERROR,
                 { ipAddress: clientIp }
             );

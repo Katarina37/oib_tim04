@@ -56,6 +56,20 @@ export class StorageClient implements IStorageClient {
         return response.data;
     }
 
+    private async postPerfumeIdsAction(
+        path: string,
+        perfumeIds: number[],
+        userContext?: UserContext
+    ): Promise<any> {
+        const response = await this.http.post(
+            path,
+            { perfumeIds },
+            { headers: this.buildUserHeaders(userContext) }
+        );
+
+        return response.data;
+    }
+
     async reservePackages(quantity: number, userContext?: UserContext): Promise<number[]> {
         const data = await this.postQuantityAction(
             "/storage/reserve-package",
@@ -66,6 +80,28 @@ export class StorageClient implements IStorageClient {
         const packageIds = data?.data?.packageIds ?? data?.packageIds;
         if (!Array.isArray(packageIds)) {
             throw new Error("Invalid reserve response from storage service");
+        }
+
+        if (packageIds.some((id) => !Number.isInteger(id) || id <= 0)) {
+            throw new Error("Invalid package IDs from storage service");
+        }
+
+        return packageIds;
+    }
+
+    async reservePackagesByPerfumeIds(
+        perfumeIds: number[],
+        userContext?: UserContext
+    ): Promise<number[]> {
+        const data = await this.postPerfumeIdsAction(
+            "/storage/reserve-package-by-perfumes",
+            perfumeIds,
+            userContext
+        );
+
+        const packageIds = data?.data?.packageIds ?? data?.packageIds;
+        if (!Array.isArray(packageIds)) {
+            throw new Error("Invalid reserve-by-perfumes response from storage service");
         }
 
         if (packageIds.some((id) => !Number.isInteger(id) || id <= 0)) {

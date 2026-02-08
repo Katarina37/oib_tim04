@@ -38,6 +38,22 @@ export function validatePackageIds(packageIds: unknown): ValidationResult {
     return { success: true };
 }
 
+export function validatePerfumeIds(perfumeIds: unknown): ValidationResult {
+    if (!Array.isArray(perfumeIds) || perfumeIds.length === 0) {
+        return { success: false, message: "Lista ID parfema je obavezna" };
+    }
+
+    const hasInvalidId = perfumeIds.some(
+        (id) => !Number.isInteger(id) || Number(id) <= 0
+    );
+
+    if (hasInvalidId) {
+        return { success: false, message: "Svi ID-jevi parfema moraju biti pozitivni celi brojevi" };
+    }
+
+    return { success: true };
+}
+
 export function validatePackagingSyncData(data: PackagingSyncDTO): ValidationResult {
     const idsValidation = validatePackageIds(data.packageIds);
     if (!idsValidation.success) {

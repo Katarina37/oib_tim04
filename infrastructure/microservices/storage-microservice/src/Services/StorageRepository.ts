@@ -5,6 +5,7 @@ import { PackageSummaryDTO } from "../Domain/DTOs/PackageSummaryDTO";
 import { WarehouseSummaryDTO } from "../Domain/DTOs/WarehouseSummaryDTO";
 import { PackageState } from "../Domain/enums/PackageState";
 import { Package } from "../Domain/models/Package";
+import { PackagePerfume } from "../Domain/models/PackagePerfume";
 import { Warehouse } from "../Domain/models/Warehouse";
 import { IStorageRepository } from "../Domain/services/IStorageRepository";
 
@@ -55,6 +56,92 @@ export class StorageRepository implements IStorageRepository {
 
         await this.packageRepo.save(packages);
         return packages.map((pkg) => pkg.id);
+    }
+
+    async reservePackagesByPerfumeIds(perfumeIds: number[]): Promise<number[]> {
+        if (!Array.isArray(perfumeIds) || perfumeIds.length === 0) {
+            return [];
+        }
+
+        const uniquePerfumeIds = Array.from(
+            new Set(
+                perfumeIds.filter((id) => Number.isInteger(id) && id > 0)
+            )
+        );
+
+        if (uniquePerfumeIds.length === 0) {
+            return [];
+        }
+
+        const rows = await this.packageRepo
+            .createQueryBuilder("package")
+            .innerJoin(
+                PackagePerfume,
+                "packagePerfume",
+                "packagePerfume.ambalaza_id = package.id"
+            )
+            .select("package.id", "packageId")
+            .addSelect("packagePerfume.parfem_id", "perfumeId")
+            .where("package.status = :status", { status: PackageState.AVAILABLE })
+            .andWhere("packagePerfume.parfem_id IN (:...perfumeIds)", {
+                perfumeIds: uniquePerfumeIds,
+            })
+            .orderBy("package.id", "ASC")
+            .getRawMany<{ packageId: number; perfumeId: number }>();
+
+        if (rows.length === 0) {
+            return [];
+        }
+
+        const packageIdByPerfumeId = new Map<number, number>();
+        for (const row of rows) {
+            const perfumeId = Number(row.perfumeId);
+            const packageId = Number(row.packageId);
+            if (
+                Number.isInteger(perfumeId) &&
+                perfumeId > 0 &&
+                Number.isInteger(packageId) &&
+                packageId > 0 &&
+                !packageIdByPerfumeId.has(perfumeId)
+            ) {
+                packageIdByPerfumeId.set(perfumeId, packageId);
+            }
+        }
+
+        const selectedPackageIds: number[] = [];
+        for (const perfumeId of perfumeIds) {
+            const selectedPackageId = packageIdByPerfumeId.get(perfumeId);
+            if (!selectedPackageId) {
+                continue;
+            }
+            selectedPackageIds.push(selectedPackageId);
+        }
+
+        if (selectedPackageIds.length === 0) {
+            return [];
+        }
+
+        const uniquePackageIds = Array.from(new Set(selectedPackageIds));
+
+        const packages = await this.packageRepo.find({
+            where: {
+                id: In(uniquePackageIds),
+                state: PackageState.AVAILABLE,
+            },
+            order: { id: "ASC" },
+        });
+
+        if (packages.length === 0) {
+            return [];
+        }
+
+        for (const pkg of packages) {
+            pkg.state = PackageState.RESERVED;
+        }
+
+        await this.packageRepo.save(packages);
+        const reservedPackageIdSet = new Set<number>(packages.map((pkg) => pkg.id));
+        return selectedPackageIds.filter((packageId) => reservedPackageIdSet.has(packageId));
     }
 
     async markPackagesAsSent(packageIds: number[]): Promise<number> {

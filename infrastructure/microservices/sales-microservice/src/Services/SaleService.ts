@@ -35,41 +35,40 @@ export class SaleService implements ISaleService {
     async executeSale(data: CreateSaleDto, userContext: UserContext): Promise<SaleResponseDTO> {
         const catalog = await this.loadCatalogForCheckout(userContext, data.userId);
         const saleItems = this.resolveSaleItems(data.items, catalog);
+        const requestedPerfumeIds = this.expandSaleItemsToPerfumeIds(saleItems);
 
-        const requestedPackages = saleItems.reduce(
-            (sum, item) => sum + item.quantity,
-            0
-        );
+        const requestedPackages = requestedPerfumeIds.length;
 
-        const reservedPackageIds = await this.storageClient.reservePackages(
-            requestedPackages,
+        const reservedPackageIds = await this.storageClient.reservePackagesByPerfumeIds(
+            requestedPerfumeIds,
             userContext
         );
+        const uniqueReservedPackageIds = this.deduplicatePositiveIds(reservedPackageIds);
 
         if (reservedPackageIds.length < requestedPackages) {
             await this.logInsufficientPackages(data.userId, requestedPackages, reservedPackageIds.length);
-            await this.safeReleasePackages(reservedPackageIds, userContext, data.userId);
+            await this.safeReleasePackages(uniqueReservedPackageIds, userContext, data.userId);
             throw new Error("Nema dovoljno paketa na stanju za izvršenje prodaje.");
         }
 
         try {
             const sentPackages = await this.storageClient.sendReservedPackages(
-                reservedPackageIds,
+                uniqueReservedPackageIds,
                 userContext
             );
-            if (sentPackages < reservedPackageIds.length) {
+            if (sentPackages < uniqueReservedPackageIds.length) {
                 throw new Error(
-                    `Nije moguce poslati svu rezervisanu ambalazu. Poslato: ${sentPackages}/${reservedPackageIds.length}.`
+                    `Nije moguce poslati svu rezervisanu ambalazu. Poslato: ${sentPackages}/${uniqueReservedPackageIds.length}.`
                 );
             }
 
             const unpackedPackages = await this.storageClient.unpackPackages(
-                reservedPackageIds,
+                uniqueReservedPackageIds,
                 userContext
             );
-            if (unpackedPackages < reservedPackageIds.length) {
+            if (unpackedPackages < uniqueReservedPackageIds.length) {
                 throw new Error(
-                    `Nije moguce raspakovati svu poslatu ambalazu. Raspakovano: ${unpackedPackages}/${reservedPackageIds.length}.`
+                    `Nije moguce raspakovati svu poslatu ambalazu. Raspakovano: ${unpackedPackages}/${uniqueReservedPackageIds.length}.`
                 );
             }
 
@@ -108,14 +107,14 @@ export class SaleService implements ISaleService {
 
             return this.toDTO(savedSale);
         } catch (error) {
-            await this.safeReleasePackages(reservedPackageIds, userContext, data.userId);
+            await this.safeReleasePackages(uniqueReservedPackageIds, userContext, data.userId);
             await this.trySendAuditLog({
                 tip_zapisa: "ERROR",
                 opis: `Prodaja neuspesna nakon rezervacije ambalaze: ${(error as Error).message}`,
                 mikroservis: SaleService.MICROSERVICE_NAME,
                 korisnik_id: data.userId,
                 dodatni_podaci: {
-                    reservedPackageIds,
+                    reservedPackageIds: uniqueReservedPackageIds,
                 },
             });
             throw error;
@@ -165,7 +164,8 @@ export class SaleService implements ISaleService {
 
     async getAvailablePerfumes(userContext?: UserContext): Promise<PerfumeDTO[]> {
         try {
-            return await this.perfumeCatalogClient.getAvailablePerfumes(userContext);
+            const perfumes = await this.perfumeCatalogClient.getAvailablePerfumes(userContext);
+            return perfumes.filter((perfume) => perfume.stock > 0);
         } catch (error) {
             await this.trySendAuditLog({
                 tip_zapisa: "ERROR",
@@ -176,11 +176,17 @@ export class SaleService implements ISaleService {
 
             const fallbackCatalog = await this.fallbackPerfumeCatalogClient.getAvailablePerfumes(userContext);
             const fallbackStock = await this.resolveSharedInventoryStock(userContext);
+            const distributedStocks = this.distributeSharedStock(
+                fallbackStock,
+                fallbackCatalog.length
+            );
 
-            return fallbackCatalog.map((perfume) => ({
-                ...perfume,
-                stock: fallbackStock,
-            }));
+            return fallbackCatalog
+                .map((perfume, index) => ({
+                    ...perfume,
+                    stock: distributedStocks[index] ?? 0,
+                }))
+                .filter((perfume) => perfume.stock > 0);
         }
     }
 
@@ -273,6 +279,38 @@ export class SaleService implements ISaleService {
         }
 
         return Array.from(resolvedItemsByPerfume.values());
+    }
+
+    private expandSaleItemsToPerfumeIds(saleItems: ResolvedSaleItem[]): number[] {
+        const perfumeIds: number[] = [];
+        for (const item of saleItems) {
+            for (let index = 0; index < item.quantity; index += 1) {
+                perfumeIds.push(item.perfumeId);
+            }
+        }
+        return perfumeIds;
+    }
+
+    private distributeSharedStock(totalStock: number, bucketCount: number): number[] {
+        if (bucketCount <= 0) {
+            return [];
+        }
+
+        const normalizedTotal = Number.isFinite(totalStock) && totalStock > 0
+            ? Math.floor(totalStock)
+            : 0;
+
+        const base = Math.floor(normalizedTotal / bucketCount);
+        const remainder = normalizedTotal % bucketCount;
+
+        return Array.from({ length: bucketCount }, (_unused, index) =>
+            base + (index < remainder ? 1 : 0)
+        );
+    }
+
+    private deduplicatePositiveIds(ids: number[]): number[] {
+        const normalizedIds = ids.filter((id) => Number.isInteger(id) && id > 0);
+        return Array.from(new Set(normalizedIds));
     }
 
     private async logInsufficientPackages(

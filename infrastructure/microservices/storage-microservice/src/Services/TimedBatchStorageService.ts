@@ -139,6 +139,47 @@ export class TimedBatchStorageService implements IStorageService {
         }
     }
 
+    async reservePackagesByPerfumeIds(perfumeIds: number[]): Promise<number[]> {
+        try {
+            this.ensureValidPerfumeIds(perfumeIds);
+            // Reservacija po parfemima mora da se rešava u jednom koraku:
+            // parcijalno batčovanje menja rezultat kada više parfema pripada istoj ambalaži.
+            const reservedPackageIds =
+                await this.repository.reservePackagesByPerfumeIds(perfumeIds);
+
+            const level =
+                reservedPackageIds.length === perfumeIds.length
+                    ? LogLevel.INFO
+                    : LogLevel.WARNING;
+
+            await this.logger.log(
+                `Rezervisane ambalaze po parfemima: ${reservedPackageIds.length}/${perfumeIds.length}`,
+                level,
+                {
+                    additionalData: {
+                        requestedPerfumeCount: perfumeIds.length,
+                        reservedPackageCount: reservedPackageIds.length,
+                        type: this.profile.type,
+                    },
+                }
+            );
+
+            return reservedPackageIds;
+        } catch (error) {
+            await this.logger.log(
+                `Greska pri rezervaciji ambalaze po parfemima: ${(error as Error).message}`,
+                LogLevel.ERROR,
+                {
+                    additionalData: {
+                        requestedPerfumeCount: perfumeIds.length,
+                        type: this.profile.type,
+                    },
+                }
+            );
+            throw error;
+        }
+    }
+
     async sendReservedPackages(packageIds: number[]): Promise<number> {
         try {
             this.ensureValidPackageIds(packageIds);
@@ -254,6 +295,16 @@ export class TimedBatchStorageService implements IStorageService {
             packageIds.some((id) => !Number.isInteger(id) || id <= 0)
         ) {
             throw new Error("Neispravna lista identifikatora ambalaza");
+        }
+    }
+
+    private ensureValidPerfumeIds(perfumeIds: number[]): void {
+        if (
+            !Array.isArray(perfumeIds) ||
+            perfumeIds.length === 0 ||
+            perfumeIds.some((id) => !Number.isInteger(id) || id <= 0)
+        ) {
+            throw new Error("Neispravna lista identifikatora parfema");
         }
     }
 

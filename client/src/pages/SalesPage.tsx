@@ -103,7 +103,7 @@ export const SalesPage: React.FC = () => {
       return 0;
     }
 
-    return perfumes.reduce((minStock, perfume) => Math.min(minStock, perfume.stock), perfumes[0].stock);
+    return perfumes.reduce((totalStock, perfume) => totalStock + Math.max(perfume.stock, 0), 0);
   }, [perfumes]);
 
   const totalItems = useMemo(
