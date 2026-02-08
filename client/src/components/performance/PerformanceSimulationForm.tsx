@@ -2,60 +2,100 @@ import React, {useState} from "react";
 import { CreatePerformanceParams } from "../../models/performance/CreatePerformanceParams";
 
 interface Props {
-    onRunSimulation: (params: CreatePerformanceParams) => void;
-    isLoading: boolean;
+  onRunSimulation: (params: CreatePerformanceParams) => void | Promise<void>;
+  isLoading: boolean;
 }
 
 const PerformanceSimulationForm: React.FC<Props> = ({ onRunSimulation, isLoading }) => {
-    const [naziv, setNaziv] = useState("");
-    const [tip, setTip] = useState<"distributivni_centar" | "magacinski_centar">("distributivni_centar");
+  const [naziv, setNaziv] = useState("");
+  const [tip, setTip] = useState<"distributivni_centar" | "magacinski_centar">(
+    "distributivni_centar"
+  );
+  const [brojZahteva, setBrojZahteva] = useState<number>(60);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        onRunSimulation({ 
-            naziv, 
-            tip_algoritma: tip 
-        });
-    };
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
 
-    return (
-        <div className="bg-surface p-5 rounded-lg border border-border mb-6">
-            <h4 className="text-sm font-bold mb-4 uppercase">Nova simulacija</h4>
-            
-            <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 items-end">
-                <div className="flex-1 w-full">
-                    <label className="text-xs text-text-muted mb-1 block">Naziv</label>
-                    <input
-                        type="text"
-                        className="w-full bg-background border border-border rounded px-3 py-2 text-sm outline-none focus:border-primary"
-                        value={naziv}
-                        onChange={(e) => setNaziv(e.target.value)}
-                        required
-                    />
-                </div>
+    const nazivTrimmed = naziv.trim();
+    if (!nazivTrimmed) {
+      return;
+    }
 
-                <div className="flex-1 w-full">
-                    <label className="text-xs text-text-muted mb-1 block">Algoritam</label>
-                    <select
-                        className="w-full bg-background border border-border rounded px-3 py-2 text-sm outline-none focus:border-primary"
-                        value={tip}
-                        onChange={(e) => setTip(e.target.value as any)}
-                    >
-                        <option value="distributivni_centar">Distributivni centar</option>
-                        <option value="magacinski_centar">Magacinski centar</option>
-                    </select>
-                </div>
+    onRunSimulation({
+      naziv: nazivTrimmed,
+      tip_algoritma: tip,
+      broj_zahteva: brojZahteva,
+    });
+  };
 
-                <button
-                    type="submit"
-                    disabled={isLoading || !naziv}
-                    className="bg-primary text-white px-6 py-2 rounded font-medium disabled:opacity-50 transition-opacity"
-                >
-                    {isLoading ? "Pokretanje..." : "Pokreni"}
-                </button>
-            </form>
+  return (
+    <form className="performance-form" onSubmit={handleSubmit}>
+      <div className="performance-form__grid">
+        <div className="input-group">
+          <label className="input-group__label" htmlFor="performance-name">
+            Naziv simulacije
+          </label>
+          <input
+            id="performance-name"
+            className="input"
+            type="text"
+            minLength={3}
+            maxLength={200}
+            value={naziv}
+            onChange={(event) => setNaziv(event.target.value)}
+            placeholder="npr. Q1 logisticka simulacija"
+            required
+          />
         </div>
-    );
+
+        <div className="input-group">
+          <label className="input-group__label" htmlFor="performance-algorithm">
+            Tip algoritma
+          </label>
+          <select
+            id="performance-algorithm"
+            className="input select"
+            value={tip}
+            onChange={(event) =>
+              setTip(event.target.value as "distributivni_centar" | "magacinski_centar")
+            }
+          >
+            <option value="distributivni_centar">Distributivni centar</option>
+            <option value="magacinski_centar">Magacinski centar</option>
+          </select>
+        </div>
+
+        <div className="input-group">
+          <label className="input-group__label" htmlFor="performance-count">
+            Broj zahteva
+          </label>
+          <input
+            id="performance-count"
+            className="input"
+            type="number"
+            min={1}
+            max={5000}
+            value={brojZahteva}
+            onChange={(event) => {
+              const parsed = Number.parseInt(event.target.value, 10);
+              setBrojZahteva(Number.isNaN(parsed) ? 1 : parsed);
+            }}
+            required
+          />
+        </div>
+      </div>
+
+      <div className="performance-form__footer">
+        <p className="text-muted">
+          Model koristi parametre: distributivni centar (3 ambalaze / 0.5s), magacinski centar
+          (1 ambalaza / 2.5s).
+        </p>
+        <button className="btn btn--primary" type="submit" disabled={isLoading || naziv.trim().length < 3}>
+          {isLoading ? "Pokretanje..." : "Pokreni simulaciju"}
+        </button>
+      </div>
+    </form>
+  );
 };
 
 export default PerformanceSimulationForm;

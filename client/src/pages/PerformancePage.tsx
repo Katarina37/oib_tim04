@@ -1,213 +1,265 @@
-import React, { useState, useEffect} from "react";
-import { BarChart3, Play, RefreshCw, AlertTriangle, Zap, History, Info } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  AlertTriangle,
+  BarChart3,
+  Gauge,
+  History,
+  Info,
+  PlayCircle,
+  RefreshCw,
+  TrendingUp,
+} from "lucide-react";
 import { useAuth } from "../hooks/useAuthHook";
 import { useServices } from "../contexts/ServiceContext";
-
 import { PerformanceReportDTO } from "../models/performance/PerformanceReportDTO";
+import { CreatePerformanceParams } from "../models/performance/CreatePerformanceParams";
+import StatsCard from "../components/production/StatsCard";
 import PerformanceSimulationForm from "../components/performance/PerformanceSimulationForm";
 import PerformanceReportsTable from "../components/performance/PerformanceReportsTable";
 import EfficiencyComparisonChart from "../components/performance/EfficiencyComparisonChart";
 import AlgorithmAnalysisConclusions from "../components/performance/AlgorithmAnalysisConclusions";
 
+type PerformanceTab = "simulate" | "compare" | "history";
+
 const PerformancePage: React.FC = () => {
-    const { token } = useAuth();
-    const { performanceAPI } = useServices(); // Pretpostavka da je registrovan u ServiceContext
+  const { token } = useAuth();
+  const { performanceAPI } = useServices();
 
-    const [activeTab, setActiveTab] = useState<'new' | 'history' | 'charts'>('new');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<PerformanceTab>("simulate");
+  const [isLoadingReports, setIsLoadingReports] = useState(false);
+  const [isRunningSimulation, setIsRunningSimulation] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reports, setReports] = useState<PerformanceReportDTO[]>([]);
+  const [selectedReport, setSelectedReport] = useState<PerformanceReportDTO | null>(null);
 
-    //podaci
-    const [reports, setReports] = useState<PerformanceReportDTO[]>([]);
-    const [selectedReport, setSelectedReport] = useState<PerformanceReportDTO | null>(null);
+  const loadReports = useCallback(async (): Promise<void> => {
+    if (!token) {
+      return;
+    }
 
-    //ucitavanje prethodnih simulacija
-    const loadReports = async () => {
-        if (!token) return;
-        setIsLoading(true);
-        setError(null);
-        try {
-            const data = await performanceAPI.getReports(token);
-            setReports(data);
-            if (data.length > 0 && !selectedReport) {
-                setSelectedReport(data[0]);
-            }
-        } catch (err) {
-            setError("Greška pri učitavanju istorije performansi.");
-            console.error(err);
-        } finally {
-            setIsLoading(false);
-        }
+    setIsLoadingReports(true);
+    setError(null);
+
+    try {
+      const data = await performanceAPI.getReports(token);
+      setReports(data);
+      setSelectedReport((current) => current ?? data[0] ?? null);
+    } catch (requestError) {
+      console.error(requestError);
+      setError("Greska pri ucitavanju istorije performansi.");
+    } finally {
+      setIsLoadingReports(false);
+    }
+  }, [performanceAPI, token]);
+
+  useEffect(() => {
+    void loadReports();
+  }, [loadReports]);
+
+  const handleRunSimulation = async (params: CreatePerformanceParams): Promise<void> => {
+    if (!token) {
+      return;
+    }
+
+    setIsRunningSimulation(true);
+    setError(null);
+
+    try {
+      const createdReport = await performanceAPI.runSimulation(params, token);
+      setReports((current) => [createdReport, ...current]);
+      setSelectedReport(createdReport);
+      setActiveTab("compare");
+    } catch (requestError) {
+      console.error(requestError);
+      setError("Neuspesno pokretanje simulacije. Proverite unete parametre.");
+    } finally {
+      setIsRunningSimulation(false);
+    }
+  };
+
+  const handleExportPDF = async (id: number): Promise<void> => {
+    if (!token) {
+      return;
+    }
+
+    try {
+      const blob = await performanceAPI.exportPerformancePDF(id, token);
+      const url = window.URL.createObjectURL(blob);
+      const report = reports.find((item) => item.id === id);
+      const fileName = `performance-${report?.naziv ?? id}.pdf`;
+
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      window.URL.revokeObjectURL(url);
+    } catch (requestError) {
+      console.error(requestError);
+      setError("Neuspesan PDF izvoz performansi.");
+    }
+  };
+
+  const stats = useMemo(() => {
+    const total = reports.length;
+    const averageEfficiency =
+      total > 0
+        ? reports.reduce((sum, report) => sum + report.efikasnost_procenat, 0) / total
+        : 0;
+    const averageThroughput =
+      total > 0 ? reports.reduce((sum, report) => sum + report.brzina_obrade, 0) / total : 0;
+    const best = reports.reduce<PerformanceReportDTO | null>((currentBest, report) => {
+      if (!currentBest || report.efikasnost_procenat > currentBest.efikasnost_procenat) {
+        return report;
+      }
+      return currentBest;
+    }, null);
+
+    return {
+      total,
+      averageEfficiency,
+      averageThroughput,
+      bestAlgorithm:
+        best?.tip_algoritma === "distributivni_centar"
+          ? "Distributivni centar"
+          : best
+            ? "Magacinski centar"
+            : "-",
     };
+  }, [reports]);
 
-    useEffect(() => {
-        loadReports();
-    }, [token]);
+  const isBusy = isLoadingReports || isRunningSimulation;
 
-    //pokretanje nove simulacije
-    const handleRunSimulation = async (params: any) => {
-        if (!token) return;
-        setIsLoading(true);
-        setError(null);
-        try {
-            const newReport = await performanceAPI.runSimulation(params, token);
-            setReports(prev => [newReport, ...prev]);
-            setSelectedReport(newReport);
-            setActiveTab('charts'); // Automatski prebaci na grafikon nakon simulacije
-        } catch (err) {
-            setError("Neuspešno pokretanje simulacije. Proverite parametre.");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    //pdf
-    const handleExportPDF = async (id: number) => {
-        if (!token) return;
-        try {
-            const blob = await performanceAPI.exportPerformancePDF(id, token);
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            const report = reports.find(r => r.id === id);
-            
-            a.href = url;
-            a.download = `Performance_Report_${report?.naziv || id}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        } catch (err) {
-            console.error("Greška pri generisanju PDF-a", err);
-        }
-    };
-
-    return (
-        <div className="analysis-page">
-            <div className="page-header">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="page-header__title">Analiza Performansi</h1>
-                        <p className="page-header__subtitle">Simulacija i poređenje efikasnosti algoritama</p>
-                    </div>
-                    <div className="flex items-center gap-md">
-                        <button className="btn btn--secondary" onClick={loadReports} disabled={isLoading}>
-                            <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
-                            Osveži podatke
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Error */}
-            {error && (
-                <div className="card mb-lg border-error bg-red-50">
-                    <div className="card__body flex items-center gap-md">
-                        <AlertTriangle className="text-error" size={24} />
-                        <p className="text-error font-medium">{error}</p>
-                    </div>
-                </div>
-            )}
-
-            {/* Tab navigacija */}
-            <div className="card mb-lg">
-                <div className="card__body p-2">
-                    <div className="flex gap-sm bg-surface p-1 rounded-lg">
-                        <button 
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition
-                            ${activeTab === 'new' ? 'bg-white shadow-sm text-primary' : 'text-text-secondary hover:bg-white/60'}`}
-                            onClick={() => setActiveTab('new')}
-                        >
-                            <Play size={16} /> Nova Simulacija
-                        </button>
-                        <button 
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition
-                            ${activeTab === 'charts' ? 'bg-white shadow-sm text-primary' : 'text-text-secondary hover:bg-white/60'}`}
-                            onClick={() => setActiveTab('charts')}
-                        >
-                            <BarChart3 size={16} /> Rezultati i Grafikoni
-                        </button>
-                        <button 
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition
-                            ${activeTab === 'history' ? 'bg-white shadow-sm text-primary' : 'text-text-secondary hover:bg-white/60'}`}
-                            onClick={() => setActiveTab('history')}
-                        >
-                            <History size={16} /> Istorija Izveštaja
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* sadrzaj tabova */}
-            <div className="grid grid-cols-1 gap-lg">
-                
-                {/* tab 1 - nova simulacija */}
-                {activeTab === 'new' && (
-                    <div className="max-w-4xl mx-auto w-full">
-                        <div className="card">
-                            <div className="card__header">
-                                <h3 className="card__title flex items-center gap-2">
-                                    <Zap className="text-primary" size={20} /> Parametri Simulacije
-                                </h3>
-                            </div>
-                            <div className="card__body">
-                                <PerformanceSimulationForm onRunSimulation={handleRunSimulation} isLoading={isLoading} />
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* tab2 - grafikoni i analiza */}
-                {activeTab === 'charts' && (
-                    <div className="space-y-lg">
-                        {selectedReport ? (
-                            <>
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-lg">
-                                    <div className="lg:col-span-2">
-                                        <div className="card">
-                                            <div className="card__header">
-                                                <h3 className="card__title">Vizuelizacija Vremenske Kompleksnosti</h3>
-                                            </div>
-                                            <div className="card__body">
-                                                <EfficiencyComparisonChart reports={reports} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="lg:col-span-1">
-                                        <AlgorithmAnalysisConclusions selectedReport={selectedReport} />
-                                    </div>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="card p-12 text-center">
-                                <Info size={48} className="mx-auto text-text-muted mb-4" />
-                                <p className="text-text-muted">Nema selektovanih podataka. Pokrenite simulaciju ili izaberite izveštaj iz istorije.</p>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* tab 3 - tabela sa istorijom */}
-                {activeTab === 'history' && (
-                    <div className="card">
-                        <div className="card__header flex justify-between items-center">
-                            <h3 className="card__title">Prethodne Analize</h3>
-                            <span className="text-sm text-text-muted">Ukupno: {reports.length}</span>
-                        </div>
-                        <div className="card__body">
-                            <PerformanceReportsTable 
-                                reports={reports} 
-                                onExport={handleExportPDF} 
-                                onViewDetails={(report: PerformanceReportDTO) => {
-                                    setSelectedReport(report);
-                                    setActiveTab('charts');
-                                }}
-                            />
-                        </div>
-                    </div>
-                )}
-            </div>
+  return (
+    <div className="analysis-page performance-page">
+      <div className="page-header page-header--with-action">
+        <div>
+          <h1 className="page-header__title">Analiza performansi</h1>
+          <p className="page-header__subtitle">
+            Simulacija logistickih algoritama i pregled efikasnosti rada.
+          </p>
         </div>
-    );
+        <div className="performance-header-actions">
+          <button className="btn btn--secondary" onClick={() => void loadReports()} disabled={isBusy}>
+            <RefreshCw size={16} className={isLoadingReports ? "icon-spin" : ""} />
+            {isLoadingReports ? "Osvezavanje..." : "Osvezi"}
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="storage-alert storage-alert--error">
+          <AlertTriangle size={16} />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <div className="stats-grid">
+        <StatsCard icon={<History size={24} />} value={stats.total} label="Ukupno simulacija" />
+        <StatsCard
+          icon={<BarChart3 size={24} />}
+          value={`${stats.averageEfficiency.toFixed(2)}%`}
+          label="Prosecna efikasnost"
+        />
+        <StatsCard
+          icon={<Gauge size={24} />}
+          value={`${stats.averageThroughput.toFixed(3)} amb/s`}
+          label="Prosecna brzina obrade"
+        />
+        <StatsCard icon={<TrendingUp size={24} />} value={stats.bestAlgorithm} label="Najbolji algoritam" />
+      </div>
+
+      <div className="card">
+        <div className="card__body performance-tabs">
+          <button
+            className={`performance-tab ${activeTab === "simulate" ? "performance-tab--active" : ""}`}
+            onClick={() => setActiveTab("simulate")}
+          >
+            <PlayCircle size={16} />
+            Nova simulacija
+          </button>
+          <button
+            className={`performance-tab ${activeTab === "compare" ? "performance-tab--active" : ""}`}
+            onClick={() => setActiveTab("compare")}
+          >
+            <BarChart3 size={16} />
+            Poredjenje rezultata
+          </button>
+          <button
+            className={`performance-tab ${activeTab === "history" ? "performance-tab--active" : ""}`}
+            onClick={() => setActiveTab("history")}
+          >
+            <History size={16} />
+            Istorija izvestaja
+          </button>
+        </div>
+      </div>
+
+      {activeTab === "simulate" && (
+        <div className="card">
+          <div className="card__header">
+            <h2 className="card__title">
+              <PlayCircle size={20} className="card__title-icon" />
+              Parametri simulacije
+            </h2>
+          </div>
+          <div className="card__body">
+            <PerformanceSimulationForm onRunSimulation={handleRunSimulation} isLoading={isRunningSimulation} />
+          </div>
+        </div>
+      )}
+
+      {activeTab === "compare" && (
+        <div className="grid performance-compare-grid">
+          <div className="card">
+            <div className="card__header">
+              <h2 className="card__title">
+                <BarChart3 size={20} className="card__title-icon" />
+                Uporedni pregled efikasnosti
+              </h2>
+            </div>
+            <div className="card__body">
+              <EfficiencyComparisonChart reports={reports} />
+            </div>
+          </div>
+
+          <AlgorithmAnalysisConclusions selectedReport={selectedReport} />
+
+          {reports.length === 0 && (
+            <div className="card">
+              <div className="card__body performance-empty-state">
+                <Info size={42} />
+                <p>Nema podataka za poredjenje. Pokrenite novu simulaciju.</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "history" && (
+        <div className="card">
+          <div className="card__header">
+            <h2 className="card__title">
+              <History size={20} className="card__title-icon" />
+              Istorija performance izvestaja
+            </h2>
+            <span className="text-muted">Prikazano: {reports.length}</span>
+          </div>
+          <div className="card__body">
+            <PerformanceReportsTable
+              reports={reports}
+              onExport={(id) => void handleExportPDF(id)}
+              onViewDetails={(report) => {
+                setSelectedReport(report);
+                setActiveTab("compare");
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default PerformancePage;

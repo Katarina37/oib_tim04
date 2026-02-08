@@ -1,4 +1,4 @@
-import { Repository, FindOptionsWhere, Between, Like } from "typeorm";
+import { Repository } from "typeorm";
 import {
   CreateAuditLogData,
   IAuditLogRepository,
@@ -36,25 +36,41 @@ export class TypeOrmAuditLogRepository implements IAuditLogRepository {
     await this.repository.remove(log);
   }
 
-  search(criteria: AuditLogSearchCriteriaDTO): Promise<AuditLog[]> {
-    const where: FindOptionsWhere<AuditLog> = {};
+  async search(criteria: AuditLogSearchCriteriaDTO): Promise<AuditLog[]> {
+    const query = this.repository.createQueryBuilder("log");
 
     if (criteria.tip_zapisa) {
-      where.tipZapisa = criteria.tip_zapisa;
-    }
-    if (criteria.mikroservis) {
-      where.mikroservis = Like(`%${criteria.mikroservis}%`);
-    }
-    if (criteria.korisnik_id) {
-      where.korisnikId = criteria.korisnik_id;
-    }
-    if (criteria.datum_od && criteria.datum_do) {
-      where.datumVreme = Between(criteria.datum_od, criteria.datum_do);
+      query.andWhere("log.tipZapisa = :tipZapisa", { tipZapisa: criteria.tip_zapisa });
     }
 
-    return this.repository.find({
-      where,
-      order: { datumVreme: "DESC" },
-    });
+    if (criteria.opis) {
+      query.andWhere("log.opis LIKE :opis", { opis: `%${criteria.opis}%` });
+    }
+
+    if (criteria.mikroservis) {
+      query.andWhere("log.mikroservis LIKE :mikroservis", {
+        mikroservis: `%${criteria.mikroservis}%`,
+      });
+    }
+
+    if (criteria.korisnik_id !== undefined) {
+      query.andWhere("log.korisnikId = :korisnikId", { korisnikId: criteria.korisnik_id });
+    }
+
+    if (criteria.ip_adresa) {
+      query.andWhere("log.ipAdresa LIKE :ipAdresa", { ipAdresa: `%${criteria.ip_adresa}%` });
+    }
+
+    if (criteria.datum_od) {
+      query.andWhere("log.datumVreme >= :datumOd", { datumOd: criteria.datum_od });
+    }
+
+    if (criteria.datum_do) {
+      query.andWhere("log.datumVreme <= :datumDo", { datumDo: criteria.datum_do });
+    }
+
+    query.orderBy("log.datumVreme", "DESC");
+
+    return query.getMany();
   }
 }

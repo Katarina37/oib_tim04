@@ -7,7 +7,7 @@ import AuthPage from './pages/AuthPage';
 import ProductionPage from './pages/ProductionPage';
 import WeatherPage from './pages/WeatherPage';
 import SettingsPage from './pages/SettingsPage';
-import UnderConstructionPage from './pages/UnderConstructionPage';
+import AuditLogsPage from './pages/AuditLogsPage';
 import AnalysisPage from './pages/AnalysisPage';
 import PerformancePage from './pages/PerformancePage';
 import { getDefaultRouteForRole } from './helpers/roleAccess';
@@ -151,10 +151,7 @@ const App: React.FC = () => {
         element={
           <ProtectedRoute requiredRole="admin">
             <AppLayout>
-              <UnderConstructionPage 
-                title="Evidencija događaja" 
-                description="Mikroservis za audit logove sistema"
-              />
+              <AuditLogsPage />
             </AppLayout>
           </ProtectedRoute>
         }

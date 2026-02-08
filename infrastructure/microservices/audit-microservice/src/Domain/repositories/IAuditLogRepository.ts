@@ -8,7 +8,7 @@ export interface CreateAuditLogData {
   mikroservis?: string | null;
   korisnik_id?: number | null;
   ip_adresa?: string | null;
-  dodatni_podaci?: object | null;
+  dodatni_podaci?: Record<string, unknown> | null;
 }
 
 export interface IAuditLogRepository {

@@ -1,4 +1,7 @@
+import { AlgorithmType } from "../enums/AlgorithmType";
+
 export interface RunSimulationDTO {
-    naziv: string;
-    tip_algoritma: "distributivni_centar" | "magacinski_centar";
+  naziv: string;
+  tip_algoritma: AlgorithmType;
+  broj_zahteva?: number;
 }

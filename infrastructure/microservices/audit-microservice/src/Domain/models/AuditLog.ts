@@ -25,5 +25,5 @@ export class AuditLog {
   ipAdresa!: string | null;
 
   @Column({ type: "json", nullable: true, name: "dodatni_podaci" })
-  dodatniPodaci!: object | null;
+  dodatniPodaci!: Record<string, unknown> | null;
 }

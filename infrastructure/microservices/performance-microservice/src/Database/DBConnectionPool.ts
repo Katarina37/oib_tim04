@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
-import { PerformanceReport } from "../Domain/models/PerformanceReport";
 import { requireEnv, requireIntEnv } from "../config/env";
+import { PerformanceReportEntity } from "../Infrastructure/entities/PerformanceReportEntity";
 
 export const Db = new DataSource({
   type: "mysql",
@@ -11,7 +11,7 @@ export const Db = new DataSource({
   password: requireEnv("DB_PASSWORD"),
   database: requireEnv("DB_NAME"),
   ssl: { rejectUnauthorized: false },
-  synchronize: true, 
-  logging: false, 
-  entities: [PerformanceReport],
+  synchronize: false,
+  logging: false,
+  entities: [PerformanceReportEntity],
 });

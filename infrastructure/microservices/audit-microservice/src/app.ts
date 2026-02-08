@@ -40,8 +40,8 @@ const initializeApp = async (): Promise<void> => {
   const auditLogRepository: IAuditLogRepository = new TypeOrmAuditLogRepository(
     Db.getRepository(AuditLog)
   );
-  const auditService: IAuditService = new AuditService(auditLogRepository);
   const logger: ILoggerService = new LoggerService();
+  const auditService: IAuditService = new AuditService(auditLogRepository, logger);
   const requestAuditMiddleware = new RequestAuditMiddleware(logger);
   const auditController = new AuditController(auditService);
   

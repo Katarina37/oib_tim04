@@ -145,6 +145,13 @@ export class GatewayController {
 
     // Performance Analysis microservice routes (Admin only)
     this.router.all(
+      "/performance-analysis",
+      authenticate,
+      authorize(UserRole.ADMIN),
+      this.proxyToPerformanceAnalysis.bind(this)
+    );
+
+    this.router.all(
       "/performance-analysis/*path",
       authenticate,
       authorize(UserRole.ADMIN),

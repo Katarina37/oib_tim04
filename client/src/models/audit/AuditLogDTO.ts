@@ -6,7 +6,7 @@ export enum AuditLogLevel {
 
 export interface AuditLogDTO {
   id: number;
-  tip_zapisa: AuditLogLevel | string;
+  tip_zapisa: AuditLogLevel;
   datum_vreme: string;
   opis: string;
   mikroservis: string | null;

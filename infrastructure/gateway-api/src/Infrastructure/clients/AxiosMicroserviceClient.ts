@@ -80,7 +80,30 @@ export class AxiosMicroserviceClient implements IMicroserviceClient {
       return payload;
     }
 
-    return error.message;
+    if (typeof error.message === "string" && error.message.trim().length > 0 && error.message !== "Error") {
+      return error.message;
+    }
+
+    const code = typeof error.code === "string" ? error.code : "";
+    const baseURL = typeof error.config?.baseURL === "string" ? error.config.baseURL : "";
+    const url = typeof error.config?.url === "string" ? error.config.url : "";
+    const target = `${baseURL}${url}`;
+
+    if (code === "ECONNREFUSED") {
+      return target
+        ? `Mikroservis nije dostupan na adresi ${target}.`
+        : "Mikroservis nije dostupan (ECONNREFUSED).";
+    }
+
+    if (code === "ETIMEDOUT" || code === "ECONNABORTED") {
+      return target
+        ? `Isteklo je vreme cekanja odgovora sa mikroservisa ${target}.`
+        : "Isteklo je vreme cekanja odgovora mikroservisa.";
+    }
+
+    return code
+      ? `Neuspesna komunikacija sa mikroservisom (${code}).`
+      : "Neuspesna komunikacija sa mikroservisom.";
   }
 
   async proxy<T = unknown>(request: ProxyRequest): Promise<ProxyResponse<T>> {
@@ -116,10 +139,13 @@ export class AxiosMicroserviceClient implements IMicroserviceClient {
       };
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string }>;
+      const fallbackStatus = axiosError.code === "ETIMEDOUT" || axiosError.code === "ECONNABORTED"
+        ? 504
+        : 502;
       return {
         success: false,
         error: this.resolveErrorMessage(axiosError),
-        status: axiosError.response?.status || 500,
+        status: axiosError.response?.status ?? fallbackStatus,
         headers: this.normalizeHeaders(axiosError.response?.headers),
       };
     }

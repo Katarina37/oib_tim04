@@ -1,7 +1,7 @@
-import { PerformanceReport } from "../models/PerformanceReport";
+import { NewPerformanceReport, PerformanceReport } from "../models/PerformanceReport";
 
 export interface IPerformanceRepository {
-    saveReport(report: PerformanceReport): Promise<PerformanceReport>;
-    findAll(): Promise<PerformanceReport[]>;
-    findById(id: number): Promise<PerformanceReport | null>;
+  save(report: NewPerformanceReport): Promise<PerformanceReport>;
+  findAll(): Promise<PerformanceReport[]>;
+  findById(id: number): Promise<PerformanceReport | null>;
 }

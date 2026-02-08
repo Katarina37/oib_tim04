@@ -1,13 +1,20 @@
-import { IAuditService } from "../Domain/services/IAuditService";
-import { AuditLog } from "../Domain/models/AuditLog";
 import { AuditLogDTO } from "../Domain/DTOs/AuditLogDTO";
+import { AuditLogSearchCriteriaDTO } from "../Domain/DTOs/AuditLogSearchCriteriaDTO";
 import { CreateAuditLogDTO } from "../Domain/DTOs/CreateAuditLogDTO";
 import { UpdateAuditLogDTO } from "../Domain/DTOs/UpdateAuditLogDTO";
-import { AuditLogSearchCriteriaDTO } from "../Domain/DTOs/AuditLogSearchCriteriaDTO";
+import { NotFoundError } from "../Domain/errors/NotFoundError";
+import { ValidationError } from "../Domain/errors/ValidationError";
+import { LogLevel } from "../Domain/enums/LogLevel";
+import { AuditLog } from "../Domain/models/AuditLog";
 import { IAuditLogRepository } from "../Domain/repositories/IAuditLogRepository";
+import { IAuditService } from "../Domain/services/IAuditService";
+import { ILoggerService } from "../Domain/services/ILoggerService";
 
 export class AuditService implements IAuditService {
-  constructor(private readonly auditLogRepository: IAuditLogRepository) {}
+  constructor(
+    private readonly auditLogRepository: IAuditLogRepository,
+    private readonly logger?: ILoggerService
+  ) {}
 
   async getAllLogs(): Promise<AuditLogDTO[]> {
     const logs = await this.auditLogRepository.findAll();
@@ -15,17 +22,20 @@ export class AuditService implements IAuditService {
   }
 
   async getLogById(id: number): Promise<AuditLogDTO> {
+    this.ensureValidId(id);
+
     const log = await this.auditLogRepository.findById(id);
     if (!log) {
-      throw new Error(`Audit log with ID ${id} not found`);
+      throw new NotFoundError(`Audit log with ID ${id} not found.`);
     }
+
     return this.toDTO(log);
   }
 
   async createLog(data: CreateAuditLogDTO): Promise<AuditLogDTO> {
     const newLog = this.auditLogRepository.create({
       tip_zapisa: data.tip_zapisa,
-      opis: data.opis,
+      opis: data.opis.trim(),
       mikroservis: data.mikroservis ?? null,
       korisnik_id: data.korisnik_id ?? null,
       ip_adresa: data.ip_adresa ?? null,
@@ -33,45 +43,62 @@ export class AuditService implements IAuditService {
     });
 
     const savedLog = await this.auditLogRepository.save(newLog);
-    this.logToConsole(savedLog);
+    await this.safeWriteServiceLog(
+      `Audit log created (id=${savedLog.id}, level=${savedLog.tipZapisa}).`,
+      LogLevel.INFO
+    );
+
     return this.toDTO(savedLog);
   }
 
   async updateLog(id: number, data: UpdateAuditLogDTO): Promise<AuditLogDTO> {
-    const log = await this.auditLogRepository.findById(id);
-    if (!log) {
-      throw new Error(`Audit log with ID ${id} not found`);
+    this.ensureValidId(id);
+
+    const existingLog = await this.auditLogRepository.findById(id);
+    if (!existingLog) {
+      throw new NotFoundError(`Audit log with ID ${id} not found.`);
     }
 
     if (data.tip_zapisa !== undefined) {
-      log.tipZapisa = data.tip_zapisa;
-    }
-    if (data.opis !== undefined) {
-      log.opis = data.opis;
-    }
-    if (data.mikroservis !== undefined) {
-      log.mikroservis = data.mikroservis ?? null;
-    }
-    if (data.korisnik_id !== undefined) {
-      log.korisnikId = data.korisnik_id ?? null;
-    }
-    if (data.ip_adresa !== undefined) {
-      log.ipAdresa = data.ip_adresa ?? null;
-    }
-    if (data.dodatni_podaci !== undefined) {
-      log.dodatniPodaci = data.dodatni_podaci ?? null;
+      existingLog.tipZapisa = data.tip_zapisa;
     }
 
-    const updatedLog = await this.auditLogRepository.save(log);
+    if (data.opis !== undefined) {
+      existingLog.opis = data.opis.trim();
+    }
+
+    if (data.mikroservis !== undefined) {
+      existingLog.mikroservis = data.mikroservis ?? null;
+    }
+
+    if (data.korisnik_id !== undefined) {
+      existingLog.korisnikId = data.korisnik_id ?? null;
+    }
+
+    if (data.ip_adresa !== undefined) {
+      existingLog.ipAdresa = data.ip_adresa ?? null;
+    }
+
+    if (data.dodatni_podaci !== undefined) {
+      existingLog.dodatniPodaci = data.dodatni_podaci ?? null;
+    }
+
+    const updatedLog = await this.auditLogRepository.save(existingLog);
+    await this.safeWriteServiceLog(`Audit log updated (id=${updatedLog.id}).`, LogLevel.INFO);
+
     return this.toDTO(updatedLog);
   }
 
   async deleteLog(id: number): Promise<void> {
+    this.ensureValidId(id);
+
     const log = await this.auditLogRepository.findById(id);
     if (!log) {
-      throw new Error(`Audit log with ID ${id} not found`);
+      throw new NotFoundError(`Audit log with ID ${id} not found.`);
     }
+
     await this.auditLogRepository.remove(log);
+    await this.safeWriteServiceLog(`Audit log deleted (id=${id}).`, LogLevel.WARNING);
   }
 
   async searchLogs(criteria: AuditLogSearchCriteriaDTO): Promise<AuditLogDTO[]> {
@@ -92,23 +119,23 @@ export class AuditService implements IAuditService {
     };
   }
 
-  private logToConsole(log: AuditLog): void {
-    const timestamp = new Date().toISOString();
-    const level = log.tipZapisa;
-    const message = `[${timestamp}] [${level}] ${log.opis}`;
+  private ensureValidId(id: number): void {
+    if (!Number.isInteger(id) || id <= 0) {
+      throw new ValidationError("Audit log ID must be a positive integer.");
+    }
+  }
 
-    switch (level) {
-      case "ERROR":
-        console.error(message);
-        break;
-      case "WARNING":
-        console.warn(message);
-        break;
-      case "INFO":
-        console.info(message);
-        break;
-      default:
-        console.log(message);
+  private async safeWriteServiceLog(message: string, level: LogLevel): Promise<void> {
+    if (!this.logger) {
+      return;
+    }
+
+    try {
+      await this.logger.log(message, level, {
+        additionalData: { source: "audit-service" },
+      });
+    } catch {
+      // Service logging must not break the business flow.
     }
   }
 }

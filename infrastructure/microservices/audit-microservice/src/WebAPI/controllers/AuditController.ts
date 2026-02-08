@@ -1,9 +1,12 @@
-import { Router, Request, Response } from "express";
+import { Request, Response, Router } from "express";
+import { DomainError } from "../../Domain/errors/DomainError";
 import { IAuditService } from "../../Domain/services/IAuditService";
-import { CreateAuditLogDTO } from "../../Domain/DTOs/CreateAuditLogDTO";
-import { UpdateAuditLogDTO } from "../../Domain/DTOs/UpdateAuditLogDTO";
-import { AuditLogSearchCriteriaDTO } from "../../Domain/DTOs/AuditLogSearchCriteriaDTO";
-import { validateCreateAuditLogData, validateUpdateAuditLogData } from "../validators/AuditLogValidator";
+import {
+  parseAuditLogId,
+  parseAuditSearchCriteria,
+  parseCreateAuditLogData,
+  parseUpdateAuditLogData,
+} from "../validators/AuditLogValidator";
 
 export class AuditController {
   private readonly router: Router;
@@ -25,85 +28,75 @@ export class AuditController {
   private async getAllLogs(_req: Request, res: Response): Promise<void> {
     try {
       const logs = await this.auditService.getAllLogs();
-      res.status(200).json(logs);
-    } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(200).json({ success: true, data: logs });
+    } catch (error) {
+      this.handleError(res, error);
     }
   }
 
   private async getLogById(req: Request, res: Response): Promise<void> {
     try {
-      const id = parseInt(req.params.id, 10);
+      const id = parseAuditLogId(req.params.id);
       const log = await this.auditService.getLogById(id);
-      res.status(200).json(log);
-    } catch (err) {
-      res.status(404).json({ message: (err as Error).message });
+      res.status(200).json({ success: true, data: log });
+    } catch (error) {
+      this.handleError(res, error);
     }
   }
 
   private async createLog(req: Request, res: Response): Promise<void> {
     try {
-      const data: CreateAuditLogDTO = req.body;
-
-      const validation = validateCreateAuditLogData(data);
-      if (!validation.success) {
-        res.status(400).json({ success: false, message: validation.message });
-        return;
-      }
-
+      const data = parseCreateAuditLogData(req.body);
       const log = await this.auditService.createLog(data);
       res.status(201).json({ success: true, data: log });
-    } catch (err) {
-      res.status(400).json({ success: false, message: (err as Error).message });
+    } catch (error) {
+      this.handleError(res, error);
     }
   }
 
   private async updateLog(req: Request, res: Response): Promise<void> {
     try {
-      const id = parseInt(req.params.id, 10);
-      const data: UpdateAuditLogDTO = req.body;
-
-      const validation = validateUpdateAuditLogData(data);
-      if (!validation.success) {
-        res.status(400).json({ success: false, message: validation.message });
-        return;
-      }
-
+      const id = parseAuditLogId(req.params.id);
+      const data = parseUpdateAuditLogData(req.body);
       const log = await this.auditService.updateLog(id, data);
       res.status(200).json({ success: true, data: log });
-    } catch (err) {
-      res.status(400).json({ success: false, message: (err as Error).message });
+    } catch (error) {
+      this.handleError(res, error);
     }
   }
 
   private async deleteLog(req: Request, res: Response): Promise<void> {
     try {
-      const id = parseInt(req.params.id, 10);
+      const id = parseAuditLogId(req.params.id);
       await this.auditService.deleteLog(id);
-      res.status(200).json({ success: true, message: "Audit log deleted successfully" });
-    } catch (err) {
-      res.status(404).json({ success: false, message: (err as Error).message });
+      res.status(200).json({ success: true, message: "Audit log deleted successfully." });
+    } catch (error) {
+      this.handleError(res, error);
     }
   }
 
   private async searchLogs(req: Request, res: Response): Promise<void> {
     try {
-      const criteria: AuditLogSearchCriteriaDTO = {
-        tip_zapisa: req.query.tip_zapisa as any,
-        mikroservis: req.query.mikroservis as string | undefined,
-        korisnik_id: req.query.korisnik_id ? parseInt(req.query.korisnik_id as string, 10) : undefined,
-        datum_od: req.query.datum_od ? new Date(req.query.datum_od as string) : undefined,
-        datum_do: req.query.datum_do ? new Date(req.query.datum_do as string) : undefined,
-      };
-
+      const criteria = parseAuditSearchCriteria(req.query as Record<string, unknown>);
       const logs = await this.auditService.searchLogs(criteria);
-      res.status(200).json(logs);
-    } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(200).json({ success: true, data: logs });
+    } catch (error) {
+      this.handleError(res, error);
     }
   }
 
   public getRouter(): Router {
     return this.router;
+  }
+
+  private handleError(res: Response, error: unknown): void {
+    if (error instanceof DomainError) {
+      res.status(error.statusCode).json({ success: false, message: error.message });
+      return;
+    }
+
+    const message =
+      error instanceof Error ? error.message : "Unexpected error while processing request.";
+    res.status(500).json({ success: false, message });
   }
 }

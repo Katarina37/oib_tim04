@@ -1,102 +1,253 @@
 import { Router, Request, Response } from "express";
-import { IPerformanceService } from "../../Domain/services/IPerformanceService";
+import { IPerformanceApplicationService } from "../../Application/services/IPerformanceApplicationService";
+import { NotFoundError } from "../../Domain/errors/NotFoundError";
+import { ValidationError } from "../../Domain/errors/ValidationError";
 import { ILoggerService } from "../../Domain/services/ILoggerService";
 import { LogLevel } from "../../Domain/enums/LogLevel";
-import { validateRunSimulation } from "../validators/PerformanceValidator";
-import { PdfService } from "../../Services/PdfService";
+import { mapReportToResponse } from "../mappers/PerformanceApiMapper";
+import { validateIdParam, validateRunSimulationPayload } from "../validators/PerformanceValidator";
 
 export class PerformanceController {
   private readonly router: Router;
 
   constructor(
-    private readonly performanceService: IPerformanceService,
+    private readonly performanceApplicationService: IPerformanceApplicationService,
     private readonly logger: ILoggerService
   ) {
     this.router = Router();
     this.initializeRoutes();
   }
 
-    private initializeRoutes(): void {
-        //pokrecem simulaciju
-        this.router.post("/simulacija/pokreni", this.runSimulation.bind(this));
-        //pregled svih izvestaja
-        this.router.get("/izvestaji", this.getReports.bind(this));
-        //samo jedan izvozim
-        this.router.get("/izvestaji/:id/pdf", this.exportPDF.bind(this));
+  private initializeRoutes(): void {
+    const prefix = "/performance-analysis";
+    // Canonical routes
+    this.router.post(`${prefix}/simulations`, this.runSimulation.bind(this));
+    this.router.get(`${prefix}/reports`, this.getReports.bind(this));
+    this.router.get(`${prefix}/reports/:id`, this.getReportById.bind(this));
+    this.router.get(`${prefix}/reports/:id/pdf`, this.exportPDF.bind(this));
+
+    // Legacy compatibility routes
+    this.router.post(`${prefix}/simulacija/pokreni`, this.runSimulation.bind(this));
+    this.router.get(`${prefix}/izvestaji`, this.getReports.bind(this));
+    this.router.get(`${prefix}/izvestaji/:id`, this.getReportById.bind(this));
+    this.router.get(`${prefix}/izvestaji/:id/pdf`, this.exportPDF.bind(this));
+  }
+
+  public getRouter(): Router {
+    return this.router;
+  }
+
+  private getClientIp(req: Request): string {
+    const forwarded = req.headers["x-forwarded-for"];
+    if (typeof forwarded === "string") {
+      return forwarded.split(",")[0].trim();
     }
 
-    public getRouter(): Router {
-        return this.router;
+    return req.ip || req.socket.remoteAddress || "unknown";
+  }
+
+  private getUserId(req: Request): number | undefined {
+    const headerValue = req.headers["x-user-id"];
+    const value = Array.isArray(headerValue) ? headerValue[0] : headerValue;
+    if (!value) {
+      return undefined;
     }
 
-    private async runSimulation(req: Request, res: Response): Promise<void> {
-        //validacija ulaznih podataka
-        const validation = validateRunSimulation(req.body);
-        if (!validation.success) {
-            res.status(400).json({ success: false, message: validation.message });
-            return;
-        }
+    const parsed = Number.parseInt(String(value), 10);
+    return Number.isNaN(parsed) ? undefined : parsed;
+  }
 
-        try {
-            //pocetak simulacije
-            await this.logger.log(`Korisnik pokrece simulaciju: ${req.body.naziv}`, LogLevel.INFO, { ipAddress: req.ip });
-            
-            //pozivam u servisu pocetak simulacije
-            const report = await this.performanceService.runSimulation(req.body);
-            
-            //logujem da je uspesno
-            await this.logger.log(`Simulacija uspesno izvrsena. ID: ${report.id}`, LogLevel.INFO);
-            res.status(201).json({ success: true, data: report });
-
-        } catch (error) {
-            await this.logger.log(`Greska pri simulaciji: ${(error as Error).message}`, LogLevel.ERROR);
-            res.status(500).json({ success: false, message: "Doslo je do greske tokom izvrsavanja simulacije." });
-        }
+  private getParamValue(value: string | string[] | undefined): string | undefined {
+    if (Array.isArray(value)) {
+      return value[0];
     }
 
-    private async getReports(_req: Request, res: Response): Promise<void> {
-        try {
-            const reports = await this.performanceService.getAllReports();
-            res.status(200).json({ success: true, data: reports });
-        } catch (error) {
-            res.status(500).json({ success: false, message: "Greska pri dobavljanju izvestaja." });
-        }
+    return value;
+  }
+
+  private resolveStatusCode(error: unknown): number {
+    if (error instanceof NotFoundError) {
+      return 404;
     }
 
-    private async exportPDF(req: Request, res: Response): Promise<void> {
-        const idParam = req.params.id;
-        if (typeof idParam !== 'string') {
-            res.status(400).json({ success: false, message: "Nevalidan ID parametar." });
-            return;
-        }
-        const id = parseInt(idParam);
-
-        if (isNaN(id)) {
-            res.status(400).json({ success: false, message: "Validan ID je obavezan." });
-            return;
-        }
-        try {
-            //dobavljam podatke iz baze preko servisa
-            const report = await this.performanceService.getReportById(id);
-            if (!report) {
-                res.status(404).json({ success: false, message: "Izvestaj nije pronadjen." });
-                return;
-            }
-
-            //generisem pdf preko PdfServisa
-            const pdfBuffer = await PdfService.generatePerformancePdf(report);
-
-            //logujem izvoz pdfa
-            await this.logger.log(`Izvezen PDF za izvestaj ID: ${id}`, LogLevel.INFO, { ipAddress: req.ip });
-
-            //klijentu saljem fajl
-            res.setHeader("Content-Type", "application/pdf");
-            res.setHeader("Content-Disposition", `attachment; filename=izvestaj-performansi-${id}.pdf`);
-            res.send(pdfBuffer);
-
-        } catch (error) {
-            await this.logger.log(`Greska pri generisanju PDF-a: ${(error as Error).message}`, LogLevel.ERROR);
-            res.status(500).json({ success: false, message: "Greska prilikom generisanja PDF dokumenta." });
-        }
+    if (error instanceof ValidationError) {
+      return 400;
     }
+
+    return 500;
+  }
+
+  private resolveErrorMessage(error: unknown): string {
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+
+    return "Doslo je do neocekivane greske.";
+  }
+
+  private async runSimulation(req: Request, res: Response): Promise<void> {
+    const validation = validateRunSimulationPayload(req.body);
+    const clientIp = this.getClientIp(req);
+    const userId = this.getUserId(req);
+
+    if (!validation.success) {
+      await this.logger.log(
+        `Neuspesna validacija zahteva za simulaciju: ${validation.message}`,
+        LogLevel.WARNING,
+        {
+          userId,
+          ipAddress: clientIp,
+        }
+      );
+      res.status(400).json({ success: false, message: validation.message });
+      return;
+    }
+
+    try {
+      await this.logger.log(
+        `Pokrenuta simulacija: ${validation.data.naziv}`,
+        LogLevel.INFO,
+        {
+          userId,
+          ipAddress: clientIp,
+          additionalData: {
+            tipAlgoritma: validation.data.tip_algoritma,
+            brojZahteva: validation.data.broj_zahteva,
+          },
+        }
+      );
+
+      const report = await this.performanceApplicationService.runSimulation(validation.data);
+
+      await this.logger.log(
+        `Simulacija zavrsena, kreiran izvestaj ${report.id}`,
+        LogLevel.INFO,
+        {
+          userId,
+          ipAddress: clientIp,
+          additionalData: {
+            reportId: report.id,
+            efikasnost: report.efikasnostProcenat,
+            brzinaObrade: report.brzinaObrade,
+          },
+        }
+      );
+
+      res.status(201).json({ success: true, data: mapReportToResponse(report) });
+    } catch (error) {
+      await this.logger.log(
+        `Greska pri pokretanju simulacije: ${this.resolveErrorMessage(error)}`,
+        LogLevel.ERROR,
+        {
+          userId,
+          ipAddress: clientIp,
+        }
+      );
+
+      res.status(this.resolveStatusCode(error)).json({
+        success: false,
+        message: this.resolveErrorMessage(error),
+      });
+    }
+  }
+
+  private async getReports(req: Request, res: Response): Promise<void> {
+    const clientIp = this.getClientIp(req);
+    const userId = this.getUserId(req);
+
+    try {
+      const reports = await this.performanceApplicationService.getReports();
+      res.status(200).json({
+        success: true,
+        data: reports.map((report) => mapReportToResponse(report)),
+      });
+
+      await this.logger.log("Uspesno preuzeta istorija performance izvestaja", LogLevel.INFO, {
+        userId,
+        ipAddress: clientIp,
+        additionalData: {
+          count: reports.length,
+        },
+      });
+    } catch (error) {
+      await this.logger.log(
+        `Greska pri preuzimanju izvestaja: ${this.resolveErrorMessage(error)}`,
+        LogLevel.ERROR,
+        {
+          userId,
+          ipAddress: clientIp,
+        }
+      );
+
+      res.status(this.resolveStatusCode(error)).json({
+        success: false,
+        message: this.resolveErrorMessage(error),
+      });
+    }
+  }
+
+  private async getReportById(req: Request, res: Response): Promise<void> {
+    const idValidation = validateIdParam(this.getParamValue(req.params.id));
+    if (!idValidation.success) {
+      res.status(400).json({ success: false, message: idValidation.message });
+      return;
+    }
+
+    try {
+      const report = await this.performanceApplicationService.getReportById(idValidation.data);
+      res.status(200).json({
+        success: true,
+        data: mapReportToResponse(report),
+      });
+    } catch (error) {
+      res.status(this.resolveStatusCode(error)).json({
+        success: false,
+        message: this.resolveErrorMessage(error),
+      });
+    }
+  }
+
+  private async exportPDF(req: Request, res: Response): Promise<void> {
+    const idValidation = validateIdParam(this.getParamValue(req.params.id));
+    const clientIp = this.getClientIp(req);
+    const userId = this.getUserId(req);
+
+    if (!idValidation.success) {
+      res.status(400).json({ success: false, message: idValidation.message });
+      return;
+    }
+
+    try {
+      const { report, pdfBuffer } = await this.performanceApplicationService.exportReportPdf(
+        idValidation.data
+      );
+
+      const filename = `performance-report-${report.id}.pdf`;
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename=${filename}`);
+      res.status(200).send(pdfBuffer);
+
+      await this.logger.log(`PDF izvezen za izvestaj ${report.id}`, LogLevel.INFO, {
+        userId,
+        ipAddress: clientIp,
+      });
+    } catch (error) {
+      await this.logger.log(
+        `Greska pri izvozu PDF-a: ${this.resolveErrorMessage(error)}`,
+        LogLevel.ERROR,
+        {
+          userId,
+          ipAddress: clientIp,
+          additionalData: {
+            reportId: idValidation.data,
+          },
+        }
+      );
+
+      res.status(this.resolveStatusCode(error)).json({
+        success: false,
+        message: this.resolveErrorMessage(error),
+      });
+    }
+  }
 }

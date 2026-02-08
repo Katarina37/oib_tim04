@@ -1,10 +1,12 @@
+import { LogLevel } from "../enums/LogLevel";
+
 export interface AuditLogPayload {
-    tip_zapisa: string;
-    opis: string;
-    mikroservis: string;
-    korisnik_id?: number | null;
-    ip_adresa?: string | null;
-    dodatni_podaci?: object | Record<string, unknown> | null;
+  tipZapisa: LogLevel;
+  opis: string;
+  mikroservis: string;
+  korisnikId?: number;
+  ipAdresa?: string;
+  dodatniPodaci?: Record<string, unknown>;
 }
 
 export interface IAuditClient {
