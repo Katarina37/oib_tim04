@@ -71,26 +71,42 @@ export class SaleService implements ISaleService {
                 );
             }
 
-            const analysisResult = await this.analysisClient.createFiscalBill({
-                saleType: data.type as SaleType,
-                paymentMethod: data.paymentMethod as PaymentMethod,
-                userId: data.userId,
-                soldItems: saleItems.map((item) => ({
-                    productId: item.perfumeId,
-                    productName: item.name,
-                    quantity: item.quantity,
-                    price: item.price,
-                })),
-            });
+            let billId: number | null = null;
+            try {
+                const analysisResult = await this.analysisClient.createFiscalBill({
+                    saleType: data.type as SaleType,
+                    paymentMethod: data.paymentMethod as PaymentMethod,
+                    userId: data.userId,
+                    soldItems: saleItems.map((item) => ({
+                        productId: item.perfumeId,
+                        productName: item.name,
+                        quantity: item.quantity,
+                        price: item.price,
+                    })),
+                });
+                billId = analysisResult.billId;
+            } catch (error) {
+                await this.trySendAuditLog({
+                    tip_zapisa: "WARNING",
+                    opis: `Analitika nije dostupna, koristim lokalni broj racuna: ${(error as Error).message}`,
+                    mikroservis: SaleService.MICROSERVICE_NAME,
+                    korisnik_id: data.userId,
+                });
+            }
 
-            const billNumber = this.resolveBillNumber(analysisResult.billId);
+            const billNumber = billId ? this.resolveBillNumber(billId) : "";
             const saleToPersist = await this.buildSaleForPersistence(
                 data,
                 saleItems,
                 billNumber
             );
 
-            const savedSale = await this.saleRepository.save(saleToPersist);
+            let savedSale = await this.saleRepository.save(saleToPersist);
+
+            if (!billId) {
+                savedSale.billNumber = this.resolveBillNumber(savedSale.id);
+                savedSale = await this.saleRepository.save(savedSale);
+            }
 
             await this.trySendAuditLog({
                 tip_zapisa: "INFO",
@@ -164,7 +180,7 @@ export class SaleService implements ISaleService {
     async getAvailablePerfumes(userContext?: UserContext): Promise<PerfumeDTO[]> {
         try {
             const perfumes = await this.perfumeCatalogClient.getAvailablePerfumes(userContext);
-            return perfumes.filter((perfume) => perfume.stock > 0);
+            return perfumes;
         } catch (error) {
             await this.trySendAuditLog({
                 tip_zapisa: "ERROR",

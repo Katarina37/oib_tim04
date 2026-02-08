@@ -58,6 +58,25 @@ const formatDateTime = (isoDate: string): string => {
   });
 };
 
+const mergePerfumesById = (items: PerfumeDTO[]): PerfumeDTO[] => {
+  const byId = new Map<number, PerfumeDTO>();
+
+  for (const item of items) {
+    const existing = byId.get(item.id);
+    if (!existing) {
+      byId.set(item.id, { ...item });
+      continue;
+    }
+
+    byId.set(item.id, {
+      ...existing,
+      stock: (existing.stock ?? 0) + (item.stock ?? 0),
+    });
+  }
+
+  return Array.from(byId.values());
+};
+
 export const SalesPage: React.FC = () => {
   const { token, user } = useAuth();
   const { saleAPI } = useServices();
@@ -80,15 +99,26 @@ export const SalesPage: React.FC = () => {
     setError(null);
 
     try {
-      const [catalog, allSales] = await Promise.all([
+      const [catalogResult, salesResult] = await Promise.allSettled([
         saleAPI.getAvailablePerfumes(token),
         saleAPI.getAllSales(token),
       ]);
 
-      setPerfumes(catalog);
-      setSalesHistory(allSales);
-    } catch (requestError) {
-      setError(getErrorMessage(requestError));
+      let errorMessage: string | null = null;
+
+      if (catalogResult.status === "fulfilled") {
+        setPerfumes(mergePerfumesById(catalogResult.value));
+      } else {
+        errorMessage = getErrorMessage(catalogResult.reason);
+      }
+
+      if (salesResult.status === "fulfilled") {
+        setSalesHistory(salesResult.value);
+      } else if (!errorMessage) {
+        errorMessage = getErrorMessage(salesResult.reason);
+      }
+
+      setError(errorMessage);
     } finally {
       setIsLoadingData(false);
     }

@@ -54,7 +54,7 @@ export class AnalysisClient implements IAnalysisClient {
             data?: { id?: number };
             billId?: number;
         }>(
-            "data-analysis/fiscal-bills",
+            "/data-analysis/fiscal-bills",
             payload
         );
 
