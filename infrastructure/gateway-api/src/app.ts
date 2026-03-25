@@ -132,6 +132,11 @@ const weatherClient: IMicroserviceClient = createRequiredGatewayMicroserviceClie
   "WEATHER_SERVICE_URL",
 ]);
 
+// Security incident service client
+const securityIncidentClient: IMicroserviceClient = createRequiredGatewayMicroserviceClient([
+  "SECURITY_INCIDENT_SERVICE_URL",
+]);
+
 // Create gateway service with all dependencies
 const gatewayService: IGatewayService = new GatewayService(
   authClient,
@@ -144,7 +149,8 @@ const gatewayService: IGatewayService = new GatewayService(
   dataAnalysisClient,
   performanceAnalysisClient,
   auditClient,
-  weatherClient
+  weatherClient,
+  securityIncidentClient
 );
 
 const userAccessPolicy: IUserAccessPolicy = new UserAccessPolicy();

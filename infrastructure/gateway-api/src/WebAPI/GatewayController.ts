@@ -135,6 +135,20 @@ export class GatewayController {
       this.proxyToWeather.bind(this)
     );
 
+    // Security incident microservice routes (Admin only)
+    this.router.all(
+      "/security-incidents",
+      authenticate,
+      authorize(UserRole.ADMIN),
+      this.proxyToSecurityIncidents.bind(this)
+    );
+    this.router.all(
+      "/security-incidents/*path",
+      authenticate,
+      authorize(UserRole.ADMIN),
+      this.proxyToSecurityIncidents.bind(this)
+    );
+
     // Data Analysis microservice routes (Admin only)
     this.router.all(
       "/data-analysis/*path",
@@ -455,6 +469,12 @@ export class GatewayController {
   private async proxyToWeather(req: Request, res: Response): Promise<void> {
     const proxyRequest = this.buildProxyRequest(req);
     const response = await this.gatewayService.proxyToWeather(proxyRequest);
+    this.sendProxyResponse(res, response);
+  }
+
+  private async proxyToSecurityIncidents(req: Request, res: Response): Promise<void> {
+    const proxyRequest = this.buildProxyRequest(req);
+    const response = await this.gatewayService.proxyToSecurityIncidents(proxyRequest);
     this.sendProxyResponse(res, response);
   }
 
