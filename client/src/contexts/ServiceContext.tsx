@@ -21,6 +21,8 @@ import { ISaleAPI } from "../api/sale/ISaleAPI";
 import { SalesAPI } from "../api/sale/SaleAPI";
 import { IProcessingAPI } from "../api/processing/IProcessingAPI";
 import { ProcessingAPI } from "../api/processing/ProcessingAPI";
+import { ISecurityIncidentAPI } from "../api/security_incidents/ISecurityIncidentAPI";
+import { SecurityIncidentAPI } from "../api/security_incidents/SecurityIncidentAPI";
 
 type ServiceContextValue = {
   plantAPI: IPlantAPI;
@@ -33,6 +35,7 @@ type ServiceContextValue = {
   performanceAPI: IPerformanceAPI;
   saleAPI: ISaleAPI;
   processingAPI: IProcessingAPI;
+  securityIncidentAPI: ISecurityIncidentAPI;
 };
 
 type ServiceProviderProps = {
@@ -61,6 +64,7 @@ export const ServiceProvider: React.FC<ServiceProviderProps> = ({ children, http
       performanceAPI: new PerformanceAPI(resolvedHttpClient),
       saleAPI: new SalesAPI(resolvedHttpClient),
       processingAPI: new ProcessingAPI(resolvedHttpClient),
+      securityIncidentAPI: new SecurityIncidentAPI(resolvedHttpClient),
     }),
     [resolvedHttpClient]
   );

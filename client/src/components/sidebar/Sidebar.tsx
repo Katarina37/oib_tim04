@@ -12,6 +12,7 @@ import {
   Droplets,
   CloudSun,
   Settings,
+  ShieldAlert,
 } from 'lucide-react';
 import { normalizeRole, RoleKey } from '../../helpers/roleAccess';
 import { useAuth } from '../../hooks/useAuthHook';
@@ -123,6 +124,13 @@ export const Sidebar: React.FC = () => {
       to: "/audit-logs",
       icon: <FileText size={20} />,
       label: "Evidencija",
+      allowedRoles: ["admin"],
+      section: "system",
+    },
+    {
+      to: "/security-incidents",
+      icon: <ShieldAlert size={20} />,
+      label: "Incidenti",
       allowedRoles: ["admin"],
       section: "system",
     },

@@ -15,6 +15,7 @@ import StoragePage from './pages/StoragePage';
 import { SalesPage } from './pages/SalesPage';
 import ProcessingPage from './pages/ProcessingPage';
 import EditUserPage from './pages/EditUserPage';
+import SecurityIncidentsPage from './pages/SecurityIncidentsPage';
 
 const App: React.FC = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -152,6 +153,17 @@ const App: React.FC = () => {
           <ProtectedRoute requiredRole="admin">
             <AppLayout>
               <AuditLogsPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/security-incidents"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AppLayout>
+              <SecurityIncidentsPage />
             </AppLayout>
           </ProtectedRoute>
         }

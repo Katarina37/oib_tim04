@@ -748,6 +748,11 @@ body {
   color: var(--color-info);
 }
 
+.badge--critical {
+  background: rgba(239, 68, 68, 0.2);
+  color: #b91c1c;
+}
+
 .badge--performance-distribution {
   background: rgba(77, 184, 150, 0.15);
   color: var(--color-primary-dark);
@@ -2516,6 +2521,137 @@ body {
 
 .performance-conclusion__body {
   padding: var(--space-lg);
+}
+
+/* ============================================
+   Security Incidents Page
+   ============================================ */
+
+.security-incidents-page {
+  gap: var(--space-md);
+}
+
+.security-incidents-header-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.security-incidents-scan-controls {
+  min-width: 130px;
+}
+
+.security-incidents-auto-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  padding: 0 var(--space-xs);
+}
+
+.security-incidents-auto-refresh input {
+  accent-color: var(--color-primary);
+}
+
+.security-incidents-filters {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) 220px 220px;
+  gap: var(--space-md);
+}
+
+.security-incidents-search-wrap {
+  position: relative;
+}
+
+.security-incidents-search-wrap svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+}
+
+.security-incidents-search-wrap .input {
+  padding-left: 36px;
+}
+
+.security-incidents-table td {
+  vertical-align: middle;
+}
+
+.security-incidents-row--selected {
+  background: rgba(102, 205, 170, 0.16);
+}
+
+.security-incidents-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.security-incidents-empty {
+  text-align: center;
+  padding: var(--space-xl) var(--space-md);
+  color: var(--color-text-secondary);
+}
+
+.security-incidents-chart {
+  width: 100%;
+  height: 220px;
+}
+
+.security-incidents-chart-empty {
+  height: 220px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  color: var(--color-text-muted);
+  background: var(--color-background);
+}
+
+.security-incident-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+.security-incident-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.security-incident-detail strong {
+  word-break: break-word;
+}
+
+.security-incident-detail--full {
+  grid-column: 1 / -1;
+}
+
+.security-incident-evidence {
+  background: var(--color-background);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  max-height: 260px;
+  overflow: auto;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 980px) {
+  .security-incidents-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .security-incident-details-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .performance-conclusion__body blockquote {

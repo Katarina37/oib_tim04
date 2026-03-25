@@ -1,0 +1,6 @@
+export enum IncidentStatus {
+  OPEN = "OPEN",
+  IN_PROGRESS = "IN_PROGRESS",
+  RESOLVED = "RESOLVED",
+  FALSE_POSITIVE = "FALSE_POSITIVE",
+}

@@ -1,45 +1,29 @@
-import { app, BrowserWindow, Menu, ipcMain } from "electron";
-import path from "path";
-import { fileURLToPath } from "url";
-const __filename$1 = fileURLToPath(import.meta.url);
-const __dirname$1 = path.dirname(__filename$1);
-let win = null;
-const preloadPath = path.join(__dirname$1, "../dist-electron/preload.mjs");
-function createWindow() {
-  win = new BrowserWindow({
+import { app as n, BrowserWindow as a, Menu as m, ipcMain as i } from "electron";
+import o from "path";
+import { fileURLToPath as s } from "url";
+const d = s(import.meta.url), t = o.dirname(d);
+let e = null;
+const l = o.join(t, "../dist-electron/preload.mjs");
+function r() {
+  e = new a({
     width: 1e3,
     height: 700,
     minWidth: 800,
     minHeight: 600,
-    fullscreen: false,
-    frame: false,
+    fullscreen: !1,
+    frame: !1,
     backgroundColor: "#202020",
     titleBarStyle: "hiddenInset",
     webPreferences: {
-      preload: preloadPath,
-      contextIsolation: true,
-      nodeIntegration: false
+      preload: l,
+      contextIsolation: !0,
+      nodeIntegration: !1
     }
-  });
-  Menu.setApplicationMenu(null);
-  if (process.env.VITE_DEV_SERVER_URL) {
-    win.loadURL(process.env.VITE_DEV_SERVER_URL);
-  } else {
-    win.loadFile(path.join(__dirname$1, "../dist/index.html"));
-  }
-  win?.webContents.openDevTools();
-  ipcMain.on("window:minimize", () => win?.minimize());
-  ipcMain.on("window:maximize", () => {
-    if (!win) return;
-    if (win.isMaximized()) win.unmaximize();
-    else win.maximize();
-    win.webContents.send("window:maximized", win.isMaximized());
-  });
-  ipcMain.on("window:close", () => win?.close());
-  win.on("maximize", () => win?.webContents.send("window:maximized", true));
-  win.on("unmaximize", () => win?.webContents.send("window:maximized", false));
+  }), m.setApplicationMenu(null), process.env.VITE_DEV_SERVER_URL ? e.loadURL(process.env.VITE_DEV_SERVER_URL) : e.loadFile(o.join(t, "../dist/index.html")), e?.webContents.openDevTools(), i.on("window:minimize", () => e?.minimize()), i.on("window:maximize", () => {
+    e && (e.isMaximized() ? e.unmaximize() : e.maximize(), e.webContents.send("window:maximized", e.isMaximized()));
+  }), i.on("window:close", () => e?.close()), e.on("maximize", () => e?.webContents.send("window:maximized", !0)), e.on("unmaximize", () => e?.webContents.send("window:maximized", !1));
 }
-app.whenReady().then(createWindow);
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
+n.whenReady().then(r);
+n.on("window-all-closed", () => {
+  process.platform !== "darwin" && n.quit();
 });
