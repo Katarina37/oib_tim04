@@ -9,6 +9,7 @@ import { PlantState } from "../Domain/enums/PlantState";
 import { IProcessingRepository } from "../Domain/services/IProcessingRepository";
 import { IProcessingService } from "../Domain/services/IProcessingService";
 import { ILoggerService } from "../Domain/services/ILoggerService";
+import { INotificationClient } from "../Domain/services/INotificationClient";
 import {
   IProductionClient,
   ProductionPlantDTO,
@@ -33,7 +34,8 @@ export class ProcessingService implements IProcessingService {
   constructor(
     private readonly processingRepository: IProcessingRepository,
     private readonly logger: ILoggerService,
-    private readonly productionClient: IProductionClient
+    private readonly productionClient: IProductionClient,
+    private readonly notificationClient: INotificationClient
   ) {}
 
   async startProcessing(data: StartProcessingDTO): Promise<ProcessingSummaryDTO> {
@@ -113,6 +115,20 @@ export class ProcessingService implements IProcessingService {
           },
         }
       );
+      await this.trySendNotificationEvent({
+        eventType: "PROCESSING_FAILED",
+        sourceService: "processing-microservice",
+        title: "Neuspesna prerada",
+        message: `Prerada nije uspela: ${(error as Error).message}`,
+        priority: "ERROR",
+        targetRole: "SALES_MANAGER",
+        metadata: {
+          perfumeName: data.perfumeName,
+          bottleQuantity: data.bottleQuantity,
+          bottleVolumeMl: data.bottleVolumeMl,
+          requiredPlants,
+        },
+      });
       throw error;
     }
   }
@@ -205,6 +221,20 @@ export class ProcessingService implements IProcessingService {
         },
       }
     );
+
+    await this.trySendNotificationEvent({
+      eventType: "PROCESSING_INSUFFICIENT_PLANTS",
+      sourceService: "processing-microservice",
+      title: "Nema dovoljno biljaka za preradu",
+      message: `Dostupno ${harvestedPlants.length}, potrebno ${requiredPlants}. Pokrenuta je auto-sadnja i berba.`,
+      priority: "WARNING",
+      targetRole: "SALES_MANAGER",
+      metadata: {
+        requiredPlants,
+        harvestedPlants: harvestedPlants.length,
+        missingPlants,
+      },
+    });
 
     await this.ensurePlantedInventory(profile, missingPlants);
     await this.productionClient.harvestPlants(profile.commonName, missingPlants);
@@ -324,6 +354,27 @@ export class ProcessingService implements IProcessingService {
             plantIds,
           },
         }
+      );
+    }
+  }
+
+  private async trySendNotificationEvent(payload: {
+    eventType: string;
+    sourceService: string;
+    title: string;
+    message: string;
+    priority: "INFO" | "WARNING" | "ERROR";
+    targetRole?: "ADMIN" | "SALES_MANAGER" | "SELLER";
+    targetUserId?: number;
+    metadata?: Record<string, unknown>;
+  }): Promise<void> {
+    try {
+      await this.notificationClient.sendEvent(payload);
+    } catch (notificationError) {
+      console.error(
+        "Notification event delivery failed:",
+        (notificationError as Error).message,
+        payload
       );
     }
   }

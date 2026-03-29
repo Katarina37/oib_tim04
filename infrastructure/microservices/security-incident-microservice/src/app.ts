@@ -7,8 +7,10 @@ import { IncidentRepository } from "./Services/IncidentRepository";
 import { LoggerService } from "./Services/LoggerService";
 import { AxiosAuditClient } from "./Infrastructure/clients/AxiosAuditClient";
 import { AxiosAuditSearchClient } from "./Infrastructure/clients/AxiosAuditSearchClient";
+import { AxiosNotificationClient } from "./Infrastructure/clients/AxiosNotificationClient";
 import { IAuditClient } from "./Domain/services/IAuditClient";
 import { IAuditSearchClient } from "./Domain/services/IAuditSearchClient";
+import { INotificationClient } from "./Domain/services/INotificationClient";
 import { CorsConfig } from "./WebAPI/middleware/CorsConfig";
 import { GatewayAuthMiddleware } from "./WebAPI/middleware/GatewayAuthMiddleware";
 import { getOptionalEnv, requireEnv } from "./config/env";
@@ -37,6 +39,10 @@ export function createApp(): Application {
   const incidentRepository = new IncidentRepository();
 
   const auditServiceUrl = requireEnv("GATEWAY_AUDIT_URL");
+  const notificationServiceUrl =
+    getOptionalEnv("GATEWAY_NOTIFICATION_URL") ||
+    getOptionalEnv("NOTIFICATION_SERVICE_URL") ||
+    "http://localhost:4000/api/v1";
   const auditHttpClient = axios.create({
     baseURL: auditServiceUrl,
     headers: {
@@ -46,14 +52,27 @@ export function createApp(): Application {
     timeout: 7000,
   });
 
+  const notificationHttpClient = axios.create({
+    baseURL: notificationServiceUrl,
+    headers: {
+      "Content-Type": "application/json",
+      "X-Gateway-Key": gatewayApiKey,
+    },
+    timeout: 7000,
+  });
+
   const auditClient: IAuditClient = new AxiosAuditClient(auditHttpClient);
   const auditSearchClient: IAuditSearchClient = new AxiosAuditSearchClient(auditHttpClient);
+  const notificationClient: INotificationClient = new AxiosNotificationClient(
+    notificationHttpClient
+  );
   const loggerService = new LoggerService(auditClient);
 
   const incidentService = new IncidentService(
     incidentRepository,
     loggerService,
     auditSearchClient,
+    notificationClient,
     {
       defaultLookbackMinutes: readPositiveInt("INCIDENT_DEFAULT_LOOKBACK_MINUTES", 30),
       bruteForceThreshold: readPositiveInt("INCIDENT_BRUTE_FORCE_THRESHOLD", 5),

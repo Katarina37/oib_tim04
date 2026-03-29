@@ -20,7 +20,8 @@ export class GatewayService implements IGatewayService {
     private readonly performanceAnalysisClient: IMicroserviceClient,
     private readonly auditClient: IMicroserviceClient,
     private readonly weatherClient: IMicroserviceClient,
-    private readonly securityIncidentClient: IMicroserviceClient
+    private readonly securityIncidentClient: IMicroserviceClient,
+    private readonly notificationClient: IMicroserviceClient
   ) {}
 
   async login(data: LoginUserDTO): Promise<AuthResponse> {
@@ -101,5 +102,9 @@ export class GatewayService implements IGatewayService {
 
   async proxyToSecurityIncidents(request: ProxyRequest): Promise<ProxyResponse> {
     return this.securityIncidentClient.proxy(request);
+  }
+
+  async proxyToNotifications(request: ProxyRequest): Promise<ProxyResponse> {
+    return this.notificationClient.proxy(request);
   }
 }

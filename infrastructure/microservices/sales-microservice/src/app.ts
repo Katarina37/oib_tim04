@@ -13,11 +13,13 @@ import { SaleService } from "./Services/SaleService";
 import { TypeORMSaleRepository } from "./Infrastructure/repositories/TypeORMSaleRepository";
 
 import { AxiosAuditClient } from "./Infrastructure/clients/AxiosAuditClient";
+import { AxiosNotificationClient } from "./Infrastructure/clients/AxiosNotificationClient";
 import { AnalysisClient } from "./Infrastructure/clients/AnalysisClient";
 import { StorageClient } from "./Infrastructure/clients/StorageClient";
 import { DatabasePerfumeCatalogClient } from "./Infrastructure/clients/DatabasePerfumeCatalogClient";
 
 import { IAuditClient } from "./Domain/services/IAuditClient";
+import { INotificationClient } from "./Domain/services/INotificationClient";
 import { IAnalysisClient } from "./Domain/services/IAnalysisClient";
 import { IStorageClient } from "./Domain/services/IStorageClient";
 import { IPerfumeCatalogClient } from "./Domain/services/IPerfumeCatalogClient";
@@ -72,6 +74,23 @@ export async function createApp(): Promise<Application> {
 
   const auditClient: IAuditClient = new AxiosAuditClient(auditHttpClient);
   const loggerService: ILoggerService = new LoggerService(auditClient);
+
+  // ===== NOTIFICATION CLIENT =====
+  const notificationServiceUrl =
+    getOptionalEnv("GATEWAY_NOTIFICATION_URL") ||
+    getOptionalEnv("NOTIFICATION_SERVICE_URL") ||
+    "http://localhost:4000/api/v1";
+  const notificationHttpClient = axios.create({
+    baseURL: notificationServiceUrl,
+    headers: {
+      "Content-Type": "application/json",
+      "X-Gateway-Key": gatewayApiKey,
+    },
+    timeout: 5000,
+  });
+  const notificationClient: INotificationClient = new AxiosNotificationClient(
+    notificationHttpClient
+  );
  
   const normalizeApiBaseUrl = (baseURL: string): string => {
     const trimmed = baseURL.trim().replace(/\/+$/, "");
@@ -122,6 +141,7 @@ export async function createApp(): Promise<Application> {
   const saleService = new SaleService(
     saleRepository, 
     auditClient,
+    notificationClient,
     storageClient,
     analysisClient,
     perfumeCatalogClient

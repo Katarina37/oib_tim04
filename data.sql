@@ -267,6 +267,49 @@ CREATE TABLE IF NOT EXISTS audit_log (
 
 
 -- =============================================================
+-- DATABASE: notification_center
+-- =============================================================
+CREATE DATABASE IF NOT EXISTS notification_center
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+USE notification_center;
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(160) NOT NULL,
+    message TEXT NOT NULL,
+    priority ENUM('INFO', 'WARNING', 'ERROR') NOT NULL,
+    event_type VARCHAR(120) NOT NULL,
+    source_service VARCHAR(100) NOT NULL,
+    target_role ENUM('ADMIN', 'SALES_MANAGER', 'SELLER') NULL,
+    target_user_id INT NULL,
+    is_read TINYINT(1) NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    read_at DATETIME NULL,
+    metadata JSON NULL,
+    INDEX idx_notifications_created_at (created_at),
+    INDEX idx_notifications_priority (priority),
+    INDEX idx_notifications_is_read (is_read),
+    INDEX idx_notifications_target_role (target_role),
+    INDEX idx_notifications_target_user_id (target_user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS notification_email_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    notification_id INT NULL,
+    subject VARCHAR(160) NOT NULL,
+    message TEXT NOT NULL,
+    target_role VARCHAR(40) NULL,
+    target_user_id INT NULL,
+    metadata JSON NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_notification_email_log_created_at (created_at),
+    INDEX idx_notification_email_log_notification_id (notification_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================
 -- DATABASE: vremenski_uslovi
 -- =============================================================
 CREATE DATABASE IF NOT EXISTS vremenski_uslovi

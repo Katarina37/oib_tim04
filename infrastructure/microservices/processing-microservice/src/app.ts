@@ -6,7 +6,9 @@ import { ProcessingRepository } from "./Services/ProcessingRepository";
 import { LoggerService } from "./Services/LoggerService";
 import axios from "axios";
 import { AxiosAuditClient } from "./Infrastructure/clients/AxiosAuditClient";
+import { AxiosNotificationClient } from "./Infrastructure/clients/AxiosNotificationClient";
 import { IAuditClient } from "./Domain/services/IAuditClient";
+import { INotificationClient } from "./Domain/services/INotificationClient";
 import { IProductionClient } from "./Domain/services/IProductionClient";
 import { AxiosProductionClient } from "./Infrastructure/clients/AxiosProductionClient";
 import { CorsConfig } from "./WebAPI/middleware/CorsConfig";
@@ -30,6 +32,10 @@ export function createApp(): Application {
   // Dependency Injection
   const processingRepository = new ProcessingRepository(AppDataSource);
   const auditServiceUrl = requireEnv("GATEWAY_AUDIT_URL");
+  const notificationServiceUrl =
+    getOptionalEnv("GATEWAY_NOTIFICATION_URL") ||
+    getOptionalEnv("NOTIFICATION_SERVICE_URL") ||
+    "http://localhost:4000/api/v1";
   const productionServiceUrl =
     getOptionalEnv("PRODUCTION_SERVICE_URL") || "http://localhost:5000/api/v1";
   const productionTimeoutRaw = Number.parseInt(
@@ -63,13 +69,25 @@ export function createApp(): Application {
     },
     timeout: productionTimeoutMs,
   });
+  const notificationHttpClient = axios.create({
+    baseURL: notificationServiceUrl,
+    headers: {
+      "Content-Type": "application/json",
+      "X-Gateway-Key": gatewayApiKey,
+    },
+    timeout: 5000,
+  });
   const auditClient: IAuditClient = new AxiosAuditClient(auditHttpClient);
+  const notificationClient: INotificationClient = new AxiosNotificationClient(
+    notificationHttpClient
+  );
   const productionClient: IProductionClient = new AxiosProductionClient(productionHttpClient);
   const loggerService = new LoggerService(auditClient, "prerada");
   const processingService = new ProcessingService(
     processingRepository,
     loggerService,
-    productionClient
+    productionClient,
+    notificationClient
   );
   const processingController = new ProcessingController(processingService, loggerService);
 
