@@ -199,6 +199,27 @@ export class GatewayController {
       authorize(UserRole.ADMIN),
       this.proxyToAudit.bind(this)
     );
+
+    // Internal notification ingestion route (service-to-service, gateway key only)
+    this.router.all(
+      "/notifications/internal/events",
+      this.requireGatewayKey.bind(this),
+      this.proxyToNotifications.bind(this)
+    );
+
+    // Notification routes (all authenticated roles)
+    this.router.all(
+      "/notifications",
+      authenticate,
+      authorize(UserRole.ADMIN, UserRole.SELLER, UserRole.SALES_MANAGER),
+      this.proxyToNotifications.bind(this)
+    );
+    this.router.all(
+      "/notifications/*path",
+      authenticate,
+      authorize(UserRole.ADMIN, UserRole.SELLER, UserRole.SALES_MANAGER),
+      this.proxyToNotifications.bind(this)
+    );
   }
 
   private async login(req: Request, res: Response): Promise<void> {
@@ -499,6 +520,12 @@ export class GatewayController {
   private async proxyToAuditInternal(req: Request, res: Response): Promise<void> {
     const proxyRequest = this.buildProxyRequest(req, "internal/audit");
     const response = await this.gatewayService.proxyToAudit(proxyRequest);
+    this.sendProxyResponse(res, response);
+  }
+
+  private async proxyToNotifications(req: Request, res: Response): Promise<void> {
+    const proxyRequest = this.buildProxyRequest(req);
+    const response = await this.gatewayService.proxyToNotifications(proxyRequest);
     this.sendProxyResponse(res, response);
   }
 

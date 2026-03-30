@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Leaf,
@@ -13,11 +13,15 @@ import {
   CloudSun,
   Settings,
   ShieldAlert,
+  Bell,
+  Check,
+  CheckCheck,
 } from 'lucide-react';
 import { normalizeRole, RoleKey } from '../../helpers/roleAccess';
 import { useAuth } from '../../hooks/useAuthHook';
 import { useServices } from '../../contexts/ServiceContext';
 import { UserDTO } from '../../models/users/UserDTO';
+import { useNotificationCenter } from '../../hooks/useNotificationCenterHook';
 import './Sidebar.css';
 
 interface NavItemProps {
@@ -25,6 +29,7 @@ interface NavItemProps {
   icon: React.ReactNode;
   label: string;
   disabled?: boolean;
+  badgeCount?: number;
 }
 
 type NavSection = 'operations' | 'system' | 'seller';
@@ -34,7 +39,7 @@ type NavConfigItem = NavItemProps & {
   section: NavSection;
 };
 
-const NavItem: React.FC<NavItemProps> = ({ to, icon, label, disabled = false }) => {
+const NavItem: React.FC<NavItemProps> = ({ to, icon, label, disabled = false, badgeCount = 0 }) => {
   const location = useLocation();
   const isActive = location.pathname === to || location.pathname.startsWith(`${to}/`);
 
@@ -51,6 +56,9 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, disabled = false }) 
     <NavLink to={to} className={`sidebar__nav-item ${isActive ? 'active' : ''}`} data-tooltip={label}>
       <span className="sidebar__nav-icon">{icon}</span>
       <span className="sidebar__nav-label">{label}</span>
+      {badgeCount > 0 && (
+        <span className="sidebar__nav-badge">{badgeCount > 99 ? '99+' : badgeCount}</span>
+      )}
     </NavLink>
   );
 };
@@ -60,6 +68,15 @@ export const Sidebar: React.FC = () => {
   const { userAPI } = useServices();
   const navigate = useNavigate();
   const [currentUserProfile, setCurrentUserProfile] = useState<UserDTO | null>(null);
+  const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
+  const notificationPanelRef = useRef<HTMLDivElement | null>(null);
+  const {
+    latestUnread,
+    unreadCount,
+    isLoading: isNotificationLoading,
+    markAsRead,
+    markAllAsRead,
+  } = useNotificationCenter();
 
   const navItems: NavConfigItem[] = [
     {
@@ -89,6 +106,14 @@ export const Sidebar: React.FC = () => {
       label: "Prodaja",
       allowedRoles: ["seller", "sales_manager"],
       section: "operations",
+    },
+    {
+      to: "/notifications",
+      icon: <Bell size={20} />,
+      label: "Notifikacije",
+      allowedRoles: ["admin", "seller", "sales_manager"],
+      section: "operations",
+      badgeCount: unreadCount,
     },
     // Weather and Settings - SELLER only
     {
@@ -179,6 +204,24 @@ export const Sidebar: React.FC = () => {
     };
   }, [token, userAPI]);
 
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (!notificationPanelRef.current) {
+        return;
+      }
+
+      if (!notificationPanelRef.current.contains(event.target as Node)) {
+        setIsNotificationPanelOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, []);
+
   const getInitials = (username?: string, firstName?: string | null, lastName?: string | null): string => {
     const safeFirstName = firstName?.trim() ?? '';
     const safeLastName = lastName?.trim() ?? '';
@@ -212,6 +255,27 @@ export const Sidebar: React.FC = () => {
 
   const handleProfileClick = () => {
     navigate('/profile');
+  };
+
+  const handleOpenNotificationCenter = () => {
+    setIsNotificationPanelOpen(false);
+    navigate('/notifications');
+  };
+
+  const handleMarkAllNotificationsAsRead = async () => {
+    try {
+      await markAllAsRead();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleMarkNotificationAsRead = async (id: number) => {
+    try {
+      await markAsRead(id);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const resolvedFirstName = user?.firstName ?? currentUserProfile?.firstName ?? '';
@@ -268,6 +332,74 @@ export const Sidebar: React.FC = () => {
       </nav>
 
       <div className="sidebar__footer">
+        <div className="sidebar__notification" ref={notificationPanelRef}>
+          <button
+            type="button"
+            className="sidebar__notification-button"
+            onClick={() => setIsNotificationPanelOpen((currentValue) => !currentValue)}
+          >
+            <Bell size={16} />
+            <span className="sidebar__notification-label">Obaveštenja</span>
+            {unreadCount > 0 && (
+              <span className="sidebar__notification-count">{unreadCount > 99 ? '99+' : unreadCount}</span>
+            )}
+          </button>
+
+          {isNotificationPanelOpen && (
+            <div className="sidebar__notification-panel">
+              <div className="sidebar__notification-panel-header">
+                <span>Nepročitano ({unreadCount})</span>
+                <button
+                  type="button"
+                  className="sidebar__notification-mark-all"
+                  onClick={() => void handleMarkAllNotificationsAsRead()}
+                  disabled={unreadCount === 0}
+                >
+                  <CheckCheck size={14} />
+                  Sve pročitano
+                </button>
+              </div>
+
+              <div className="sidebar__notification-list">
+                {isNotificationLoading && latestUnread.length === 0 ? (
+                  <p className="sidebar__notification-empty">Učitavanje...</p>
+                ) : latestUnread.length === 0 ? (
+                  <p className="sidebar__notification-empty">Nema novih obaveštenja.</p>
+                ) : (
+                  latestUnread.map((notification) => (
+                    <div key={notification.id} className="sidebar__notification-item">
+                      <button
+                        type="button"
+                        className="sidebar__notification-item-content"
+                        onClick={handleOpenNotificationCenter}
+                      >
+                        <span className="sidebar__notification-item-title">{notification.title}</span>
+                        <span className="sidebar__notification-item-text">{notification.message}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="sidebar__notification-read"
+                        onClick={() => void handleMarkNotificationAsRead(notification.id)}
+                        aria-label="Označi kao pročitano"
+                      >
+                        <Check size={13} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <button
+                type="button"
+                className="sidebar__notification-open"
+                onClick={handleOpenNotificationCenter}
+              >
+                Otvori notifikacioni centar
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="sidebar__profile">
           <button
             type="button"

@@ -2,6 +2,7 @@ import { Request, Response, Router } from "express";
 import { PackagingSyncDTO } from "../../Domain/DTOs/PackagingSyncDTO";
 import { LogLevel } from "../../Domain/enums/LogLevel";
 import { ILoggerService } from "../../Domain/services/ILoggerService";
+import { INotificationClient } from "../../Domain/services/INotificationClient";
 import { IStorageSyncService } from "../../Domain/services/IStorageSyncService";
 import { validatePackagingSyncData } from "../validators/PackageValidator";
 
@@ -10,7 +11,8 @@ export class StorageSyncController {
 
   constructor(
     private readonly storageSyncService: IStorageSyncService,
-    private readonly logger: ILoggerService
+    private readonly logger: ILoggerService,
+    private readonly notificationClient: INotificationClient
   ) {
     this.router = Router();
     this.initializeRoutes();
@@ -66,6 +68,24 @@ export class StorageSyncController {
         },
       });
 
+      if (result.missingPackages > 0) {
+        await this.trySendNotificationEvent({
+          eventType: "STORAGE_PACKAGING_SYNC_PARTIAL",
+          sourceService: "storage-microservice",
+          title: "Delimicna sinhronizacija pakovanja i skladista",
+          message: `Nedostaje ${result.missingPackages} paketa tokom sinhronizacije.`,
+          priority: "WARNING",
+          targetRole: "SALES_MANAGER",
+          metadata: {
+            operation: result.operation,
+            requestedPackages: payload.packageIds.length,
+            recordedPackages: result.recordedPackages,
+            missingPackages: result.missingPackages,
+            targetWarehouseId: payload.targetWarehouseId,
+          },
+        });
+      }
+
       res.status(200).json({ success: true, data: result });
     } catch (error) {
       await this.logger.log(
@@ -75,7 +95,36 @@ export class StorageSyncController {
           ipAddress: clientIp,
         }
       );
+      await this.trySendNotificationEvent({
+        eventType: "STORAGE_PACKAGING_SYNC_ERROR",
+        sourceService: "storage-microservice",
+        title: "Greska pri sinhronizaciji pakovanja i skladista",
+        message: `Sinhronizacija nije uspela: ${(error as Error).message}`,
+        priority: "ERROR",
+        targetRole: "ADMIN",
+      });
       res.status(500).json({ success: false, message: (error as Error).message });
+    }
+  }
+
+  private async trySendNotificationEvent(payload: {
+    eventType: string;
+    sourceService: string;
+    title: string;
+    message: string;
+    priority: "INFO" | "WARNING" | "ERROR";
+    targetRole?: "ADMIN" | "SALES_MANAGER" | "SELLER";
+    targetUserId?: number;
+    metadata?: Record<string, unknown>;
+  }): Promise<void> {
+    try {
+      await this.notificationClient.sendEvent(payload);
+    } catch (notificationError) {
+      console.error(
+        "Notification event delivery failed:",
+        (notificationError as Error).message,
+        payload
+      );
     }
   }
 }

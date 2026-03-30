@@ -16,6 +16,7 @@ import { SalesPage } from './pages/SalesPage';
 import ProcessingPage from './pages/ProcessingPage';
 import EditUserPage from './pages/EditUserPage';
 import SecurityIncidentsPage from './pages/SecurityIncidentsPage';
+import NotificationsPage from './pages/NotificationsPage';
 
 const App: React.FC = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -119,6 +120,17 @@ const App: React.FC = () => {
           <ProtectedRoute requiredRole="admin,seller,sales_manager">
             <AppLayout>
               <EditUserPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute requiredRole="admin,seller,sales_manager">
+            <AppLayout>
+              <NotificationsPage />
             </AppLayout>
           </ProtectedRoute>
         }

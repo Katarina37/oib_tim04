@@ -9,6 +9,7 @@ import { IAuditSearchClient } from "../Domain/services/IAuditSearchClient";
 import { IIncidentRepository } from "../Domain/services/IIncidentRepository";
 import { IIncidentService, ScanResult } from "../Domain/services/IIncidentService";
 import { ILoggerService } from "../Domain/services/ILoggerService";
+import { INotificationClient } from "../Domain/services/INotificationClient";
 
 interface IncidentServiceConfig {
   defaultLookbackMinutes: number;
@@ -35,6 +36,7 @@ export class IncidentService implements IIncidentService {
     private readonly incidentRepository: IIncidentRepository,
     private readonly logger: ILoggerService,
     private readonly auditSearchClient: IAuditSearchClient,
+    private readonly notificationClient: INotificationClient,
     private readonly config: IncidentServiceConfig
   ) {}
 
@@ -357,7 +359,43 @@ export class IncidentService implements IIncidentService {
       }
     );
 
+    await this.trySendNotificationEvent({
+      eventType: "SECURITY_INCIDENT_CREATED",
+      sourceService: MICROserviceName,
+      title: "Novi bezbednosni incident",
+      message: `Detektovan je incident tipa ${saved.incidentType} (severity=${saved.severity}).`,
+      priority: "ERROR",
+      targetRole: "ADMIN",
+      metadata: {
+        incidentId: saved.id,
+        incidentType: saved.incidentType,
+        severity: saved.severity,
+        fingerprint: saved.fingerprint,
+      },
+    });
+
     return true;
+  }
+
+  private async trySendNotificationEvent(payload: {
+    eventType: string;
+    sourceService: string;
+    title: string;
+    message: string;
+    priority: "INFO" | "WARNING" | "ERROR";
+    targetRole?: "ADMIN" | "SALES_MANAGER" | "SELLER";
+    targetUserId?: number;
+    metadata?: Record<string, unknown>;
+  }): Promise<void> {
+    try {
+      await this.notificationClient.sendEvent(payload);
+    } catch (notificationError) {
+      console.error(
+        "Notification event delivery failed:",
+        (notificationError as Error).message,
+        payload
+      );
+    }
   }
 
   private normalizeText(text: string): string {

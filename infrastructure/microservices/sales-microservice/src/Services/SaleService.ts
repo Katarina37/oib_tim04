@@ -8,6 +8,7 @@ import { SaleItem } from "../Domain/models/SaleItem";
 import { ISaleRepository } from "../Domain/repositories/ISaleRepository";
 import { IAnalysisClient } from "../Domain/services/IAnalysisClient";
 import { IAuditClient } from "../Domain/services/IAuditClient";
+import { INotificationClient } from "../Domain/services/INotificationClient";
 import { IPerfumeCatalogClient } from "../Domain/services/IPerfumeCatalogClient";
 import { ISaleService } from "../Domain/services/ISaleService";
 import { IStorageClient } from "../Domain/services/IStorageClient";
@@ -26,6 +27,7 @@ export class SaleService implements ISaleService {
     constructor(
         private readonly saleRepository: ISaleRepository,
         private readonly auditClient: IAuditClient,
+        private readonly notificationClient: INotificationClient,
         private readonly storageClient: IStorageClient,
         private readonly analysisClient: IAnalysisClient,
         private readonly perfumeCatalogClient: IPerfumeCatalogClient
@@ -120,6 +122,21 @@ export class SaleService implements ISaleService {
                 },
             });
 
+            await this.trySendNotificationEvent({
+                eventType: "SALES_COMPLETED",
+                sourceService: SaleService.MICROSERVICE_NAME,
+                title: "Prodaja uspesno zavrsena",
+                message: `Racun ${savedSale.billNumber} je uspesno kreiran.`,
+                priority: "INFO",
+                targetRole: "SALES_MANAGER",
+                targetUserId: data.userId,
+                metadata: {
+                    saleId: savedSale.id,
+                    total: savedSale.totalAmount,
+                    billNumber: savedSale.billNumber,
+                },
+            });
+
             return this.toDTO(savedSale);
         } catch (error) {
             await this.safeReleasePackages(uniqueReservedPackageIds, userContext, data.userId);
@@ -129,6 +146,18 @@ export class SaleService implements ISaleService {
                 mikroservis: SaleService.MICROSERVICE_NAME,
                 korisnik_id: data.userId,
                 dodatni_podaci: {
+                    reservedPackageIds: uniqueReservedPackageIds,
+                },
+            });
+            await this.trySendNotificationEvent({
+                eventType: "SALES_FAILED",
+                sourceService: SaleService.MICROSERVICE_NAME,
+                title: "Prodaja neuspesna",
+                message: `Prodaja nije zavrsena: ${(error as Error).message}`,
+                priority: "ERROR",
+                targetRole: "SALES_MANAGER",
+                targetUserId: data.userId,
+                metadata: {
                     reservedPackageIds: uniqueReservedPackageIds,
                 },
             });
@@ -293,6 +322,20 @@ export class SaleService implements ISaleService {
                 sent: sentPackages,
             },
         });
+
+        await this.trySendNotificationEvent({
+            eventType: "INSUFFICIENT_PACKAGES_FOR_SALE",
+            sourceService: SaleService.MICROSERVICE_NAME,
+            title: "Nedovoljno paketa za prodaju",
+            message: `Zahtevano: ${requestedPackages}, dostupno: ${sentPackages}.`,
+            priority: "WARNING",
+            targetRole: "SALES_MANAGER",
+            targetUserId: userId,
+            metadata: {
+                requested: requestedPackages,
+                sent: sentPackages,
+            },
+        });
     }
 
     private async buildSaleForPersistence(
@@ -390,6 +433,27 @@ export class SaleService implements ISaleService {
             await this.auditClient.sendLog(payload);
         } catch (auditError) {
             console.error("Audit log delivery failed:", (auditError as Error).message, payload);
+        }
+    }
+
+    private async trySendNotificationEvent(payload: {
+        eventType: string;
+        sourceService: string;
+        title: string;
+        message: string;
+        priority: "INFO" | "WARNING" | "ERROR";
+        targetRole?: "ADMIN" | "SALES_MANAGER" | "SELLER";
+        targetUserId?: number;
+        metadata?: Record<string, unknown>;
+    }): Promise<void> {
+        try {
+            await this.notificationClient.sendEvent(payload);
+        } catch (notificationError) {
+            console.error(
+                "Notification event delivery failed:",
+                (notificationError as Error).message,
+                payload
+            );
         }
     }
 }

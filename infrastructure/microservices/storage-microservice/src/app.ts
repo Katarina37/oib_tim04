@@ -15,9 +15,11 @@ import { StorageSyncService } from "./Services/StorageSyncService";
 import { StorageRepository } from "./Services/StorageRepository";
 import { LoggerService } from "./Services/LoggerService";
 import { AxiosPackagingClient } from "./Infrastructure/clients/AxiosPackagingClient";
+import { AxiosNotificationClient } from "./Infrastructure/clients/AxiosNotificationClient";
 
 import { AxiosAuditClient } from "./Infrastructure/clients/AxiosAuditClient";
 import { IAuditClient } from "./Domain/services/IAuditClient";
+import { INotificationClient } from "./Domain/services/INotificationClient";
 import { IPackagingClient } from "./Domain/services/IPackagingClient";
 import { IStorageRepository } from "./Domain/services/IStorageRepository";
 import { IStorageSyncService } from "./Domain/services/IStorageSyncService";
@@ -75,6 +77,22 @@ export function createApp(): Application {
     const auditClient: IAuditClient = new AxiosAuditClient(auditHttpClient);
     const loggerService = new LoggerService(auditClient, "storage-microservice");
 
+    const notificationServiceUrl =
+        getOptionalEnv("GATEWAY_NOTIFICATION_URL") ||
+        getOptionalEnv("NOTIFICATION_SERVICE_URL") ||
+        "http://localhost:4000/api/v1";
+    const notificationHttpClient = axios.create({
+        baseURL: notificationServiceUrl,
+        headers: {
+            "Content-Type": "application/json",
+            "X-Gateway-Key": gatewayApiKey,
+        },
+        timeout: 5000,
+    });
+    const notificationClient: INotificationClient = new AxiosNotificationClient(
+        notificationHttpClient
+    );
+
     // WRITE services
     const distributionCenterService =
         new DistributionCenterStorageService(storageRepository, packagingClient, loggerService);
@@ -102,7 +120,7 @@ export function createApp(): Application {
     const storageOverviewController =
         new StorageOverviewController(storageOverviewService, loggerService);
     const storageSyncController =
-        new StorageSyncController(storageSyncService, loggerService);
+        new StorageSyncController(storageSyncService, loggerService, notificationClient);
 
     // Health check
 
