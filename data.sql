@@ -336,6 +336,39 @@ CREATE TABLE IF NOT EXISTS vremenski_dan (
     INDEX idx_vreme_mesec (datum_mesec)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- =============================================================
+-- DATABASE: preporuke
+-- =============================================================
+CREATE DATABASE IF NOT EXISTS preporuke
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+USE preporuke;
+
+CREATE TABLE IF NOT EXISTS user_recommendations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    korisnik_id INT NOT NULL,
+    preporuceni_parfemi JSON NOT NULL,
+    tip_preporuke VARCHAR(20) NOT NULL,
+    generisan_datum DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    istice_datum DATETIME NOT NULL,
+    INDEX idx_preporuke_korisnik (korisnik_id),
+    INDEX idx_preporuke_istice (istice_datum)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS item_co_occurrence (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    parfem_id_1 INT NOT NULL,
+    parfem_id_2 INT NOT NULL,
+    zajednicki_broj_kupovina INT NOT NULL DEFAULT 0,
+    datum_azuriranja DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT uq_co_occurrence UNIQUE (parfem_id_1, parfem_id_2),
+    CONSTRAINT chk_parfem_order CHECK (parfem_id_1 < parfem_id_2),
+    INDEX idx_co_parfem1 (parfem_id_1),
+    INDEX idx_co_parfem2 (parfem_id_2),
+    INDEX idx_co_count (zajednicki_broj_kupovina DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 -- #############################################################
 -- PART 2: SEED DATA (TEST DATA)
@@ -695,6 +728,55 @@ INSERT INTO vremenski_dan (
 ('2026-01-17', 4.0, 68, 0.0, 'COLD', 'OK', 'NONE', 'Hladniji dan bez padavina.', 2);
 
 
+-- =============================================================
+-- preporuke.item_co_occurrence (seed na osnovu prodaja podataka)
+-- =============================================================
+USE preporuke;
+
+-- FR-2026-002: korisnik kupio parfemId 2 i 3 zajedno
+INSERT INTO item_co_occurrence (parfem_id_1, parfem_id_2, zajednicki_broj_kupovina) VALUES
+(2, 3, 1);
+
+-- FR-2026-004: korisnik kupio parfemId 6 i 8 zajedno
+INSERT INTO item_co_occurrence (parfem_id_1, parfem_id_2, zajednicki_broj_kupovina) VALUES
+(6, 8, 1);
+
+-- =============================================================
+-- preporuke.user_recommendations (seed primjeri)
+-- =============================================================
+
+-- Preporuka za korisnika 3 (ana.seller) - kupio parfem 1 i 10
+INSERT INTO user_recommendations (korisnik_id, preporuceni_parfemi, tip_preporuke, generisan_datum, istice_datum)
+VALUES (
+    3,
+    '[
+        {"parfemId":9,"naziv":"Neroli Air","preporukaTip":"popularity","score":90},
+        {"parfemId":2,"naziv":"Lavender Veil","preporukaTip":"popularity","score":80},
+        {"parfemId":3,"naziv":"Bergamot Intense","preporukaTip":"popularity","score":70},
+        {"parfemId":4,"naziv":"Jasmine Nuit","preporukaTip":"popularity","score":60},
+        {"parfemId":6,"naziv":"Vetiver Line","preporukaTip":"popularity","score":50}
+    ]',
+    'hybrid',
+    NOW(),
+    DATE_ADD(NOW(), INTERVAL 1 DAY)
+);
+
+-- Preporuka za korisnika 4 (marko.seller) - kupio parfem 4
+INSERT INTO user_recommendations (korisnik_id, preporuceni_parfemi, tip_preporuke, generisan_datum, istice_datum)
+VALUES (
+    4,
+    '[
+        {"parfemId":9,"naziv":"Neroli Air","preporukaTip":"popularity","score":90},
+        {"parfemId":2,"naziv":"Lavender Veil","preporukaTip":"popularity","score":80},
+        {"parfemId":1,"naziv":"Rose Absolue","preporukaTip":"popularity","score":70},
+        {"parfemId":3,"naziv":"Bergamot Intense","preporukaTip":"popularity","score":60},
+        {"parfemId":8,"naziv":"Iris Signature","preporukaTip":"popularity","score":50}
+    ]',
+    'hybrid',
+    NOW(),
+    DATE_ADD(NOW(), INTERVAL 1 DAY)
+);
+
 -- #############################################################
 -- PART 3: CLEANUP (DELETE ALL DATA FROM ALL TABLES)
 -- #############################################################
@@ -735,6 +817,10 @@ TRUNCATE TABLE audit_log;
 
 USE vremenski_uslovi;
 TRUNCATE TABLE vremenski_dan;
+
+USE preporuke;
+TRUNCATE TABLE user_recommendations;
+TRUNCATE TABLE item_co_occurrence;
 
 SET FOREIGN_KEY_CHECKS = 1;
 

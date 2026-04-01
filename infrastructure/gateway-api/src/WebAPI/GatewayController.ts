@@ -172,6 +172,22 @@ export class GatewayController {
       this.proxyToPerformanceAnalysis.bind(this)
     );
 
+    // recommendation microservice
+
+    this.router.all(
+    "/recommendations",
+      authenticate,
+      authorize(UserRole.SELLER, UserRole.SALES_MANAGER),
+      this.proxyToRecommendations.bind(this)
+    );
+
+    this.router.all(
+      "/recommendations/*path",
+      authenticate,
+      authorize(UserRole.SELLER, UserRole.SALES_MANAGER),
+      this.proxyToRecommendations.bind(this)
+    );
+
     // Audit microservice - constrained log search (needed for production diary view)
     this.router.get(
       "/audit/logs/search",
@@ -526,6 +542,12 @@ export class GatewayController {
   private async proxyToNotifications(req: Request, res: Response): Promise<void> {
     const proxyRequest = this.buildProxyRequest(req);
     const response = await this.gatewayService.proxyToNotifications(proxyRequest);
+    this.sendProxyResponse(res, response);
+  }
+
+  private async proxyToRecommendations(req: Request, res: Response): Promise<void> {
+    const proxyRequest = this.buildProxyRequest(req);
+    const response = await this.gatewayService.proxyToRecommendations(proxyRequest);
     this.sendProxyResponse(res, response);
   }
 

@@ -20,4 +20,5 @@ app.listen(port, () => {
   console.log(`  ALL  /api/v1/performance-analysis/*path (ADMIN)`);
   console.log(`  ALL  /api/v1/audit/*path (ADMIN)`);
   console.log(`  ALL  /api/v1/notifications/*path (ADMIN, SELLER, SALES_MANAGER)`);
+  console.log(`  ALL  /api/v1/recommendations/*path (SELLER, SALES_MANAGER)`);
 });

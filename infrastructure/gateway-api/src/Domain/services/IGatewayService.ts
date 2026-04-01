@@ -29,4 +29,5 @@ export interface IGatewayService {
   proxyToWeather(request: ProxyRequest): Promise<ProxyResponse>;
   proxyToSecurityIncidents(request: ProxyRequest): Promise<ProxyResponse>;
   proxyToNotifications(request: ProxyRequest): Promise<ProxyResponse>;
+  proxyToRecommendations(request: ProxyRequest): Promise<ProxyResponse>;
 }

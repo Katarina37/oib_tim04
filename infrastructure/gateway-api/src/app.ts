@@ -142,6 +142,11 @@ const notificationClient: IMicroserviceClient = createRequiredGatewayMicroservic
   "NOTIFICATION_SERVICE_URL",
 ]);
 
+// recommendation service client
+const recommendationClient: IMicroserviceClient = createRequiredGatewayMicroserviceClient([
+  "RECOMMENDATION_SERVICE_URL",
+]);
+
 // Create gateway service with all dependencies
 const gatewayService: IGatewayService = new GatewayService(
   authClient,
@@ -156,7 +161,8 @@ const gatewayService: IGatewayService = new GatewayService(
   auditClient,
   weatherClient,
   securityIncidentClient,
-  notificationClient
+  notificationClient,
+  recommendationClient
 );
 
 const userAccessPolicy: IUserAccessPolicy = new UserAccessPolicy();

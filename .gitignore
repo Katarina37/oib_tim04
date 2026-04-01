@@ -41,3 +41,6 @@ lerna-debug.log*
 client/release/
 client/out/
 client/*.tsbuildinfo
+
+# Local scripts
+*.bat
