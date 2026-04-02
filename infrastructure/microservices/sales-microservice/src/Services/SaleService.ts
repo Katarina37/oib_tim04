@@ -13,6 +13,7 @@ import { IPerfumeCatalogClient } from "../Domain/services/IPerfumeCatalogClient"
 import { ISaleService } from "../Domain/services/ISaleService";
 import { IStorageClient } from "../Domain/services/IStorageClient";
 import { UserContext } from "../Domain/types/UserContext";
+import { IRecommendationClient } from "Domain/services/IRecommendationClient";
 
 type ResolvedSaleItem = {
     perfumeId: number;
@@ -30,7 +31,8 @@ export class SaleService implements ISaleService {
         private readonly notificationClient: INotificationClient,
         private readonly storageClient: IStorageClient,
         private readonly analysisClient: IAnalysisClient,
-        private readonly perfumeCatalogClient: IPerfumeCatalogClient
+        private readonly perfumeCatalogClient: IPerfumeCatalogClient,
+        private readonly recommendationClient: IRecommendationClient
     ) {}
 
     async executeSale(data: CreateSaleDto, userContext: UserContext): Promise<SaleResponseDTO> {
@@ -121,6 +123,8 @@ export class SaleService implements ISaleService {
                     billNumber: savedSale.billNumber,
                 },
             });
+
+            await this.tryUpdateCoOccurrence(saleItems.map(i => i.perfumeId));
 
             await this.trySendNotificationEvent({
                 eventType: "SALES_COMPLETED",
@@ -454,6 +458,21 @@ export class SaleService implements ISaleService {
                 (notificationError as Error).message,
                 payload
             );
+        }
+    }
+
+    private async tryUpdateCoOccurrence(perfumeIds: number[]): Promise<void> {
+        try {
+            for (let i = 0; i < perfumeIds.length; i++) {
+                for (let j = i + 1; j < perfumeIds.length; j++) {
+                    await this.recommendationClient.updateCoOccurrence(
+                        perfumeIds[i],
+                        perfumeIds[j]
+                    );
+                }
+            }
+        } catch (error) {
+            console.error("Co-occurrence update failed:", (error as Error).message);
         }
     }
 }

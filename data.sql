@@ -382,8 +382,8 @@ USE korisnici;
 INSERT INTO users (username, password, email, firstName, lastName, role) VALUES
 ('admin', '$2b$10$y1p5qkYzY2cnQmA7S9xEze5Ng8j7qf6YlWmX0z9lXq2M8hD4TnYQ6', 'admin@osinjel.com', 'Mila', 'Petrovic', 'ADMIN'),
 ('sales.manager', '$2b$10$L3n9Q0cD1sW8vP7kU4rAtef0x9C2jB5uYh3K6mN8pQ4tR2sV7wXyO', 'manager@osinjel.com', 'Nikola', 'Ilic', 'SALES_MANAGER'),
-('ana.seller', '$2b$10$P4r8T1mB6wQ3xY9zK5cVne2d7F1sH8jL0aN4uD6eG2pR9tY5kM3nS', 'ana@osinjel.com', 'Ana', 'Jovanovic', 'SELLER'),
-('marko.seller', '$2b$10$Q9v2M6aR1tP8xY3kL5zCwe7n4B0sD2fG6hJ1mN9pT4rV8yK3uL7cA', 'marko@osinjel.com', 'Marko', 'Kostic', 'SELLER'),
+('ana.seller', '$2b$10$qz9gcJtD9.fYt70CPQjuQ.DKZIfgcsSIx54dmSN/XexrUVej4Pawa', 'ana@osinjel.com', 'Ana', 'Jovanovic', 'SELLER'),
+('marko.seller', '$2b$10$oFSXtDNqyX1HDp7ySccv7.tTcoznXk/zUfTfqtfqGtQqX0kG9wtN2', 'marko@osinjel.com', 'Marko', 'Kostic', 'SELLER'),
 ('jelena.seller', '$2b$10$R6b3N8kD2vQ1yM5tL9pAxe4c7F0sH2jG8uW3mT6rP1nY4kV9zC5dB', 'jelena@osinjel.com', 'Jelena', 'Savic', 'SELLER');
 
 
@@ -733,13 +733,16 @@ INSERT INTO vremenski_dan (
 -- =============================================================
 USE preporuke;
 
--- FR-2026-002: korisnik kupio parfemId 2 i 3 zajedno
-INSERT INTO item_co_occurrence (parfem_id_1, parfem_id_2, zajednicki_broj_kupovina) VALUES
-(2, 3, 1);
 
--- FR-2026-004: korisnik kupio parfemId 6 i 8 zajedno
 INSERT INTO item_co_occurrence (parfem_id_1, parfem_id_2, zajednicki_broj_kupovina) VALUES
-(6, 8, 1);
+(1, 2, 3),
+(1, 4, 2),
+(2, 3, 1),
+(3, 4, 2),
+(3, 10, 2),
+(4, 9, 3),
+(6, 8, 1),
+(9, 10, 4);
 
 -- =============================================================
 -- preporuke.user_recommendations (seed primjeri)

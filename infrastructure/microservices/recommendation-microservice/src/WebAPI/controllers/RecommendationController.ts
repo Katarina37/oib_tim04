@@ -24,8 +24,8 @@ export class RecommendationController {
     }
 
     private initializeRoutes(): void {
-        this.router.get("/recommendations/:userId", this.getRecommendations.bind(this));
-        this.router.post("/recommendations/update-cooccurrence", this.updateCoOccurrence.bind(this));
+        this.router.get("/:userId", this.getRecommendations.bind(this));
+        this.router.post("/update-cooccurrence", this.updateCoOccurrence.bind(this));
     }
 
     private async getRecommendations(req: Request, res: Response, next: NextFunction): Promise<void> {

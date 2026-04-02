@@ -2803,3 +2803,51 @@ body {
     align-items: flex-start;
   }
 }
+
+/* ============================================
+   Recommendation Page
+   ============================================ */
+
+.recommendation-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.recommendation-card {
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    background: var(--color-surface);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.recommendation-card:hover {
+    border-color: var(--color-primary-light);
+    box-shadow: var(--shadow-md);
+}
+
+.recommendation-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+}
+
+.recommendation-card__name {
+    font-weight: 500;
+    font-size: var(--font-size-md);
+    color: var(--color-text-primary);
+}
+
+.recommendation-card__type {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: var(--font-size-xs);
+}
+
+.recommendation-card__explanation {
+    margin-top: var(--space-xs);
+    font-size: var(--font-size-sm);
+}

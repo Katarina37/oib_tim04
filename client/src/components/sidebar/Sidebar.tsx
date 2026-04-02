@@ -16,6 +16,7 @@ import {
   Bell,
   Check,
   CheckCheck,
+  Star
 } from 'lucide-react';
 import { normalizeRole, RoleKey } from '../../helpers/roleAccess';
 import { useAuth } from '../../hooks/useAuthHook';
@@ -104,6 +105,13 @@ export const Sidebar: React.FC = () => {
       to: "/sales",
       icon: <ShoppingCart size={20} />,
       label: "Prodaja",
+      allowedRoles: ["seller", "sales_manager"],
+      section: "operations",
+    },
+    {
+      to: "/recommendations",
+      icon: <Star size={20} />,
+      label: "Preporuke",
       allowedRoles: ["seller", "sales_manager"],
       section: "operations",
     },

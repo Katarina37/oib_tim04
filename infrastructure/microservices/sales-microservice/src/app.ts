@@ -28,6 +28,7 @@ import { ILoggerService } from "./Domain/services/ILoggerService";
 import { LoggerService } from "./Services/LoggerService";
 import { Db } from "./DataBase/DbConnectionPool";
 import { createProxyMiddleware } from "http-proxy-middleware/dist/factory";
+import { AxiosRecommendationClient } from "./Infrastructure/clients/AxiosRecommendationClient";
 
 export async function createApp(): Promise<Application> {
   const app = express();
@@ -136,6 +137,17 @@ export async function createApp(): Promise<Application> {
     gatewayApiKey
   );
 
+  const recommendationHttpClient = axios.create({
+    baseURL: requireEnv("RECOMMENDATION_SERVICE_URL") + "/api/v1",
+    headers: {
+        "Content-Type": "application/json",
+        "X-Gateway-Key": gatewayApiKey,
+    },
+    timeout: 5000,
+  });
+
+  const recommendationClient = new AxiosRecommendationClient(recommendationHttpClient);
+
   // ===== DEPENDENCY INJECTION =====
   const saleRepository = new TypeORMSaleRepository();
   const saleService = new SaleService(
@@ -144,7 +156,8 @@ export async function createApp(): Promise<Application> {
     notificationClient,
     storageClient,
     analysisClient,
-    perfumeCatalogClient
+    perfumeCatalogClient,
+    recommendationClient
   );
   
   const salesController = new SalesController(

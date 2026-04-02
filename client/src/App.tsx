@@ -17,6 +17,7 @@ import ProcessingPage from './pages/ProcessingPage';
 import EditUserPage from './pages/EditUserPage';
 import SecurityIncidentsPage from './pages/SecurityIncidentsPage';
 import NotificationsPage from './pages/NotificationsPage';
+import RecommendationPage from './pages/RecommendationPage';
 
 const App: React.FC = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -135,6 +136,18 @@ const App: React.FC = () => {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/recommendations"
+        element={
+            <ProtectedRoute requiredRole="seller,sales_manager">
+                <AppLayout>
+                    <RecommendationPage />
+                </AppLayout>
+            </ProtectedRoute>
+        }
+      />
+
 
       {/* Admin routes */}
       <Route

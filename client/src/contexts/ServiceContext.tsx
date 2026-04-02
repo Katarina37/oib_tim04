@@ -25,6 +25,8 @@ import { ISecurityIncidentAPI } from "../api/security_incidents/ISecurityInciden
 import { SecurityIncidentAPI } from "../api/security_incidents/SecurityIncidentAPI";
 import { INotificationAPI } from "../api/notification/INotificationAPI";
 import { NotificationAPI } from "../api/notification/NotificationAPI";
+import { IRecommendationAPI } from "../api/recommendation/IRecommendationAPI";
+import { RecommendationAPI } from "../api/recommendation/RecommendationAPI";
 
 type ServiceContextValue = {
   plantAPI: IPlantAPI;
@@ -39,6 +41,7 @@ type ServiceContextValue = {
   processingAPI: IProcessingAPI;
   securityIncidentAPI: ISecurityIncidentAPI;
   notificationAPI: INotificationAPI;
+  recommendationAPI: IRecommendationAPI;
 };
 
 type ServiceProviderProps = {
@@ -69,6 +72,7 @@ export const ServiceProvider: React.FC<ServiceProviderProps> = ({ children, http
       processingAPI: new ProcessingAPI(resolvedHttpClient),
       securityIncidentAPI: new SecurityIncidentAPI(resolvedHttpClient),
       notificationAPI: new NotificationAPI(resolvedHttpClient),
+      recommendationAPI: new RecommendationAPI(resolvedHttpClient),
     }),
     [resolvedHttpClient]
   );
