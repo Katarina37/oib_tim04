@@ -141,6 +141,23 @@ export class RecommendationRepository implements IRecommendationRepository {
         return results;
     }
 
+    async getPerfumeById(id: number): Promise<{ id: number; naziv: string } | null> {
+        const query = `
+            SELECT id, naziv
+            FROM prerada.parfem
+            WHERE id = ?
+        `;
+
+        const results = await AppDataSource.query(query, [id]);
+
+        if (!results || results.length === 0) return null;
+
+        return {
+            id: results[0].id,
+            naziv: results[0].naziv
+        };
+    }
+
     private toDomain(entity: UserRecommendationEntity): UserRecommendation {
         const rec = new UserRecommendation();
         rec.id = entity.id;

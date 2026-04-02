@@ -55,7 +55,12 @@ export class RecommendationService implements IRecommendationService {
 
         const topPerfumeMap = new Map(topPerfumes.map(p => [p.id, p.naziv]));
         for (const [id, data] of collaborativeScores.entries()) {
-            data.naziv = topPerfumeMap.get(id) ?? `Parfem #${id}`;
+            if (!topPerfumeMap.has(id)) {
+                const perfume = await this.repository.getPerfumeById(id);
+                data.naziv = perfume?.naziv ?? `Parfem #${id}`;
+            } else {
+                data.naziv = topPerfumeMap.get(id)!;
+            }
         }
 
         const hybridMap = new Map<number, { naziv: string; score: number; tip: string }>();

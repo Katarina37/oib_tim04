@@ -7,4 +7,5 @@ export interface IRecommendationRepository {
     getCoOccurrenceForPerfume(parfemId: number, limit: number): Promise<Array<{ parfemId2: number; zajednickiBroj: number }>>;
     getTopSellingPerfumes(limit: number, daysBack: number): Promise<Array<{ id: number; naziv: string; ukupnoProdatih: number }>>;
     getUserPurchasedPerfumes(userId: number): Promise<Array<{ parfemId: number; naziv: string }>>;
+    getPerfumeById(id: number): Promise<{ id: number; naziv: string } | null>;
 }
